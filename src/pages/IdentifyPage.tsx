@@ -39,7 +39,8 @@ export default function IdentifyPage() {
       // Convert base64 to blob for upload
       const response = await fetch(imageBase64);
       const blob = await response.blob();
-      const imageUrl = await uploadPlantImage(user.id, blob, `${result.name.replace(/\s/g, '-')}.jpg`);
+      const safeName = result.name.replace(/[^a-zA-Z0-9-_]/g, '-');
+      const imageUrl = await uploadPlantImage(user.id, blob, `${safeName}.jpg`);
 
       const { error } = await supabase.from('plants').insert({
         user_id: user.id,

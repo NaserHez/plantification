@@ -1,14 +1,70 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useNavigate } from "react-router-dom";
+import { Camera, Leaf, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+import BottomNav from "@/components/BottomNav";
 
-const Index = () => {
+export default function Index() {
+  const navigate = useNavigate();
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <div className="min-h-screen bg-background pb-20">
+      {/* Hero */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-accent/30 to-leaf-light/40 px-6 pt-12 pb-10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-md mx-auto"
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <Leaf className="w-6 h-6 text-primary animate-leaf-sway" />
+            <span className="text-sm font-medium text-primary">Plantwise</span>
+          </div>
+          <h1 className="text-4xl font-serif leading-tight mb-3">
+            Know your plants,<br />
+            <span className="text-primary">grow with care</span>
+          </h1>
+          <p className="text-muted-foreground text-sm leading-relaxed mb-6">
+            Snap a photo to instantly identify any plant and get personalized care instructions.
+          </p>
+          <div className="flex gap-3">
+            <Button onClick={() => navigate("/identify")} className="h-11 rounded-xl px-5 gap-2">
+              <Camera className="w-4 h-4" />
+              Identify
+            </Button>
+            <Button onClick={() => navigate("/garden")} variant="outline" className="h-11 rounded-xl px-5 gap-2">
+              <Leaf className="w-4 h-4" />
+              My Garden
+            </Button>
+          </div>
+        </motion.div>
+        {/* Decorative circles */}
+        <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-primary/5" />
+        <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-sun/10" />
       </div>
+
+      {/* Feature cards */}
+      <div className="px-6 -mt-2 max-w-md mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="grid grid-cols-2 gap-3 mt-6"
+        >
+          {[
+            { icon: Camera, title: "Instant ID", desc: "Identify any plant with AI", color: "text-primary" },
+            { icon: Sparkles, title: "Care Tips", desc: "Personalized plant care", color: "text-sun" },
+          ].map(({ icon: Icon, title, desc, color }) => (
+            <div key={title} className="bg-card rounded-2xl p-4 border border-border">
+              <Icon className={`w-6 h-6 ${color} mb-2`} />
+              <h3 className="font-serif text-sm">{title}</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
+            </div>
+          ))}
+        </motion.div>
+      </div>
+
+      <BottomNav />
     </div>
   );
-};
-
-export default Index;
+}

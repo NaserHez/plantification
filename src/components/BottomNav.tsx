@@ -1,4 +1,4 @@
-import { Camera, Leaf, Home } from "lucide-react";
+import { Camera, Leaf, Home, Settings } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -6,6 +6,7 @@ const tabs = [
   { path: "/", icon: Home, label: "Home" },
   { path: "/identify", icon: Camera, label: "Identify" },
   { path: "/garden", icon: Leaf, label: "Garden" },
+  { path: "/settings", icon: Settings, label: "Settings" },
 ];
 
 export default function BottomNav() {

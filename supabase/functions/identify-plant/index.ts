@@ -27,11 +27,9 @@ serve(async (req) => {
       );
     }
 
-    // Strip data URI prefix if present
     const base64Image = image.includes(',') ? image.split(',')[1] : image;
 
     console.log('Calling Plant.id API...');
-    console.log('Image base64 length:', base64Image.length);
 
     const response = await fetch('https://api.plant.id/v3/identification', {
       method: 'POST',
@@ -57,8 +55,6 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log('Plant.id response received, suggestions:', data.result?.classification?.suggestions?.length);
-
     const suggestion = data.result?.classification?.suggestions?.[0];
 
     if (!suggestion) {
@@ -68,12 +64,44 @@ serve(async (req) => {
       );
     }
 
+    // Generate care tips using Lovable AI
+    let careTips = "";
+    try {
+      const aiKey = Deno.env.get('LOVABLE_API_KEY');
+      if (aiKey) {
+        const aiRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${aiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash',
+            messages: [
+              {
+                role: 'user',
+                content: `Give brief care tips (3-4 sentences) for the plant "${suggestion.name}". Include watering, sunlight, soil, and common issues. Be concise and practical.`,
+              },
+            ],
+            max_tokens: 200,
+          }),
+        });
+        if (aiRes.ok) {
+          const aiData = await aiRes.json();
+          careTips = aiData.choices?.[0]?.message?.content || "";
+        }
+      }
+    } catch (e) {
+      console.error('AI care tips error:', e);
+    }
+
     const result = {
       name: suggestion.name,
       scientificName: suggestion.name,
       commonNames: data.result?.classification?.suggestions?.slice(0, 3).map((s: any) => s.name) || [],
       confidence: Math.round((suggestion.probability || 0) * 100),
       similarImages: suggestion.similar_images?.slice(0, 3).map((img: any) => img.url) || [],
+      careTips,
       isMock: false,
     };
 

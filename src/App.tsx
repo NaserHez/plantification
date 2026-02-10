@@ -4,11 +4,13 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { ThemeProvider } from "next-themes";
 import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import IdentifyPage from "./pages/IdentifyPage";
 import GardenPage from "./pages/GardenPage";
 import PlantDetailPage from "./pages/PlantDetailPage";
+import SettingsPage from "./pages/SettingsPage";
 import AuthForm from "./components/AuthForm";
 import NotFound from "./pages/NotFound";
 
@@ -25,29 +27,32 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  if (user === undefined) return null; // loading
+  if (user === undefined) return null;
   if (!user) return <AuthForm />;
   return <>{children}</>;
 }
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthGate>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/identify" element={<IdentifyPage />} />
-            <Route path="/garden" element={<GardenPage />} />
-            <Route path="/plant/:id" element={<PlantDetailPage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthGate>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthGate>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/identify" element={<IdentifyPage />} />
+              <Route path="/garden" element={<GardenPage />} />
+              <Route path="/plant/:id" element={<PlantDetailPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthGate>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;

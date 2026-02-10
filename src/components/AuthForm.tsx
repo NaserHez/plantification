@@ -43,7 +43,7 @@ export default function AuthForm() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-4">
             <Leaf className="w-8 h-8 text-primary animate-leaf-sway" />
           </div>
-          <h1 className="text-3xl font-serif">Plantwise</h1>
+          <h1 className="text-3xl font-serif">Plantification</h1>
           <p className="text-muted-foreground mt-1">Identify & care for your plants</p>
         </div>
 

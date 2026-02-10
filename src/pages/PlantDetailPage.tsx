@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Droplets, Sun, MapPin, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -95,9 +96,12 @@ export default function PlantDetailPage() {
         className="px-5 -mt-6 relative"
       >
         <div className="bg-card rounded-2xl p-5 border border-border shadow-sm">
-          <h1 className="font-serif text-2xl">{plant.name}</h1>
+          <h1 className="font-serif text-2xl">{plant.nickname || plant.name}</h1>
           {plant.scientific_name && (
             <p className="text-sm text-muted-foreground italic">{plant.scientific_name}</p>
+          )}
+          {plant.nickname && plant.nickname !== plant.name && (
+            <p className="text-xs text-muted-foreground">Species: {plant.name}</p>
           )}
 
           {/* Quick actions */}
@@ -159,6 +163,23 @@ export default function PlantDetailPage() {
                   <SelectItem value="windowsill">Windowsill</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            {plant.care_tips && (
+              <div className="p-3 rounded-xl bg-accent/50 border border-border">
+                <Label className="text-xs text-muted-foreground mb-1 block font-medium">💡 Care Tips</Label>
+                <p className="text-sm text-muted-foreground leading-relaxed">{plant.care_tips}</p>
+              </div>
+            )}
+
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1.5 block">Nickname</Label>
+              <Input
+                value={plant.nickname || ""}
+                onChange={(e) => handleUpdate("nickname", e.target.value)}
+                placeholder="Give your plant a name..."
+                className="rounded-xl"
+              />
             </div>
 
             <div>

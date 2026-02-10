@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       plants: {
         Row: {
+          care_tips: string | null
           confidence: number | null
           created_at: string
           id: string
@@ -23,6 +24,7 @@ export type Database = {
           last_watered: string | null
           location: string | null
           name: string
+          nickname: string | null
           notes: string | null
           pot_size: string | null
           scientific_name: string | null
@@ -32,6 +34,7 @@ export type Database = {
           watering_frequency: string | null
         }
         Insert: {
+          care_tips?: string | null
           confidence?: number | null
           created_at?: string
           id?: string
@@ -39,6 +42,7 @@ export type Database = {
           last_watered?: string | null
           location?: string | null
           name: string
+          nickname?: string | null
           notes?: string | null
           pot_size?: string | null
           scientific_name?: string | null
@@ -48,6 +52,7 @@ export type Database = {
           watering_frequency?: string | null
         }
         Update: {
+          care_tips?: string | null
           confidence?: number | null
           created_at?: string
           id?: string
@@ -55,6 +60,7 @@ export type Database = {
           last_watered?: string | null
           location?: string | null
           name?: string
+          nickname?: string | null
           notes?: string | null
           pot_size?: string | null
           scientific_name?: string | null

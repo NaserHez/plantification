@@ -18,7 +18,7 @@ export default function Index() {
         >
           <div className="flex items-center gap-2 mb-2">
             <Leaf className="w-6 h-6 text-primary animate-leaf-sway" />
-            <span className="text-sm font-medium text-primary">Plantwise</span>
+            <span className="text-sm font-medium text-primary">Plantification</span>
           </div>
           <h1 className="text-4xl font-serif leading-tight mb-3">
             Know your plants,<br />

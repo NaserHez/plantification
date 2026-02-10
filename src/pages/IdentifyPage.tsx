@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import CameraCapture from "@/components/CameraCapture";
 import BottomNav from "@/components/BottomNav";
@@ -15,6 +17,7 @@ interface IdentificationResult {
   confidence: number;
   commonNames?: string[];
   similarImages?: string[];
+  careTips?: string;
   isMock: boolean;
 }
 
@@ -23,10 +26,12 @@ export default function IdentifyPage() {
   const [result, setResult] = useState<IdentificationResult | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [nickname, setNickname] = useState("");
 
   const handleResult = (res: IdentificationResult, img: string) => {
     setResult(res);
     setImageBase64(img);
+    setNickname(res.name); // default nickname to identified name
   };
 
   const handleSave = async () => {
@@ -36,7 +41,6 @@ export default function IdentifyPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Convert base64 to blob for upload
       const response = await fetch(imageBase64);
       const blob = await response.blob();
       const safeName = result.name.replace(/[^a-zA-Z0-9-_]/g, '-');
@@ -45,13 +49,15 @@ export default function IdentifyPage() {
       const { error } = await supabase.from('plants').insert({
         user_id: user.id,
         name: result.name,
+        nickname: nickname || result.name,
         scientific_name: result.scientificName,
         confidence: result.confidence,
         image_url: imageUrl,
+        care_tips: result.careTips || null,
       });
 
       if (error) throw error;
-      toast.success(`${result.name} added to your garden!`);
+      toast.success(`${nickname || result.name} added to your garden!`);
       navigate("/garden");
     } catch (err: any) {
       toast.error(err.message || "Failed to save plant");
@@ -96,6 +102,16 @@ export default function IdentifyPage() {
                 </p>
               )}
 
+              {result.careTips && (
+                <div className="mt-4 p-3 rounded-xl bg-accent/50 border border-border">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Lightbulb className="w-4 h-4 text-sun" />
+                    <span className="text-xs font-medium">Care Tips</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{result.careTips}</p>
+                </div>
+              )}
+
               {result.similarImages && result.similarImages.length > 0 && (
                 <div className="flex gap-2 mt-4 overflow-x-auto">
                   {result.similarImages.map((url, i) => (
@@ -108,6 +124,17 @@ export default function IdentifyPage() {
                   ))}
                 </div>
               )}
+
+              {/* Nickname input */}
+              <div className="mt-4 space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Give it a name</Label>
+                <Input
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  placeholder="e.g. Office Fern"
+                  className="rounded-xl h-10"
+                />
+              </div>
 
               <Button onClick={handleSave} disabled={saving} className="w-full mt-4 h-11 rounded-xl gap-2">
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}

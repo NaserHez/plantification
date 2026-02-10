@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Leaf } from "lucide-react";
+import { Plus, Leaf, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import PlantCard from "@/components/PlantCard";
@@ -38,7 +38,7 @@ export default function GardenPage() {
     <div className="min-h-screen bg-background pb-20">
       <div className="px-4 pt-6 pb-2 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-serif">My Garden</h1>
+          <h1 className="text-2xl font-serif">{localStorage.getItem("garden_name") || "My Garden"}</h1>
           <p className="text-sm text-muted-foreground">
             {plants.length} plant{plants.length !== 1 ? "s" : ""}
           </p>

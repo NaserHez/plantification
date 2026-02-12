@@ -76,7 +76,7 @@ export default function IdentifyPage() {
       </div>
 
       <div className="px-4 max-w-md mx-auto">
-        <CameraCapture onResult={handleResult} />
+        <CameraCapture onResult={handleResult} language={localStorage.getItem("plant_language") || "en"} />
 
         <AnimatePresence>
           {result && (

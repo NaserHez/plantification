@@ -11,6 +11,16 @@ interface IdentificationResult {
   confidence: number;
   commonNames?: string[];
   similarImages?: string[];
+  careTips?: string;
+  healthAssessment?: {
+    isHealthy: boolean;
+    diseases: Array<{
+      name: string;
+      probability: number;
+      description?: string;
+      treatment?: string;
+    }>;
+  };
   isMock: boolean;
 }
 
@@ -20,45 +30,23 @@ interface CameraCaptureProps {
 }
 
 export default function CameraCapture({ onResult, language = "en" }: CameraCaptureProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [streaming, setStreaming] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [streamRef, setStreamRef] = useState<MediaStream | null>(null);
 
-  const startCamera = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment", width: { ideal: 1500 }, height: { ideal: 1500 } },
-      });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        setStreamRef(stream);
-        setStreaming(true);
-      }
-    } catch {
-      toast.error("Camera access denied. Please use file upload instead.");
+  const openNativeCamera = useCallback(() => {
+    if (fileInputRef.current) {
+      fileInputRef.current.setAttribute("capture", "environment");
+      fileInputRef.current.click();
     }
   }, []);
 
-  const stopCamera = useCallback(() => {
-    streamRef?.getTracks().forEach((t) => t.stop());
-    setStreamRef(null);
-    setStreaming(false);
-  }, [streamRef]);
-
-  const capturePhoto = useCallback(() => {
-    if (!videoRef.current) return;
-    const canvas = document.createElement("canvas");
-    const v = videoRef.current;
-    canvas.width = v.videoWidth;
-    canvas.height = v.videoHeight;
-    canvas.getContext("2d")?.drawImage(v, 0, 0);
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
-    setCapturedImage(dataUrl);
-    stopCamera();
-  }, [stopCamera]);
+  const openFilePicker = useCallback(() => {
+    if (fileInputRef.current) {
+      fileInputRef.current.removeAttribute("capture");
+      fileInputRef.current.click();
+    }
+  }, []);
 
   const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -69,6 +57,8 @@ export default function CameraCapture({ onResult, language = "en" }: CameraCaptu
     } catch {
       toast.error("Failed to process image");
     }
+    // Reset input so the same file can be re-selected
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }, []);
 
   const handleIdentify = useCallback(async () => {
@@ -86,7 +76,6 @@ export default function CameraCapture({ onResult, language = "en" }: CameraCaptu
 
   const reset = () => {
     setCapturedImage(null);
-    stopCamera();
   };
 
   return (
@@ -108,16 +97,6 @@ export default function CameraCapture({ onResult, language = "en" }: CameraCaptu
               <X className="w-4 h-4" />
             </button>
           </motion.div>
-        ) : streaming ? (
-          <motion.div
-            key="video"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="relative w-full max-w-sm aspect-square rounded-2xl overflow-hidden border-2 border-primary/30"
-          >
-            <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
-          </motion.div>
         ) : (
           <motion.div
             key="empty"
@@ -136,7 +115,7 @@ export default function CameraCapture({ onResult, language = "en" }: CameraCaptu
         )}
       </AnimatePresence>
 
-      <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileUpload} className="hidden" />
+      <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
 
       <div className="flex gap-3 w-full max-w-sm">
         {capturedImage ? (
@@ -153,18 +132,13 @@ export default function CameraCapture({ onResult, language = "en" }: CameraCaptu
               </>
             )}
           </Button>
-        ) : streaming ? (
-          <Button onClick={capturePhoto} className="flex-1 h-12 rounded-xl text-base gap-2">
-            <Camera className="w-5 h-5" />
-            Capture
-          </Button>
         ) : (
           <>
-            <Button onClick={startCamera} variant="outline" className="flex-1 h-12 rounded-xl text-base gap-2">
+            <Button onClick={openNativeCamera} variant="outline" className="flex-1 h-12 rounded-xl text-base gap-2">
               <Camera className="w-5 h-5" />
               Camera
             </Button>
-            <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="flex-1 h-12 rounded-xl text-base gap-2">
+            <Button onClick={openFilePicker} variant="outline" className="flex-1 h-12 rounded-xl text-base gap-2">
               <Upload className="w-5 h-5" />
               Upload
             </Button>

@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 serve(async (req) => {
@@ -29,7 +29,7 @@ serve(async (req) => {
 
     const base64Image = image.includes(',') ? image.split(',')[1] : image;
 
-    console.log('Calling Plant.id API...');
+    console.log('Calling Plant.id API with health assessment...');
 
     const response = await fetch('https://api.plant.id/v3/identification', {
       method: 'POST',
@@ -40,6 +40,7 @@ serve(async (req) => {
       body: JSON.stringify({
         images: [base64Image],
         similar_images: true,
+        health: 'all',
       }),
     });
 
@@ -62,6 +63,23 @@ serve(async (req) => {
         JSON.stringify({ error: 'No plant identified', isMock: false }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // Parse health assessment
+    const healthResult = data.result?.disease;
+    let healthAssessment = null;
+    if (healthResult) {
+      const isHealthy = healthResult.is_healthy?.binary ?? true;
+      const diseases = (healthResult.suggestions || [])
+        .filter((d: any) => d.name !== 'healthy')
+        .slice(0, 5)
+        .map((d: any) => ({
+          name: d.name,
+          probability: Math.round((d.probability || 0) * 100),
+          description: d.details?.description || null,
+          treatment: d.details?.treatment?.biological?.join('. ') || d.details?.treatment?.chemical?.join('. ') || null,
+        }));
+      healthAssessment = { isHealthy, diseases };
     }
 
     // Generate care tips using Lovable AI
@@ -104,6 +122,7 @@ serve(async (req) => {
       confidence: Math.round((suggestion.probability || 0) * 100),
       similarImages: suggestion.similar_images?.slice(0, 3).map((img: any) => img.url) || [],
       careTips,
+      healthAssessment,
       isMock: false,
     };
 

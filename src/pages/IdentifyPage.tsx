@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, Loader2, Lightbulb } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Lightbulb, ShieldAlert, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +18,15 @@ interface IdentificationResult {
   commonNames?: string[];
   similarImages?: string[];
   careTips?: string;
+  healthAssessment?: {
+    isHealthy: boolean;
+    diseases: Array<{
+      name: string;
+      probability: number;
+      description?: string;
+      treatment?: string;
+    }>;
+  };
   isMock: boolean;
 }
 
@@ -109,6 +118,40 @@ export default function IdentifyPage() {
                     <span className="text-xs font-medium">Care Tips</span>
                   </div>
                   <p className="text-sm text-muted-foreground leading-relaxed">{result.careTips}</p>
+                </div>
+              )}
+
+              {/* Health Assessment */}
+              {result.healthAssessment && (
+                <div className={`mt-4 p-3 rounded-xl border border-border ${result.healthAssessment.isHealthy ? 'bg-primary/5' : 'bg-destructive/5'}`}>
+                  <div className="flex items-center gap-1.5 mb-2">
+                    {result.healthAssessment.isHealthy ? (
+                      <ShieldCheck className="w-4 h-4 text-primary" />
+                    ) : (
+                      <ShieldAlert className="w-4 h-4 text-destructive" />
+                    )}
+                    <span className="text-xs font-medium">
+                      {result.healthAssessment.isHealthy ? "Plant looks healthy!" : "Potential issues detected"}
+                    </span>
+                  </div>
+                  {result.healthAssessment.diseases.length > 0 && (
+                    <div className="space-y-2">
+                      {result.healthAssessment.diseases.map((disease, i) => (
+                        <div key={i} className="text-sm">
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium capitalize">{disease.name.replace(/_/g, ' ')}</span>
+                            <span className="text-xs text-muted-foreground">{disease.probability}%</span>
+                          </div>
+                          {disease.description && (
+                            <p className="text-xs text-muted-foreground mt-0.5">{disease.description}</p>
+                          )}
+                          {disease.treatment && (
+                            <p className="text-xs text-primary mt-0.5">💊 {disease.treatment}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 

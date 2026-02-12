@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, LogOut, Moon, Sun, Monitor, User, Lock, Leaf, Loader2 } from "lucide-react";
+import { ArrowLeft, LogOut, Moon, Sun, Monitor, User, Lock, Leaf, Loader2, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
 import BottomNav from "@/components/BottomNav";
+
+const LANGUAGES = [
+  { value: "en", label: "English", flag: "🇬🇧" },
+  { value: "ar", label: "العربية", flag: "🇸🇦" },
+  { value: "pt", label: "Português", flag: "🇧🇷" },
+];
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -19,6 +25,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [email, setEmail] = useState("");
+  const [language, setLanguage] = useState("en");
 
   useEffect(() => {
     const load = async () => {
@@ -37,6 +44,8 @@ export default function SettingsPage() {
       // Load garden name from localStorage
       const saved = localStorage.getItem("garden_name");
       if (saved) setGardenName(saved);
+      const savedLang = localStorage.getItem("plant_language");
+      if (savedLang) setLanguage(savedLang);
       setLoading(false);
     };
     load();
@@ -55,8 +64,9 @@ export default function SettingsPage() {
       );
       if (error) throw error;
 
-      // Save garden name locally
+      // Save garden name and language locally
       localStorage.setItem("garden_name", gardenName);
+      localStorage.setItem("plant_language", language);
 
       toast.success("Settings saved!");
     } catch (err: any) {
@@ -128,6 +138,26 @@ export default function SettingsPage() {
               </SelectItem>
             </SelectContent>
           </Select>
+        </div>
+
+        {/* Language */}
+        <div className="bg-card rounded-2xl p-5 border border-border space-y-3">
+          <h2 className="font-serif text-lg flex items-center gap-2">
+            <Globe className="w-4 h-4 text-primary" /> Care Tips Language
+          </h2>
+          <Select value={language} onValueChange={setLanguage}>
+            <SelectTrigger className="rounded-xl">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {LANGUAGES.map((lang) => (
+                <SelectItem key={lang.value} value={lang.value}>
+                  <span className="flex items-center gap-2">{lang.flag} {lang.label}</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">Care tips for newly identified plants will be generated in this language.</p>
         </div>
 
         {/* Profile */}

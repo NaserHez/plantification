@@ -19,7 +19,7 @@ serve(async (req) => {
       );
     }
 
-    const { image } = await req.json();
+    const { image, language } = await req.json();
     if (!image) {
       return new Response(
         JSON.stringify({ error: 'No image provided' }),
@@ -66,6 +66,8 @@ serve(async (req) => {
 
     // Generate care tips using Lovable AI
     let careTips = "";
+    const langMap: Record<string, string> = { en: "English", ar: "Arabic", pt: "Portuguese" };
+    const langName = langMap[language] || "English";
     try {
       const aiKey = Deno.env.get('LOVABLE_API_KEY');
       if (aiKey) {
@@ -80,7 +82,7 @@ serve(async (req) => {
             messages: [
               {
                 role: 'user',
-                content: `Give brief care tips (3-4 sentences) for the plant "${suggestion.name}". Include watering, sunlight, soil, and common issues. Be concise and practical.`,
+                content: `Give brief care tips (3-4 sentences) for the plant "${suggestion.name}" in ${langName}. Include watering, sunlight, soil, and common issues. Be concise and practical. Respond entirely in ${langName}.`,
               },
             ],
             max_tokens: 200,

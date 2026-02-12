@@ -1,8 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export async function identifyPlant(imageBase64: string) {
+export async function identifyPlant(imageBase64: string, language: string = "en") {
   const { data, error } = await supabase.functions.invoke('identify-plant', {
-    body: { image: imageBase64 },
+    body: { image: imageBase64, language },
   });
 
   if (error) throw new Error(error.message);

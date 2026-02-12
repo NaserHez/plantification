@@ -16,9 +16,10 @@ interface IdentificationResult {
 
 interface CameraCaptureProps {
   onResult: (result: IdentificationResult, imageBase64: string) => void;
+  language?: string;
 }
 
-export default function CameraCapture({ onResult }: CameraCaptureProps) {
+export default function CameraCapture({ onResult, language = "en" }: CameraCaptureProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [streaming, setStreaming] = useState(false);
@@ -74,14 +75,14 @@ export default function CameraCapture({ onResult }: CameraCaptureProps) {
     if (!capturedImage) return;
     setLoading(true);
     try {
-      const result = await identifyPlant(capturedImage);
+      const result = await identifyPlant(capturedImage, language);
       onResult(result, capturedImage);
     } catch (err: any) {
       toast.error(err.message || "Identification failed");
     } finally {
       setLoading(false);
     }
-  }, [capturedImage, onResult]);
+  }, [capturedImage, onResult, language]);
 
   const reset = () => {
     setCapturedImage(null);

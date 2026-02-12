@@ -13,7 +13,7 @@ import BottomNav from "@/components/BottomNav";
 const LANGUAGES = [
   { value: "en", label: "English", flag: "🇬🇧" },
   { value: "ar", label: "العربية", flag: "🇸🇦" },
-  { value: "pt", label: "Português", flag: "🇧🇷" },
+  { value: "pt", label: "Português", flag: "🇵🇹" },
 ];
 
 export default function SettingsPage() {

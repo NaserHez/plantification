@@ -66,7 +66,7 @@ serve(async (req) => {
 
     // Generate care tips using Lovable AI
     let careTips = "";
-    const langMap: Record<string, string> = { en: "English", ar: "Arabic", pt: "Portuguese" };
+    const langMap: Record<string, string> = { en: "English", ar: "Arabic", pt: "European Portuguese (Portugal)" };
     const langName = langMap[language] || "English";
     try {
       const aiKey = Deno.env.get('LOVABLE_API_KEY');

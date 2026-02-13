@@ -1,10 +1,11 @@
-import { Camera, Leaf, Home, Settings } from "lucide-react";
+import { Camera, Leaf, Home, Settings, Stethoscope } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { path: "/", icon: Home, label: "Home" },
   { path: "/identify", icon: Camera, label: "Identify" },
+  { path: "/diagnose", icon: Stethoscope, label: "Health" },
   { path: "/garden", icon: Leaf, label: "Garden" },
   { path: "/settings", icon: Settings, label: "Settings" },
 ];
@@ -23,7 +24,7 @@ export default function BottomNav() {
               key={path}
               onClick={() => navigate(path)}
               className={cn(
-                "flex flex-col items-center gap-0.5 px-4 py-2 rounded-xl transition-all",
+                "flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-all",
                 active ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}
             >

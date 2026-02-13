@@ -1,0 +1,78 @@
+import { useEffect, useState } from "react";
+
+interface Plant {
+  id: string;
+  name: string;
+  nickname?: string | null;
+  last_watered?: string | null;
+  watering_frequency?: string | null;
+}
+
+interface OverduePlant extends Plant {
+  daysSinceWatered: number;
+  daysOverdue: number;
+}
+
+const frequencyToDays: Record<string, number> = {
+  daily: 1,
+  "every-2-days": 2,
+  weekly: 7,
+  biweekly: 14,
+  monthly: 30,
+};
+
+export function getOverduePlants(plants: Plant[]): OverduePlant[] {
+  const now = Date.now();
+  return plants
+    .filter((p) => p.last_watered && p.watering_frequency)
+    .map((p) => {
+      const lastWatered = new Date(p.last_watered!).getTime();
+      const daysSinceWatered = Math.floor((now - lastWatered) / (1000 * 60 * 60 * 24));
+      const intervalDays = frequencyToDays[p.watering_frequency!] || 7;
+      const daysOverdue = daysSinceWatered - intervalDays;
+      return { ...p, daysSinceWatered, daysOverdue };
+    })
+    .filter((p) => p.daysOverdue >= 0)
+    .sort((a, b) => b.daysOverdue - a.daysOverdue);
+}
+
+export function useWateringReminders(plants: Plant[]) {
+  const [overdue, setOverdue] = useState<OverduePlant[]>([]);
+  const [permissionGranted, setPermissionGranted] = useState(false);
+
+  useEffect(() => {
+    if ("Notification" in window) {
+      setPermissionGranted(Notification.permission === "granted");
+    }
+  }, []);
+
+  useEffect(() => {
+    const overduePlants = getOverduePlants(plants);
+    setOverdue(overduePlants);
+
+    // Send browser notifications for overdue plants
+    if (permissionGranted && overduePlants.length > 0) {
+      const notifiedKey = `notified_${new Date().toDateString()}`;
+      const alreadyNotified = localStorage.getItem(notifiedKey);
+      if (!alreadyNotified) {
+        const names = overduePlants.slice(0, 3).map((p) => p.nickname || p.name).join(", ");
+        new Notification("🌱 Plants need water!", {
+          body: `${overduePlants.length} plant${overduePlants.length > 1 ? "s" : ""} overdue: ${names}`,
+          icon: "/favicon.ico",
+        });
+        localStorage.setItem(notifiedKey, "true");
+      }
+    }
+  }, [plants, permissionGranted]);
+
+  const requestPermission = async () => {
+    if ("Notification" in window) {
+      const result = await Notification.requestPermission();
+      setPermissionGranted(result === "granted");
+      return result === "granted";
+    }
+    return false;
+  };
+
+  return { overdue, permissionGranted, requestPermission };
+}

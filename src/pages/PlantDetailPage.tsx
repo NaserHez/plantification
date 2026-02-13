@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Droplets, Sun, MapPin, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, Droplets, Sun, MapPin, Trash2, Loader2, Stethoscope, Globe, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -8,7 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { regenerateCareTips } from "@/lib/supabase-helpers";
 import { toast } from "sonner";
+
+const LANGUAGES = [
+  { value: "en", label: "English", flag: "🇬🇧" },
+  { value: "ar", label: "العربية", flag: "🇸🇦" },
+  { value: "pt", label: "Português", flag: "🇵🇹" },
+];
 
 export default function PlantDetailPage() {
   const { id } = useParams();
@@ -16,6 +23,8 @@ export default function PlantDetailPage() {
   const [plant, setPlant] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+  const [tipsLanguage, setTipsLanguage] = useState(localStorage.getItem("plant_language") || "en");
 
   useEffect(() => {
     const fetch = async () => {
@@ -49,6 +58,21 @@ export default function PlantDetailPage() {
     setPlant((p: any) => ({ ...p, last_watered: now }));
     toast.success("Watered! 💧");
     setSaving(false);
+  };
+
+  const handleRegenerateTips = async () => {
+    if (!plant) return;
+    setRegenerating(true);
+    try {
+      const newTips = await regenerateCareTips(plant.name, tipsLanguage);
+      await supabase.from("plants").update({ care_tips: newTips }).eq("id", id);
+      setPlant((p: any) => ({ ...p, care_tips: newTips }));
+      toast.success("Care tips updated!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to regenerate tips");
+    } finally {
+      setRegenerating(false);
+    }
   };
 
   if (loading) {
@@ -110,6 +134,14 @@ export default function PlantDetailPage() {
               <Droplets className="w-4 h-4" />
               Water
             </Button>
+            <Button
+              onClick={() => navigate(`/diagnose?plantId=${id}`)}
+              variant="outline"
+              className="flex-1 h-10 rounded-xl gap-2 text-bloom border-bloom/30"
+            >
+              <Stethoscope className="w-4 h-4" />
+              Health Check
+            </Button>
           </div>
 
           {plant.last_watered && (
@@ -165,12 +197,44 @@ export default function PlantDetailPage() {
               </Select>
             </div>
 
-            {plant.care_tips && (
-              <div className="p-3 rounded-xl bg-accent/50 border border-border">
-                <Label className="text-xs text-muted-foreground mb-1 block font-medium">💡 Care Tips</Label>
-                <p className="text-sm text-muted-foreground leading-relaxed">{plant.care_tips}</p>
+            {/* Care tips with language selector */}
+            <div className="p-3 rounded-xl bg-accent/50 border border-border">
+              <div className="flex items-center justify-between mb-2">
+                <Label className="text-xs text-muted-foreground font-medium">💡 Care Tips</Label>
+                <div className="flex items-center gap-1.5">
+                  <Select value={tipsLanguage} onValueChange={setTipsLanguage}>
+                    <SelectTrigger className="h-7 w-24 rounded-lg text-xs border-border">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LANGUAGES.map((l) => (
+                        <SelectItem key={l.value} value={l.value}>
+                          <span className="flex items-center gap-1">{l.flag} {l.label}</span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    onClick={handleRegenerateTips}
+                    disabled={regenerating}
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                  >
+                    {regenerating ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <RefreshCw className="w-3.5 h-3.5" />
+                    )}
+                  </Button>
+                </div>
               </div>
-            )}
+              {plant.care_tips ? (
+                <p className="text-sm text-muted-foreground leading-relaxed">{plant.care_tips}</p>
+              ) : (
+                <p className="text-xs text-muted-foreground italic">No care tips yet. Press refresh to generate.</p>
+              )}
+            </div>
 
             <div>
               <Label className="text-xs text-muted-foreground mb-1.5 block">Nickname</Label>

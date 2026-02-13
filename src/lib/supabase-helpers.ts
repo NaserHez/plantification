@@ -10,6 +10,16 @@ export async function identifyPlant(imageBase64: string, language: string = "en"
   return data;
 }
 
+export async function regenerateCareTips(plantName: string, language: string) {
+  const { data, error } = await supabase.functions.invoke('regenerate-care-tips', {
+    body: { plantName, language },
+  });
+
+  if (error) throw new Error(error.message);
+  if (data.error) throw new Error(data.error);
+  return data.careTips;
+}
+
 export async function uploadPlantImage(userId: string, file: Blob, fileName: string) {
   const path = `${userId}/${Date.now()}-${fileName}`;
   const { data, error } = await supabase.storage

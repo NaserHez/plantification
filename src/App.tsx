@@ -11,6 +11,7 @@ import IdentifyPage from "./pages/IdentifyPage";
 import GardenPage from "./pages/GardenPage";
 import PlantDetailPage from "./pages/PlantDetailPage";
 import SettingsPage from "./pages/SettingsPage";
+import DiagnosisPage from "./pages/DiagnosisPage";
 import AuthForm from "./components/AuthForm";
 import NotFound from "./pages/NotFound";
 
@@ -46,6 +47,7 @@ const App = () => (
               <Route path="/garden" element={<GardenPage />} />
               <Route path="/plant/:id" element={<PlantDetailPage />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/diagnose" element={<DiagnosisPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthGate>

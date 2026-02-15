@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Camera, Upload, X, Loader2, ShieldCheck, ShieldAlert, Stethoscope } from "lucide-react";
+import { ArrowLeft, Camera, Upload, X, Loader2, ShieldCheck, ShieldAlert, Stethoscope, Droplets, Sun, Leaf, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion, AnimatePresence } from "framer-motion";
@@ -16,9 +16,17 @@ interface Disease {
   treatment?: string | null;
 }
 
+interface CareRecommendations {
+  watering?: { frequency?: string; amount?: string; tips?: string };
+  sunlight?: string;
+  nutrients?: string;
+  preventiveCare?: string;
+}
+
 interface HealthResult {
   isHealthy: boolean;
   diseases: Disease[];
+  careRecommendations?: CareRecommendations | null;
 }
 
 export default function DiagnosisPage() {
@@ -211,6 +219,63 @@ export default function DiagnosisPage() {
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">No issues found. Keep up the good care!</p>
+              )}
+
+              {/* Care Recommendations */}
+              {result.careRecommendations && (
+                <div className="mt-4 pt-4 border-t border-border space-y-3">
+                  <h3 className="font-serif text-base flex items-center gap-1.5">
+                    <Heart className="w-4 h-4 text-primary" /> Care Recommendations
+                  </h3>
+
+                  {result.careRecommendations.watering && (
+                    <div className="p-3 rounded-xl bg-card border border-border">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Droplets className="w-4 h-4 text-blue-500" />
+                        <span className="font-medium text-sm">Watering</span>
+                      </div>
+                      {result.careRecommendations.watering.frequency && (
+                        <p className="text-xs text-muted-foreground">📅 {result.careRecommendations.watering.frequency}</p>
+                      )}
+                      {result.careRecommendations.watering.amount && (
+                        <p className="text-xs text-muted-foreground">💧 {result.careRecommendations.watering.amount}</p>
+                      )}
+                      {result.careRecommendations.watering.tips && (
+                        <p className="text-xs text-primary mt-1">💡 {result.careRecommendations.watering.tips}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {result.careRecommendations.sunlight && (
+                    <div className="p-3 rounded-xl bg-card border border-border">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Sun className="w-4 h-4 text-yellow-500" />
+                        <span className="font-medium text-sm">Sunlight</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{result.careRecommendations.sunlight}</p>
+                    </div>
+                  )}
+
+                  {result.careRecommendations.nutrients && (
+                    <div className="p-3 rounded-xl bg-card border border-border">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Leaf className="w-4 h-4 text-green-500" />
+                        <span className="font-medium text-sm">Nutrients</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{result.careRecommendations.nutrients}</p>
+                    </div>
+                  )}
+
+                  {result.careRecommendations.preventiveCare && (
+                    <div className="p-3 rounded-xl bg-card border border-border">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <ShieldCheck className="w-4 h-4 text-primary" />
+                        <span className="font-medium text-sm">Preventive Care</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{result.careRecommendations.preventiveCare}</p>
+                    </div>
+                  )}
+                </div>
               )}
             </motion.div>
           )}

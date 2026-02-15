@@ -12,6 +12,7 @@ import GardenPage from "./pages/GardenPage";
 import PlantDetailPage from "./pages/PlantDetailPage";
 import SettingsPage from "./pages/SettingsPage";
 import DiagnosisPage from "./pages/DiagnosisPage";
+import PlantChatPage from "./pages/PlantChatPage";
 import AuthForm from "./components/AuthForm";
 import NotFound from "./pages/NotFound";
 
@@ -48,6 +49,7 @@ const App = () => (
               <Route path="/plant/:id" element={<PlantDetailPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/diagnose" element={<DiagnosisPage />} />
+              <Route path="/chat" element={<PlantChatPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthGate>

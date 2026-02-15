@@ -67,8 +67,47 @@ serve(async (req) => {
       healthAssessment = { isHealthy, diseases };
     }
 
+    // Generate care recommendations using Lovable AI
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    let careRecommendations = null;
+    if (LOVABLE_API_KEY) {
+      try {
+        const plantName = data.result?.classification?.suggestions?.[0]?.name || 'unknown plant';
+        const diseaseNames = healthAssessment.diseases.map(d => d.name).join(', ') || 'none detected';
+        const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-3-flash-preview',
+            messages: [
+              {
+                role: 'system',
+                content: 'You are a plant care expert. Return ONLY valid JSON, no markdown or extra text.'
+              },
+              {
+                role: 'user',
+                content: `Given a plant (likely "${plantName}") with health status: ${healthAssessment.isHealthy ? 'healthy' : 'issues detected'}, diseases: ${diseaseNames}.
+Provide care recommendations as JSON: {"watering":{"frequency":"...","amount":"...","tips":"..."},"sunlight":"...","nutrients":"...","preventiveCare":"..."}`
+              }
+            ],
+          }),
+        });
+        if (aiResponse.ok) {
+          const aiData = await aiResponse.json();
+          const text = aiData.choices?.[0]?.message?.content || '';
+          const jsonMatch = text.match(/\{[\s\S]*\}/);
+          if (jsonMatch) careRecommendations = JSON.parse(jsonMatch[0]);
+        }
+      } catch (e) {
+        console.error('AI care tips error:', e);
+      }
+    }
+
     return new Response(
-      JSON.stringify(healthAssessment),
+      JSON.stringify({ ...healthAssessment, careRecommendations }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {

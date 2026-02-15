@@ -12,7 +12,7 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY is not configured');
 
-    const { messages, language } = await req.json();
+    const { messages, language, plantContext } = await req.json();
 
     const langInstructions: Record<string, string> = {
       en: 'Respond in English.',
@@ -20,6 +20,10 @@ serve(async (req) => {
       pt: 'Respond entirely in European Portuguese (Português de Portugal). Use "tu" form.',
     };
     const langNote = langInstructions[language] || langInstructions.en;
+
+    const gardenContext = plantContext
+      ? `\n\nThe user has these plants in their garden:\n${plantContext}\n\nUse this information to give personalized advice. Reference their specific plants by name when relevant.`
+      : '';
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -43,7 +47,7 @@ serve(async (req) => {
 
 Keep answers concise, practical, and actionable. Use emojis sparingly for warmth. If unsure, say so rather than guessing. Format responses with markdown for readability.
 
-${langNote}`
+${langNote}${gardenContext}`
           },
           ...messages,
         ],

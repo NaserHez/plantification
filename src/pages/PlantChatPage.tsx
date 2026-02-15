@@ -4,6 +4,7 @@ import { ArrowLeft, Send, Loader2, Bot, User, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
 import ReactMarkdown from "react-markdown";
 
@@ -19,8 +20,25 @@ export default function PlantChatPage() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [plantContext, setPlantContext] = useState<string>("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const fetchPlants = async () => {
+      const { data } = await supabase
+        .from("plants")
+        .select("name, nickname, scientific_name, watering_frequency, sunlight, location, last_watered, care_tips")
+        .order("created_at", { ascending: false });
+      if (data && data.length > 0) {
+        const summary = data.map((p) =>
+          `- ${p.nickname || p.name}${p.scientific_name ? ` (${p.scientific_name})` : ""}: ${p.location || "unknown location"}, water ${p.watering_frequency || "weekly"}, sunlight ${p.sunlight || "medium"}${p.last_watered ? `, last watered ${p.last_watered}` : ""}`
+        ).join("\n");
+        setPlantContext(summary);
+      }
+    };
+    fetchPlants();
+  }, []);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -45,7 +63,7 @@ export default function PlantChatPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ messages: allMessages, language: localStorage.getItem("plantify_language") || "en" }),
+        body: JSON.stringify({ messages: allMessages, language: localStorage.getItem("plantify_language") || "en", plantContext }),
       });
 
       if (!resp.ok || !resp.body) {

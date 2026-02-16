@@ -9,6 +9,7 @@ import WateringReminders from "@/components/WateringReminders";
 import { useWateringReminders } from "@/hooks/use-watering-reminders";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/i18n/LanguageContext";
 import {
   DndContext,
   closestCenter,
@@ -75,6 +76,7 @@ function SortablePlantCard({ plant, layout }: { plant: Plant; layout: LayoutMode
 
 export default function GardenPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [plants, setPlants] = useState<Plant[]>([]);
   const [loading, setLoading] = useState(true);
   const [layout, setLayout] = useState<LayoutMode>(() => {
@@ -95,7 +97,6 @@ export default function GardenPage() {
         .order("created_at", { ascending: false });
 
       const fetched = data || [];
-      // Restore saved order
       const savedOrder = localStorage.getItem("garden_order");
       if (savedOrder) {
         try {
@@ -132,7 +133,6 @@ export default function GardenPage() {
     });
   };
 
-  // Group by location
   const locationGroups = useMemo(() => {
     const groups: Record<string, Plant[]> = {};
     plants.forEach((p) => {
@@ -144,20 +144,20 @@ export default function GardenPage() {
   }, [plants]);
 
   const locationLabels: Record<string, string> = {
-    indoor: "🏠 Indoor",
-    outdoor: "🌳 Outdoor",
-    balcony: "🌇 Balcony",
-    windowsill: "🪟 Windowsill",
-    other: "📍 Other",
+    indoor: t("indoor"),
+    outdoor: t("outdoor"),
+    balcony: t("balcony"),
+    windowsill: t("windowsill"),
+    other: t("other"),
   };
 
   return (
     <div className="min-h-screen bg-background pb-20">
       <div className="px-4 pt-6 pb-2 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-serif">{localStorage.getItem("garden_name") || "My Garden"}</h1>
+          <h1 className="text-2xl font-serif">{localStorage.getItem("garden_name") || t("myGarden")}</h1>
           <p className="text-sm text-muted-foreground">
-            {plants.length} plant{plants.length !== 1 ? "s" : ""}
+            {plants.length} {plants.length !== 1 ? t("plants") : t("plant")}
           </p>
         </div>
         <Button onClick={() => navigate("/identify")} size="icon" className="rounded-xl h-10 w-10">
@@ -165,16 +165,14 @@ export default function GardenPage() {
         </Button>
       </div>
 
-      {/* Watering reminders */}
       <WateringReminders overdue={overdue} permissionGranted={permissionGranted} onRequestPermission={requestPermission} />
 
-      {/* Layout toggle */}
       {plants.length > 0 && (
         <div className="px-4 flex gap-1 mb-3">
           {([
-            { mode: "cards" as LayoutMode, icon: LayoutGrid, label: "Cards" },
-            { mode: "list" as LayoutMode, icon: List, label: "List" },
-            { mode: "location" as LayoutMode, icon: MapPin, label: "Location" },
+            { mode: "cards" as LayoutMode, icon: LayoutGrid, label: t("cards") },
+            { mode: "list" as LayoutMode, icon: List, label: t("list") },
+            { mode: "location" as LayoutMode, icon: MapPin, label: t("location") },
           ]).map(({ mode, icon: Icon, label }) => (
             <button
               key={mode}
@@ -207,12 +205,10 @@ export default function GardenPage() {
             <div className="w-16 h-16 rounded-2xl bg-accent flex items-center justify-center mx-auto mb-4">
               <Leaf className="w-8 h-8 text-primary" />
             </div>
-            <h2 className="font-serif text-lg mb-1">No plants yet</h2>
-            <p className="text-sm text-muted-foreground mb-4">
-              Identify your first plant to start your garden
-            </p>
+            <h2 className="font-serif text-lg mb-1">{t("noPlants")}</h2>
+            <p className="text-sm text-muted-foreground mb-4">{t("noPlantsDesc")}</p>
             <Button onClick={() => navigate("/identify")} className="rounded-xl">
-              Identify a Plant
+              {t("identifyPlant")}
             </Button>
           </motion.div>
         ) : layout === "location" ? (

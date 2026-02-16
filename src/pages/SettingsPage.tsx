@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, LogOut, Moon, Sun, Monitor, User, Lock, Leaf, Loader2, Globe, Bell, BellOff } from "lucide-react";
+import { ArrowLeft, LogOut, Moon, Sun, Monitor, User, Lock, Leaf, Loader2, Globe, Bell, BellOff, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,23 +9,32 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
 import BottomNav from "@/components/BottomNav";
+import { useLanguage } from "@/i18n/LanguageContext";
+import type { Language } from "@/i18n/translations";
 
-const LANGUAGES = [
+const CARE_LANGUAGES = [
   { value: "en", label: "English", flag: "🇬🇧" },
   { value: "ar", label: "العربية", flag: "🇸🇦" },
   { value: "pt", label: "Português", flag: "🇵🇹" },
 ];
 
+const APP_LANGUAGES = [
+  { value: "en", label: "English", flag: "🇬🇧" },
+  { value: "ar", label: "العربية", flag: "🇸🇦" },
+  { value: "pt", label: "Português (PT)", flag: "🇵🇹" },
+];
+
 export default function SettingsPage() {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
+  const { t, language: appLanguage, setLanguage: setAppLanguage } = useLanguage();
   const [displayName, setDisplayName] = useState("");
   const [gardenName, setGardenName] = useState("My Garden");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [email, setEmail] = useState("");
-  const [language, setLanguage] = useState("en");
+  const [careLang, setCareLang] = useState("en");
   const [notifPermission, setNotifPermission] = useState<string>("default");
 
   useEffect(() => {
@@ -45,7 +54,7 @@ export default function SettingsPage() {
       const saved = localStorage.getItem("garden_name");
       if (saved) setGardenName(saved);
       const savedLang = localStorage.getItem("plant_language");
-      if (savedLang) setLanguage(savedLang);
+      if (savedLang) setCareLang(savedLang);
 
       if ("Notification" in window) {
         setNotifPermission(Notification.permission);
@@ -68,9 +77,9 @@ export default function SettingsPage() {
       if (error) throw error;
 
       localStorage.setItem("garden_name", gardenName);
-      localStorage.setItem("plant_language", language);
+      localStorage.setItem("plant_language", careLang);
 
-      toast.success("Settings saved!");
+      toast.success(t("settingsSaved"));
     } catch (err: any) {
       toast.error(err.message || "Failed to save");
     } finally {
@@ -80,14 +89,14 @@ export default function SettingsPage() {
 
   const handleChangePassword = async () => {
     if (newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters");
+      toast.error(t("passwordMinLength"));
       return;
     }
     setSaving(true);
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
-      toast.success("Password updated!");
+      toast.success(t("passwordUpdated"));
       setNewPassword("");
     } catch (err: any) {
       toast.error(err.message);
@@ -101,7 +110,7 @@ export default function SettingsPage() {
       const result = await Notification.requestPermission();
       setNotifPermission(result);
       if (result === "granted") {
-        toast.success("Notifications enabled!");
+        toast.success(t("notifEnabled"));
       } else {
         toast.error("Notification permission denied");
       }
@@ -127,57 +136,73 @@ export default function SettingsPage() {
         <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-xl hover:bg-muted">
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-xl font-serif">Settings</h1>
+        <h1 className="text-xl font-serif">{t("settings")}</h1>
       </div>
 
       <div className="px-4 max-w-md mx-auto space-y-6 mt-2">
-        {/* Theme */}
+        {/* App Language */}
         <div className="bg-card rounded-2xl p-5 border border-border space-y-3">
           <h2 className="font-serif text-lg flex items-center gap-2">
-            <Sun className="w-4 h-4 text-sun" /> Appearance
+            <Languages className="w-4 h-4 text-primary" /> {t("appLanguage")}
           </h2>
-          <Select value={theme || "system"} onValueChange={setTheme}>
+          <Select value={appLanguage} onValueChange={(v) => setAppLanguage(v as Language)}>
             <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="light"><span className="flex items-center gap-2"><Sun className="w-4 h-4" /> Light</span></SelectItem>
-              <SelectItem value="dark"><span className="flex items-center gap-2"><Moon className="w-4 h-4" /> Dark</span></SelectItem>
-              <SelectItem value="system"><span className="flex items-center gap-2"><Monitor className="w-4 h-4" /> System</span></SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Language */}
-        <div className="bg-card rounded-2xl p-5 border border-border space-y-3">
-          <h2 className="font-serif text-lg flex items-center gap-2">
-            <Globe className="w-4 h-4 text-primary" /> Care Tips Language
-          </h2>
-          <Select value={language} onValueChange={setLanguage}>
-            <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {LANGUAGES.map((lang) => (
+              {APP_LANGUAGES.map((lang) => (
                 <SelectItem key={lang.value} value={lang.value}>
                   <span className="flex items-center gap-2">{lang.flag} {lang.label}</span>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <p className="text-xs text-muted-foreground">Care tips for newly identified plants will be generated in this language. You can also change the language per plant.</p>
+          <p className="text-xs text-muted-foreground">{t("appLanguageDesc")}</p>
+        </div>
+
+        {/* Theme */}
+        <div className="bg-card rounded-2xl p-5 border border-border space-y-3">
+          <h2 className="font-serif text-lg flex items-center gap-2">
+            <Sun className="w-4 h-4 text-sun" /> {t("appearance")}
+          </h2>
+          <Select value={theme || "system"} onValueChange={setTheme}>
+            <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="light"><span className="flex items-center gap-2"><Sun className="w-4 h-4" /> {t("light")}</span></SelectItem>
+              <SelectItem value="dark"><span className="flex items-center gap-2"><Moon className="w-4 h-4" /> {t("dark")}</span></SelectItem>
+              <SelectItem value="system"><span className="flex items-center gap-2"><Monitor className="w-4 h-4" /> {t("system")}</span></SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Care Tips Language */}
+        <div className="bg-card rounded-2xl p-5 border border-border space-y-3">
+          <h2 className="font-serif text-lg flex items-center gap-2">
+            <Globe className="w-4 h-4 text-primary" /> {t("careTipsLanguage")}
+          </h2>
+          <Select value={careLang} onValueChange={setCareLang}>
+            <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {CARE_LANGUAGES.map((lang) => (
+                <SelectItem key={lang.value} value={lang.value}>
+                  <span className="flex items-center gap-2">{lang.flag} {lang.label}</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">{t("careTipsLangDesc")}</p>
         </div>
 
         {/* Notifications */}
         <div className="bg-card rounded-2xl p-5 border border-border space-y-3">
           <h2 className="font-serif text-lg flex items-center gap-2">
             {notifPermission === "granted" ? <Bell className="w-4 h-4 text-primary" /> : <BellOff className="w-4 h-4 text-muted-foreground" />}
-            Watering Reminders
+            {t("wateringReminders")}
           </h2>
           <p className="text-xs text-muted-foreground">
-            {notifPermission === "granted"
-              ? "Notifications are enabled. You'll be reminded when plants need watering."
-              : "Enable notifications to get watering reminders when you open the app."}
+            {notifPermission === "granted" ? t("notifEnabled") : t("notifDisabled")}
           </p>
           {notifPermission !== "granted" && (
             <Button onClick={handleRequestNotifications} variant="outline" className="w-full rounded-xl h-10 gap-2">
-              <Bell className="w-4 h-4" /> Enable Notifications
+              <Bell className="w-4 h-4" /> {t("enableNotifications")}
             </Button>
           )}
         </div>
@@ -185,41 +210,41 @@ export default function SettingsPage() {
         {/* Profile */}
         <div className="bg-card rounded-2xl p-5 border border-border space-y-3">
           <h2 className="font-serif text-lg flex items-center gap-2">
-            <User className="w-4 h-4 text-primary" /> Profile
+            <User className="w-4 h-4 text-primary" /> {t("profile")}
           </h2>
           <div>
-            <Label className="text-xs text-muted-foreground mb-1.5 block">Email</Label>
+            <Label className="text-xs text-muted-foreground mb-1.5 block">{t("email")}</Label>
             <Input value={email} disabled className="rounded-xl h-10 bg-muted" />
           </div>
           <div>
-            <Label className="text-xs text-muted-foreground mb-1.5 block">Display Name</Label>
-            <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Your name" className="rounded-xl h-10" />
+            <Label className="text-xs text-muted-foreground mb-1.5 block">{t("displayName")}</Label>
+            <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder={t("yourName")} className="rounded-xl h-10" />
           </div>
           <div>
             <Label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
-              <Leaf className="w-3.5 h-3.5 text-primary" /> Garden Name
+              <Leaf className="w-3.5 h-3.5 text-primary" /> {t("gardenName")}
             </Label>
             <Input value={gardenName} onChange={(e) => setGardenName(e.target.value)} placeholder="My Garden" className="rounded-xl h-10" />
           </div>
           <Button onClick={handleSaveProfile} disabled={saving} className="w-full rounded-xl h-10">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t("saveChanges")}
           </Button>
         </div>
 
         {/* Password */}
         <div className="bg-card rounded-2xl p-5 border border-border space-y-3">
           <h2 className="font-serif text-lg flex items-center gap-2">
-            <Lock className="w-4 h-4 text-bloom" /> Change Password
+            <Lock className="w-4 h-4 text-bloom" /> {t("changePassword")}
           </h2>
-          <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New password (min 6 chars)" className="rounded-xl h-10" />
+          <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder={t("newPassword")} className="rounded-xl h-10" />
           <Button onClick={handleChangePassword} disabled={saving || newPassword.length < 6} variant="outline" className="w-full rounded-xl h-10">
-            Update Password
+            {t("updatePassword")}
           </Button>
         </div>
 
         {/* Sign Out */}
         <Button onClick={handleSignOut} variant="outline" className="w-full rounded-xl h-10 gap-2 text-destructive border-destructive/30 hover:bg-destructive/10">
-          <LogOut className="w-4 h-4" /> Sign Out
+          <LogOut className="w-4 h-4" /> {t("signOut")}
         </Button>
       </div>
 

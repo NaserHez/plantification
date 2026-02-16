@@ -10,6 +10,7 @@ import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadPlantImage } from "@/lib/supabase-helpers";
 import { toast } from "sonner";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface IdentificationResult {
   name: string;
@@ -32,6 +33,7 @@ interface IdentificationResult {
 
 export default function IdentifyPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [result, setResult] = useState<IdentificationResult | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -40,7 +42,7 @@ export default function IdentifyPage() {
   const handleResult = (res: IdentificationResult, img: string) => {
     setResult(res);
     setImageBase64(img);
-    setNickname(res.name); // default nickname to identified name
+    setNickname(res.name);
   };
 
   const handleSave = async () => {
@@ -66,7 +68,7 @@ export default function IdentifyPage() {
       });
 
       if (error) throw error;
-      toast.success(`${nickname || result.name} added to your garden!`);
+      toast.success(`${nickname || result.name} ${t("addedToGarden")}`);
       navigate("/garden");
     } catch (err: any) {
       toast.error(err.message || "Failed to save plant");
@@ -81,7 +83,7 @@ export default function IdentifyPage() {
         <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-xl hover:bg-muted">
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-xl font-serif">Identify Plant</h1>
+        <h1 className="text-xl font-serif">{t("identifyPageTitle")}</h1>
       </div>
 
       <div className="px-4 max-w-md mx-auto">
@@ -101,27 +103,24 @@ export default function IdentifyPage() {
                   <p className="text-sm text-muted-foreground italic">{result.scientificName}</p>
                 </div>
                 <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                  {result.confidence}% match
+                  {result.confidence}% {t("match")}
                 </span>
               </div>
 
               {result.isMock && (
-                <p className="text-xs text-destructive mt-2">
-                  ⚠ Mock result – API key may not be configured
-                </p>
+                <p className="text-xs text-destructive mt-2">{t("mockWarning")}</p>
               )}
 
               {result.careTips && (
                 <div className="mt-4 p-3 rounded-xl bg-accent/50 border border-border">
                   <div className="flex items-center gap-1.5 mb-1">
                     <Lightbulb className="w-4 h-4 text-sun" />
-                    <span className="text-xs font-medium">Care Tips</span>
+                    <span className="text-xs font-medium">{t("careTips")}</span>
                   </div>
                   <p className="text-sm text-muted-foreground leading-relaxed">{result.careTips}</p>
                 </div>
               )}
 
-              {/* Health Assessment */}
               {result.healthAssessment && (
                 <div className={`mt-4 p-3 rounded-xl border border-border ${result.healthAssessment.isHealthy ? 'bg-primary/5' : 'bg-destructive/5'}`}>
                   <div className="flex items-center gap-1.5 mb-2">
@@ -131,7 +130,7 @@ export default function IdentifyPage() {
                       <ShieldAlert className="w-4 h-4 text-destructive" />
                     )}
                     <span className="text-xs font-medium">
-                      {result.healthAssessment.isHealthy ? "Plant looks healthy!" : "Potential issues detected"}
+                      {result.healthAssessment.isHealthy ? t("plantLooksHealthy") : t("potentialIssues")}
                     </span>
                   </div>
                   {result.healthAssessment.diseases.length > 0 && (
@@ -158,30 +157,24 @@ export default function IdentifyPage() {
               {result.similarImages && result.similarImages.length > 0 && (
                 <div className="flex gap-2 mt-4 overflow-x-auto">
                   {result.similarImages.map((url, i) => (
-                    <img
-                      key={i}
-                      src={url}
-                      alt="Similar"
-                      className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-                    />
+                    <img key={i} src={url} alt="Similar" className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
                   ))}
                 </div>
               )}
 
-              {/* Nickname input */}
               <div className="mt-4 space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Give it a name</Label>
+                <Label className="text-xs text-muted-foreground">{t("giveItAName")}</Label>
                 <Input
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
-                  placeholder="e.g. Office Fern"
+                  placeholder={t("nameExample")}
                   className="rounded-xl h-10"
                 />
               </div>
 
               <Button onClick={handleSave} disabled={saving} className="w-full mt-4 h-11 rounded-xl gap-2">
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                Save to Garden
+                {t("saveToGarden")}
               </Button>
             </motion.div>
           )}

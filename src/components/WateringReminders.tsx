@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface OverduePlant {
   id: string;
@@ -20,6 +21,7 @@ interface Props {
 export default function WateringReminders({ overdue, permissionGranted, onRequestPermission }: Props) {
   const [dismissed, setDismissed] = useState(false);
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   if (dismissed || overdue.length === 0) return null;
 
@@ -35,12 +37,12 @@ export default function WateringReminders({ overdue, permissionGranted, onReques
           <div className="flex items-center gap-2">
             <Droplets className="w-5 h-5 text-water" />
             <span className="font-serif text-sm font-medium">
-              {overdue.length} plant{overdue.length > 1 ? "s" : ""} need water
+              {overdue.length} {overdue.length > 1 ? t("plantsNeedWaterPlural") : t("plantsNeedWater")}
             </span>
           </div>
           <div className="flex items-center gap-1">
             {!permissionGranted && (
-              <button onClick={onRequestPermission} className="p-1 rounded-lg hover:bg-muted" title="Enable notifications">
+              <button onClick={onRequestPermission} className="p-1 rounded-lg hover:bg-muted" title={t("enableNotifications")}>
                 <BellOff className="w-4 h-4 text-muted-foreground" />
               </button>
             )}
@@ -58,7 +60,7 @@ export default function WateringReminders({ overdue, permissionGranted, onReques
             >
               <span className="truncate">{p.nickname || p.name}</span>
               <span className="text-xs text-water font-medium ml-2 whitespace-nowrap">
-                {p.daysOverdue === 0 ? "Due today" : `${p.daysOverdue}d overdue`}
+                {p.daysOverdue === 0 ? t("dueToday") : `${p.daysOverdue}${t("daysOverdue")}`}
               </span>
             </button>
           ))}

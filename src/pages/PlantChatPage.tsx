@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
 import ReactMarkdown from "react-markdown";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface Msg {
   role: "user" | "assistant";
@@ -17,6 +18,7 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/plant-chat`;
 
 export default function PlantChatPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const plantQuery = searchParams.get("plant");
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -43,7 +45,6 @@ export default function PlantChatPage() {
     fetchPlants();
   }, []);
 
-  // Auto-send when navigating from plant detail
   useEffect(() => {
     if (plantQuery && !autoSent && plantContext !== undefined) {
       setInput(`Tell me about caring for my ${plantQuery}. What should I know?`);
@@ -143,7 +144,6 @@ export default function PlantChatPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col pb-16">
-      {/* Header */}
       <div className="px-4 pt-4 pb-2 flex items-center gap-3 border-b border-border">
         <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-xl hover:bg-muted">
           <ArrowLeft className="w-5 h-5" />
@@ -153,8 +153,8 @@ export default function PlantChatPage() {
             <Bot className="w-4 h-4 text-primary" />
           </div>
           <div>
-            <h1 className="text-base font-serif leading-tight">Plantify AI</h1>
-            <p className="text-[10px] text-muted-foreground">Plant care assistant</p>
+            <h1 className="text-base font-serif leading-tight">{t("plantifyAi")}</h1>
+            <p className="text-[10px] text-muted-foreground">{t("plantCareAssistant")}</p>
           </div>
         </div>
         {messages.length > 0 && (
@@ -167,19 +167,16 @@ export default function PlantChatPage() {
         )}
       </div>
 
-      {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center gap-3 py-16">
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
               <Bot className="w-8 h-8 text-primary" />
             </div>
-            <h2 className="font-serif text-lg">Ask me anything about plants!</h2>
-            <p className="text-sm text-muted-foreground max-w-[260px]">
-              I can help with care tips, disease diagnosis, watering schedules, and more.
-            </p>
+            <h2 className="font-serif text-lg">{t("askAnything")}</h2>
+            <p className="text-sm text-muted-foreground max-w-[260px]">{t("chatHelpText")}</p>
             <div className="flex flex-wrap gap-2 justify-center mt-2">
-              {["How often should I water my succulent?", "My plant has yellow leaves", "Best indoor plants for low light"].map((q) => (
+              {[t("suggestedQ1"), t("suggestedQ2"), t("suggestedQ3")].map((q) => (
                 <button
                   key={q}
                   onClick={() => { setInput(q); textareaRef.current?.focus(); }}
@@ -234,7 +231,6 @@ export default function PlantChatPage() {
         )}
       </div>
 
-      {/* Input */}
       <div className="px-4 py-3 border-t border-border bg-card/80 backdrop-blur-xl">
         <div className="flex gap-2 items-end max-w-md mx-auto">
           <Textarea
@@ -242,7 +238,7 @@ export default function PlantChatPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask about your plants..."
+            placeholder={t("chatPlaceholder")}
             className="rounded-xl resize-none min-h-[44px] max-h-[120px] text-sm"
             rows={1}
           />

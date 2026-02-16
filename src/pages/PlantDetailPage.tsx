@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { regenerateCareTips } from "@/lib/supabase-helpers";
 import { toast } from "sonner";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const LANGUAGES = [
   { value: "en", label: "English", flag: "🇬🇧" },
@@ -20,6 +21,7 @@ const LANGUAGES = [
 export default function PlantDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [plant, setPlant] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -46,7 +48,7 @@ export default function PlantDetailPage() {
     if (error) {
       toast.error("Failed to delete");
     } else {
-      toast.success("Plant removed");
+      toast.success(t("plantRemoved"));
       navigate("/garden");
     }
   };
@@ -56,7 +58,7 @@ export default function PlantDetailPage() {
     const now = new Date().toISOString();
     await supabase.from("plants").update({ last_watered: now }).eq("id", id);
     setPlant((p: any) => ({ ...p, last_watered: now }));
-    toast.success("Watered! 💧");
+    toast.success(t("watered"));
     setSaving(false);
   };
 
@@ -67,7 +69,7 @@ export default function PlantDetailPage() {
       const newTips = await regenerateCareTips(plant.name, tipsLanguage);
       await supabase.from("plants").update({ care_tips: newTips }).eq("id", id);
       setPlant((p: any) => ({ ...p, care_tips: newTips }));
-      toast.success("Care tips updated!");
+      toast.success(t("careTipsUpdated"));
     } catch (err: any) {
       toast.error(err.message || "Failed to regenerate tips");
     } finally {
@@ -86,15 +88,14 @@ export default function PlantDetailPage() {
   if (!plant) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <p>Plant not found</p>
-        <Button onClick={() => navigate("/garden")}>Back to Garden</Button>
+        <p>{t("pageNotFound")}</p>
+        <Button onClick={() => navigate("/garden")}>{t("back")}</Button>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background pb-8">
-      {/* Header image */}
       <div className="relative h-64 bg-muted">
         {plant.image_url ? (
           <img src={plant.image_url} alt={plant.name} className="w-full h-full object-cover" />
@@ -109,7 +110,7 @@ export default function PlantDetailPage() {
         </button>
         {plant.confidence && (
           <span className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-medium bg-primary/80 text-primary-foreground backdrop-blur-sm">
-            {plant.confidence}% match
+            {plant.confidence}% {t("match")}
           </span>
         )}
       </div>
@@ -128,11 +129,10 @@ export default function PlantDetailPage() {
             <p className="text-xs text-muted-foreground">Species: {plant.name}</p>
           )}
 
-          {/* Quick actions */}
           <div className="flex gap-2 mt-4">
             <Button onClick={handleWater} disabled={saving} variant="outline" className="flex-1 h-10 rounded-xl gap-2 text-water border-water/30">
               <Droplets className="w-4 h-4" />
-              Water
+              {t("water")}
             </Button>
             <Button
               onClick={() => navigate(`/diagnose?plantId=${id}`)}
@@ -140,7 +140,7 @@ export default function PlantDetailPage() {
               className="flex-1 h-10 rounded-xl gap-2 text-bloom border-bloom/30"
             >
               <Stethoscope className="w-4 h-4" />
-              Health Check
+              {t("healthCheckBtn")}
             </Button>
             <Button
               onClick={() => navigate(`/chat?plant=${encodeURIComponent(plant.nickname || plant.name)}`)}
@@ -148,67 +148,65 @@ export default function PlantDetailPage() {
               className="flex-1 h-10 rounded-xl gap-2 text-primary border-primary/30"
             >
               <Bot className="w-4 h-4" />
-              Ask AI
+              {t("askAi")}
             </Button>
           </div>
 
           {plant.last_watered && (
             <p className="text-xs text-muted-foreground mt-2">
-              Last watered: {new Date(plant.last_watered).toLocaleDateString()}
+              {t("lastWatered")} {new Date(plant.last_watered).toLocaleDateString()}
             </p>
           )}
 
-          {/* Care settings */}
           <div className="space-y-4 mt-6">
             <div>
               <Label className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
-                <Sun className="w-3.5 h-3.5 text-sun" /> Sunlight
+                <Sun className="w-3.5 h-3.5 text-sun" /> {t("sunlightLabel")}
               </Label>
               <Select value={plant.sunlight || "medium"} onValueChange={(v) => handleUpdate("sunlight", v)}>
                 <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">Low light</SelectItem>
-                  <SelectItem value="medium">Medium light</SelectItem>
-                  <SelectItem value="high">Bright / direct</SelectItem>
+                  <SelectItem value="low">{t("lowLight")}</SelectItem>
+                  <SelectItem value="medium">{t("mediumLight")}</SelectItem>
+                  <SelectItem value="high">{t("brightDirect")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
               <Label className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
-                <Droplets className="w-3.5 h-3.5 text-water" /> Watering
+                <Droplets className="w-3.5 h-3.5 text-water" /> {t("wateringLabel")}
               </Label>
               <Select value={plant.watering_frequency || "weekly"} onValueChange={(v) => handleUpdate("watering_frequency", v)}>
                 <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="daily">Daily</SelectItem>
-                  <SelectItem value="every-2-days">Every 2 days</SelectItem>
-                  <SelectItem value="weekly">Weekly</SelectItem>
-                  <SelectItem value="biweekly">Every 2 weeks</SelectItem>
-                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="daily">{t("daily")}</SelectItem>
+                  <SelectItem value="every-2-days">{t("every2Days")}</SelectItem>
+                  <SelectItem value="weekly">{t("weekly")}</SelectItem>
+                  <SelectItem value="biweekly">{t("biweekly")}</SelectItem>
+                  <SelectItem value="monthly">{t("monthly")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
               <Label className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
-                <MapPin className="w-3.5 h-3.5 text-bloom" /> Location
+                <MapPin className="w-3.5 h-3.5 text-bloom" /> {t("locationLabel")}
               </Label>
               <Select value={plant.location || "indoor"} onValueChange={(v) => handleUpdate("location", v)}>
                 <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="indoor">Indoor</SelectItem>
-                  <SelectItem value="outdoor">Outdoor</SelectItem>
-                  <SelectItem value="balcony">Balcony</SelectItem>
-                  <SelectItem value="windowsill">Windowsill</SelectItem>
+                  <SelectItem value="indoor">{t("indoor").replace(/^[^\s]+\s/, "")}</SelectItem>
+                  <SelectItem value="outdoor">{t("outdoor").replace(/^[^\s]+\s/, "")}</SelectItem>
+                  <SelectItem value="balcony">{t("balcony").replace(/^[^\s]+\s/, "")}</SelectItem>
+                  <SelectItem value="windowsill">{t("windowsill").replace(/^[^\s]+\s/, "")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Care tips with language selector */}
             <div className="p-3 rounded-xl bg-accent/50 border border-border">
               <div className="flex items-center justify-between mb-2">
-                <Label className="text-xs text-muted-foreground font-medium">💡 Care Tips</Label>
+                <Label className="text-xs text-muted-foreground font-medium">{t("careTipsLabel")}</Label>
                 <div className="flex items-center gap-1.5">
                   <Select value={tipsLanguage} onValueChange={setTipsLanguage}>
                     <SelectTrigger className="h-7 w-24 rounded-lg text-xs border-border">
@@ -240,26 +238,26 @@ export default function PlantDetailPage() {
               {plant.care_tips ? (
                 <p className="text-sm text-muted-foreground leading-relaxed">{plant.care_tips}</p>
               ) : (
-                <p className="text-xs text-muted-foreground italic">No care tips yet. Press refresh to generate.</p>
+                <p className="text-xs text-muted-foreground italic">{t("noCareTips")}</p>
               )}
             </div>
 
             <div>
-              <Label className="text-xs text-muted-foreground mb-1.5 block">Nickname</Label>
+              <Label className="text-xs text-muted-foreground mb-1.5 block">{t("nickname")}</Label>
               <Input
                 value={plant.nickname || ""}
                 onChange={(e) => handleUpdate("nickname", e.target.value)}
-                placeholder="Give your plant a name..."
+                placeholder={t("giveNickname")}
                 className="rounded-xl"
               />
             </div>
 
             <div>
-              <Label className="text-xs text-muted-foreground mb-1.5 block">Notes</Label>
+              <Label className="text-xs text-muted-foreground mb-1.5 block">{t("notes")}</Label>
               <Textarea
                 value={plant.notes || ""}
                 onChange={(e) => handleUpdate("notes", e.target.value)}
-                placeholder="Add care notes..."
+                placeholder={t("addNotes")}
                 className="rounded-xl resize-none"
                 rows={3}
               />
@@ -268,7 +266,7 @@ export default function PlantDetailPage() {
 
           <Button onClick={handleDelete} variant="outline" className="w-full mt-6 h-10 rounded-xl gap-2 text-destructive border-destructive/30 hover:bg-destructive/10">
             <Trash2 className="w-4 h-4" />
-            Remove Plant
+            {t("removePlant")}
           </Button>
         </div>
       </motion.div>

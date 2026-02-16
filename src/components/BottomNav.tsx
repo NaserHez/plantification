@@ -1,18 +1,20 @@
 import { Camera, Leaf, Home, Settings, Stethoscope, Bot } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-
-const tabs = [
-  { path: "/", icon: Home, label: "Home" },
-  { path: "/identify", icon: Camera, label: "Identify" },
-  { path: "/diagnose", icon: Stethoscope, label: "Health" },
-  { path: "/chat", icon: Bot, label: "AI Chat" },
-  { path: "/garden", icon: Leaf, label: "Garden" },
-];
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useLanguage();
+
+  const tabs = [
+    { path: "/", icon: Home, label: t("home") },
+    { path: "/identify", icon: Camera, label: t("identify") },
+    { path: "/diagnose", icon: Stethoscope, label: t("health") },
+    { path: "/chat", icon: Bot, label: t("aiChat") },
+    { path: "/garden", icon: Leaf, label: t("garden") },
+  ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-xl border-t border-border">

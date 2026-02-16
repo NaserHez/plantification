@@ -6,12 +6,14 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Leaf, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function AuthForm() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const { t } = useLanguage();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +25,7 @@ export default function AuthForm() {
       } else {
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
-        toast.success("Check your email to confirm your account!");
+        toast.success(t("checkEmail"));
       }
     } catch (err: any) {
       toast.error(err.message);
@@ -43,13 +45,13 @@ export default function AuthForm() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-4">
             <Leaf className="w-8 h-8 text-primary animate-leaf-sway" />
           </div>
-          <h1 className="text-3xl font-serif">Plantification</h1>
-          <p className="text-muted-foreground mt-1">Identify & care for your plants</p>
+          <h1 className="text-3xl font-serif">{t("authTitle")}</h1>
+          <p className="text-muted-foreground mt-1">{t("authSubtitle")}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t("email")}</Label>
             <Input
               id="email"
               type="email"
@@ -61,7 +63,7 @@ export default function AuthForm() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t("password")}</Label>
             <Input
               id="password"
               type="password"
@@ -74,14 +76,14 @@ export default function AuthForm() {
             />
           </div>
           <Button type="submit" disabled={loading} className="w-full h-11 rounded-xl text-base">
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : isLogin ? "Sign In" : "Create Account"}
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : isLogin ? t("signIn") : t("createAccount")}
           </Button>
         </form>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
-          {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
+          {isLogin ? t("noAccount") : t("hasAccount")}{" "}
           <button onClick={() => setIsLogin(!isLogin)} className="text-primary font-medium hover:underline">
-            {isLogin ? "Sign up" : "Sign in"}
+            {isLogin ? t("signUp") : t("signInLink")}
           </button>
         </p>
       </motion.div>

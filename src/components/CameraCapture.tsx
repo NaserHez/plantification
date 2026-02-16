@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { compressImage, identifyPlant } from "@/lib/supabase-helpers";
 import { toast } from "sonner";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface IdentificationResult {
   name: string;
@@ -33,6 +34,7 @@ export default function CameraCapture({ onResult, language = "en" }: CameraCaptu
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const { t } = useLanguage();
 
   const openNativeCamera = useCallback(() => {
     if (fileInputRef.current) {
@@ -57,7 +59,6 @@ export default function CameraCapture({ onResult, language = "en" }: CameraCaptu
     } catch {
       toast.error("Failed to process image");
     }
-    // Reset input so the same file can be re-selected
     if (fileInputRef.current) fileInputRef.current.value = "";
   }, []);
 
@@ -109,7 +110,7 @@ export default function CameraCapture({ onResult, language = "en" }: CameraCaptu
               <Camera className="w-7 h-7 text-primary" />
             </div>
             <p className="text-sm text-muted-foreground text-center px-8">
-              Take a photo or upload an image to identify your plant
+              {t("takePhotoOrUpload")}
             </p>
           </motion.div>
         )}
@@ -123,12 +124,12 @@ export default function CameraCapture({ onResult, language = "en" }: CameraCaptu
             {loading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                Identifying...
+                {t("identifying")}
               </>
             ) : (
               <>
                 <Sparkles className="w-5 h-5" />
-                Identify Plant
+                {t("identifyPlantBtn")}
               </>
             )}
           </Button>
@@ -136,11 +137,11 @@ export default function CameraCapture({ onResult, language = "en" }: CameraCaptu
           <>
             <Button onClick={openNativeCamera} variant="outline" className="flex-1 h-12 rounded-xl text-base gap-2">
               <Camera className="w-5 h-5" />
-              Camera
+              {t("camera")}
             </Button>
             <Button onClick={openFilePicker} variant="outline" className="flex-1 h-12 rounded-xl text-base gap-2">
               <Upload className="w-5 h-5" />
-              Upload
+              {t("upload")}
             </Button>
           </>
         )}

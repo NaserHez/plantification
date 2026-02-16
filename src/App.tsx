@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { ThemeProvider } from "next-themes";
+import { LanguageProvider } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import IdentifyPage from "./pages/IdentifyPage";
@@ -36,26 +37,28 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
 const App = () => (
   <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthGate>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/identify" element={<IdentifyPage />} />
-              <Route path="/garden" element={<GardenPage />} />
-              <Route path="/plant/:id" element={<PlantDetailPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/diagnose" element={<DiagnosisPage />} />
-              <Route path="/chat" element={<PlantChatPage />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AuthGate>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <LanguageProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AuthGate>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/identify" element={<IdentifyPage />} />
+                <Route path="/garden" element={<GardenPage />} />
+                <Route path="/plant/:id" element={<PlantDetailPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/diagnose" element={<DiagnosisPage />} />
+                <Route path="/chat" element={<PlantChatPage />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </AuthGate>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </LanguageProvider>
   </ThemeProvider>
 );
 

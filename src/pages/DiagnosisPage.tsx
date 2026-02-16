@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { compressImage } from "@/lib/supabase-helpers";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface Disease {
   name: string;
@@ -31,6 +32,7 @@ interface HealthResult {
 
 export default function DiagnosisPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const preselectedId = searchParams.get("plantId");
 
@@ -102,17 +104,16 @@ export default function DiagnosisPage() {
         <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-xl hover:bg-muted">
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-xl font-serif">Health Check</h1>
+        <h1 className="text-xl font-serif">{t("healthCheck")}</h1>
       </div>
 
       <div className="px-4 max-w-md mx-auto space-y-4">
-        {/* Plant selector */}
         {plants.length > 0 && (
           <div>
-            <label className="text-xs text-muted-foreground mb-1.5 block">Select a plant (optional)</label>
+            <label className="text-xs text-muted-foreground mb-1.5 block">{t("selectPlant")}</label>
             <Select value={selectedPlantId} onValueChange={setSelectedPlantId}>
               <SelectTrigger className="rounded-xl">
-                <SelectValue placeholder="Choose a plant..." />
+                <SelectValue placeholder={t("choosePlant")} />
               </SelectTrigger>
               <SelectContent>
                 {plants.map((p) => (
@@ -125,7 +126,6 @@ export default function DiagnosisPage() {
           </div>
         )}
 
-        {/* Image capture */}
         <AnimatePresence mode="wait">
           {capturedImage ? (
             <motion.div
@@ -154,9 +154,7 @@ export default function DiagnosisPage() {
               <div className="w-16 h-16 rounded-full bg-accent flex items-center justify-center">
                 <Stethoscope className="w-7 h-7 text-primary" />
               </div>
-              <p className="text-sm text-muted-foreground text-center px-8">
-                Take a photo of your plant to check its health
-              </p>
+              <p className="text-sm text-muted-foreground text-center px-8">{t("takePhotoHealth")}</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -167,24 +165,23 @@ export default function DiagnosisPage() {
           {capturedImage ? (
             <Button onClick={handleDiagnose} disabled={loading} className="flex-1 h-12 rounded-xl text-base gap-2">
               {loading ? (
-                <><Loader2 className="w-5 h-5 animate-spin" /> Diagnosing...</>
+                <><Loader2 className="w-5 h-5 animate-spin" /> {t("diagnosing")}</>
               ) : (
-                <><Stethoscope className="w-5 h-5" /> Diagnose</>
+                <><Stethoscope className="w-5 h-5" /> {t("diagnoseBtn")}</>
               )}
             </Button>
           ) : (
             <>
               <Button onClick={openCamera} variant="outline" className="flex-1 h-12 rounded-xl text-base gap-2">
-                <Camera className="w-5 h-5" /> Camera
+                <Camera className="w-5 h-5" /> {t("camera")}
               </Button>
               <Button onClick={openFilePicker} variant="outline" className="flex-1 h-12 rounded-xl text-base gap-2">
-                <Upload className="w-5 h-5" /> Upload
+                <Upload className="w-5 h-5" /> {t("upload")}
               </Button>
             </>
           )}
         </div>
 
-        {/* Results */}
         <AnimatePresence>
           {result && (
             <motion.div
@@ -200,7 +197,7 @@ export default function DiagnosisPage() {
                   <ShieldAlert className="w-6 h-6 text-destructive" />
                 )}
                 <h2 className="font-serif text-lg">
-                  {result.isHealthy ? "Plant looks healthy!" : "Issues detected"}
+                  {result.isHealthy ? t("plantLooksHealthy") : t("issuesDetected")}
                 </h2>
               </div>
 
@@ -218,21 +215,20 @@ export default function DiagnosisPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">No issues found. Keep up the good care!</p>
+                <p className="text-sm text-muted-foreground">{t("noIssues")}</p>
               )}
 
-              {/* Care Recommendations */}
               {result.careRecommendations && (
                 <div className="mt-4 pt-4 border-t border-border space-y-3">
                   <h3 className="font-serif text-base flex items-center gap-1.5">
-                    <Heart className="w-4 h-4 text-primary" /> Care Recommendations
+                    <Heart className="w-4 h-4 text-primary" /> {t("careRecommendations")}
                   </h3>
 
                   {result.careRecommendations.watering && (
                     <div className="p-3 rounded-xl bg-card border border-border">
                       <div className="flex items-center gap-1.5 mb-1">
                         <Droplets className="w-4 h-4 text-blue-500" />
-                        <span className="font-medium text-sm">Watering</span>
+                        <span className="font-medium text-sm">{t("watering")}</span>
                       </div>
                       {result.careRecommendations.watering.frequency && (
                         <p className="text-xs text-muted-foreground">📅 {result.careRecommendations.watering.frequency}</p>
@@ -250,7 +246,7 @@ export default function DiagnosisPage() {
                     <div className="p-3 rounded-xl bg-card border border-border">
                       <div className="flex items-center gap-1.5 mb-1">
                         <Sun className="w-4 h-4 text-yellow-500" />
-                        <span className="font-medium text-sm">Sunlight</span>
+                        <span className="font-medium text-sm">{t("sunlight")}</span>
                       </div>
                       <p className="text-xs text-muted-foreground">{result.careRecommendations.sunlight}</p>
                     </div>
@@ -260,7 +256,7 @@ export default function DiagnosisPage() {
                     <div className="p-3 rounded-xl bg-card border border-border">
                       <div className="flex items-center gap-1.5 mb-1">
                         <Leaf className="w-4 h-4 text-green-500" />
-                        <span className="font-medium text-sm">Nutrients</span>
+                        <span className="font-medium text-sm">{t("nutrients")}</span>
                       </div>
                       <p className="text-xs text-muted-foreground">{result.careRecommendations.nutrients}</p>
                     </div>
@@ -270,7 +266,7 @@ export default function DiagnosisPage() {
                     <div className="p-3 rounded-xl bg-card border border-border">
                       <div className="flex items-center gap-1.5 mb-1">
                         <ShieldCheck className="w-4 h-4 text-primary" />
-                        <span className="font-medium text-sm">Preventive Care</span>
+                        <span className="font-medium text-sm">{t("preventiveCare")}</span>
                       </div>
                       <p className="text-xs text-muted-foreground">{result.careRecommendations.preventiveCare}</p>
                     </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Droplets, Sun, MapPin, Trash2, Loader2, Stethoscope, Globe, RefreshCw } from "lucide-react";
+import { ArrowLeft, Droplets, Sun, MapPin, Trash2, Loader2, Stethoscope, Globe, RefreshCw, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -141,6 +141,14 @@ export default function PlantDetailPage() {
             >
               <Stethoscope className="w-4 h-4" />
               Health Check
+            </Button>
+            <Button
+              onClick={() => navigate(`/chat?plant=${encodeURIComponent(plant.nickname || plant.name)}`)}
+              variant="outline"
+              className="flex-1 h-10 rounded-xl gap-2 text-primary border-primary/30"
+            >
+              <Bot className="w-4 h-4" />
+              Ask AI
             </Button>
           </div>
 

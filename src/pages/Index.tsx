@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Camera, Leaf, Sparkles } from "lucide-react";
+import { Camera, Leaf, Sparkles, Stethoscope, Bot, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
@@ -11,6 +11,13 @@ export default function Index() {
     <div className="min-h-screen bg-background pb-20">
       {/* Hero */}
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-accent/30 to-leaf-light/40 px-6 pt-12 pb-10">
+        {/* Settings gear */}
+        <button
+          onClick={() => navigate("/settings")}
+          className="absolute top-4 right-4 p-2 rounded-full bg-background/70 backdrop-blur-sm hover:bg-background/90 transition-colors z-10"
+        >
+          <Settings className="w-5 h-5 text-muted-foreground" />
+        </button>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -52,14 +59,20 @@ export default function Index() {
           className="grid grid-cols-2 gap-3 mt-6"
         >
           {[
-            { icon: Camera, title: "Instant ID", desc: "Identify any plant with AI", color: "text-primary" },
-            { icon: Sparkles, title: "Care Tips", desc: "Personalized plant care", color: "text-sun" },
-          ].map(({ icon: Icon, title, desc, color }) => (
-            <div key={title} className="bg-card rounded-2xl p-4 border border-border">
+            { icon: Camera, title: "Instant ID", desc: "Identify any plant with AI", color: "text-primary", path: "/identify" },
+            { icon: Sparkles, title: "Care Tips", desc: "Personalized plant care", color: "text-sun", path: "/garden" },
+            { icon: Stethoscope, title: "Diagnose", desc: "Detect & fix plant problems", color: "text-bloom", path: "/diagnose" },
+            { icon: Bot, title: "AI Chat", desc: "Ask anything about plants", color: "text-water", path: "/chat" },
+          ].map(({ icon: Icon, title, desc, color, path }) => (
+            <button
+              key={title}
+              onClick={() => navigate(path)}
+              className="bg-card rounded-2xl p-4 border border-border text-left hover:border-primary/30 transition-colors"
+            >
               <Icon className={`w-6 h-6 ${color} mb-2`} />
               <h3 className="font-serif text-sm">{title}</h3>
               <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
-            </div>
+            </button>
           ))}
         </motion.div>
       </div>

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Send, Loader2, Bot, User, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,10 +17,13 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/plant-chat`;
 
 export default function PlantChatPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const plantQuery = searchParams.get("plant");
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [plantContext, setPlantContext] = useState<string>("");
+  const [autoSent, setAutoSent] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -39,6 +42,20 @@ export default function PlantChatPage() {
     };
     fetchPlants();
   }, []);
+
+  // Auto-send when navigating from plant detail
+  useEffect(() => {
+    if (plantQuery && !autoSent && plantContext !== undefined) {
+      setInput(`Tell me about caring for my ${plantQuery}. What should I know?`);
+      setAutoSent(true);
+    }
+  }, [plantQuery, autoSent, plantContext]);
+
+  useEffect(() => {
+    if (autoSent && input && messages.length === 0 && !isLoading) {
+      sendMessage();
+    }
+  }, [autoSent, input]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Droplets, Sun, MapPin, Trash2, Loader2, Stethoscope, Globe, RefreshCw, Bot } from "lucide-react";
+import { ArrowLeft, Droplets, Sun, MapPin, Trash2, Loader2, Stethoscope, Globe, RefreshCw, Bot, Home } from "lucide-react";
+import PlantGallery from "@/components/PlantGallery";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -102,12 +103,20 @@ export default function PlantDetailPage() {
         ) : (
           <div className="w-full h-full flex items-center justify-center text-5xl">🌿</div>
         )}
-        <button
-          onClick={() => navigate(-1)}
-          className="absolute top-4 left-4 p-2 rounded-full bg-background/70 backdrop-blur-sm"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
+      <div className="absolute top-4 left-4 flex items-center gap-2">
+          <button
+            onClick={() => navigate("/")}
+            className="p-2 rounded-full bg-background/70 backdrop-blur-sm"
+          >
+            <Home className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 rounded-full bg-background/70 backdrop-blur-sm"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        </div>
         {plant.confidence && (
           <span className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-medium bg-primary/80 text-primary-foreground backdrop-blur-sm">
             {plant.confidence}% {t("match")}
@@ -263,6 +272,8 @@ export default function PlantDetailPage() {
               />
             </div>
           </div>
+
+          {id && <PlantGallery plantId={id} />}
 
           <Button onClick={handleDelete} variant="outline" className="w-full mt-6 h-10 rounded-xl gap-2 text-destructive border-destructive/30 hover:bg-destructive/10">
             <Trash2 className="w-4 h-4" />

@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Leaf, LayoutGrid, List, MapPin, GripVertical } from "lucide-react";
+import { Plus, Leaf, LayoutGrid, List, MapPin, GripVertical, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import PlantCard from "@/components/PlantCard";
@@ -153,8 +153,11 @@ export default function GardenPage() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <div className="px-4 pt-6 pb-2 flex items-center justify-between">
-        <div>
+      <div className="px-4 pt-4 pb-2 flex items-center gap-3">
+        <button onClick={() => navigate("/")} className="p-2 -ml-2 rounded-xl hover:bg-muted">
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        <div className="flex-1">
           <h1 className="text-2xl font-serif">{localStorage.getItem("garden_name") || t("myGarden")}</h1>
           <p className="text-sm text-muted-foreground">
             {plants.length} {plants.length !== 1 ? t("plants") : t("plant")}

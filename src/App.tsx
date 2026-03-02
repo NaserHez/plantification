@@ -15,6 +15,7 @@ import SettingsPage from "./pages/SettingsPage";
 import DiagnosisPage from "./pages/DiagnosisPage";
 import PlantChatPage from "./pages/PlantChatPage";
 import AuthForm from "./components/AuthForm";
+import NotificationsPage from "./pages/NotificationsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,6 +53,7 @@ const App = () => (
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/diagnose" element={<DiagnosisPage />} />
                 <Route path="/chat" element={<PlantChatPage />} />
+                <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </AuthGate>

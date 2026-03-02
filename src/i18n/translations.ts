@@ -118,11 +118,19 @@ export const translations = {
     watered: "Watered! 💧",
     careTipsUpdated: "Care tips updated!",
 
+    // Gallery
+    photoGallery: "Photo Gallery",
+    addPhoto: "Add Photo",
+    noPhotos: "No photos yet. Add photos to track your plant's progress.",
+    photoAdded: "Photo added!",
+    photoDeleted: "Photo deleted",
+    deletePhoto: "Delete photo",
+
     // Chat
-    plantifyAi: "Plantify AI",
+    plantifyAi: "Plantification AI",
     plantCareAssistant: "Plant care assistant",
     askAnything: "Ask me anything about plants!",
-    chatHelpText: "I can help with care tips, disease diagnosis, watering schedules, and more.",
+    chatHelpText: "I can help with care tips, disease diagnosis, watering schedules, planting times, companion plants, and more.",
     chatPlaceholder: "Ask about your plants...",
     suggestedQ1: "How often should I water my succulent?",
     suggestedQ2: "My plant has yellow leaves",
@@ -154,6 +162,12 @@ export const translations = {
     signOut: "Sign Out",
     appLanguage: "App Language",
     appLanguageDesc: "Changes the language of the entire app interface.",
+
+    // Notifications
+    notifications: "Notifications",
+    noNotifications: "No notifications right now",
+    noNotificationsDesc: "When your plants need attention, you'll see alerts here.",
+    wateringAlerts: "Watering Alerts",
 
     // 404
     pageNotFound: "Oops! Page not found",
@@ -278,11 +292,19 @@ export const translations = {
     watered: "تم الري! 💧",
     careTipsUpdated: "تم تحديث نصائح العناية!",
 
+    // Gallery
+    photoGallery: "معرض الصور",
+    addPhoto: "إضافة صورة",
+    noPhotos: "لا توجد صور بعد. أضف صوراً لتتبع تقدم نبتتك.",
+    photoAdded: "تمت إضافة الصورة!",
+    photoDeleted: "تم حذف الصورة",
+    deletePhoto: "حذف الصورة",
+
     // Chat
-    plantifyAi: "Plantify AI",
+    plantifyAi: "Plantification AI",
     plantCareAssistant: "مساعد رعاية النباتات",
     askAnything: "اسألني أي شيء عن النباتات!",
-    chatHelpText: "يمكنني المساعدة في نصائح العناية وتشخيص الأمراض وجداول الري والمزيد.",
+    chatHelpText: "يمكنني المساعدة في نصائح العناية وتشخيص الأمراض وجداول الري وأوقات الزراعة والنباتات المصاحبة والمزيد.",
     chatPlaceholder: "اسأل عن نباتاتك...",
     suggestedQ1: "كم مرة يجب أن أسقي العصارية؟",
     suggestedQ2: "نبتتي لديها أوراق صفراء",
@@ -314,6 +336,12 @@ export const translations = {
     signOut: "تسجيل الخروج",
     appLanguage: "لغة التطبيق",
     appLanguageDesc: "يُغيّر لغة واجهة التطبيق بالكامل.",
+
+    // Notifications
+    notifications: "الإشعارات",
+    noNotifications: "لا توجد إشعارات حالياً",
+    noNotificationsDesc: "عندما تحتاج نباتاتك للاهتمام، ستظهر التنبيهات هنا.",
+    wateringAlerts: "تنبيهات الري",
 
     // 404
     pageNotFound: "عذراً! الصفحة غير موجودة",
@@ -438,11 +466,19 @@ export const translations = {
     watered: "Regada! 💧",
     careTipsUpdated: "Dicas de cuidado atualizadas!",
 
+    // Gallery
+    photoGallery: "Galeria de Fotos",
+    addPhoto: "Adicionar Foto",
+    noPhotos: "Ainda sem fotos. Adiciona fotos para acompanhar o progresso da tua planta.",
+    photoAdded: "Foto adicionada!",
+    photoDeleted: "Foto eliminada",
+    deletePhoto: "Eliminar foto",
+
     // Chat
-    plantifyAi: "Plantify AI",
+    plantifyAi: "Plantification AI",
     plantCareAssistant: "Assistente de cuidado de plantas",
     askAnything: "Pergunta-me o que quiseres sobre plantas!",
-    chatHelpText: "Posso ajudar com dicas de cuidado, diagnóstico de doenças, horários de rega e muito mais.",
+    chatHelpText: "Posso ajudar com dicas de cuidado, diagnóstico de doenças, horários de rega, épocas de plantação, plantas companheiras e muito mais.",
     chatPlaceholder: "Pergunta sobre as tuas plantas...",
     suggestedQ1: "Com que frequência devo regar a minha suculenta?",
     suggestedQ2: "A minha planta tem folhas amarelas",
@@ -474,6 +510,12 @@ export const translations = {
     signOut: "Sair",
     appLanguage: "Idioma da App",
     appLanguageDesc: "Altera o idioma de toda a interface da aplicação.",
+
+    // Notifications
+    notifications: "Notificações",
+    noNotifications: "Sem notificações de momento",
+    noNotificationsDesc: "Quando as tuas plantas precisarem de atenção, verás os alertas aqui.",
+    wateringAlerts: "Alertas de Rega",
 
     // 404
     pageNotFound: "Ups! Página não encontrada",

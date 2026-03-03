@@ -162,9 +162,17 @@ export default function PlantDetailPage() {
           </div>
 
           {plant.last_watered && (
-            <p className="text-xs text-muted-foreground mt-2">
-              {t("lastWatered")} {new Date(plant.last_watered).toLocaleDateString()}
-            </p>
+            <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+              <span>{t("lastWatered")} {new Date(plant.last_watered).toLocaleDateString()}</span>
+              <span className="text-primary font-medium">
+                {t("nextWatering")} {(() => {
+                  const freqDays: Record<string, number> = { daily: 1, "every-2-days": 2, weekly: 7, biweekly: 14, monthly: 30 };
+                  const days = freqDays[plant.watering_frequency || "weekly"] || 7;
+                  const next = new Date(new Date(plant.last_watered).getTime() + days * 86400000);
+                  return next.toLocaleDateString();
+                })()}
+              </span>
+            </div>
           )}
 
           <div className="space-y-4 mt-6">

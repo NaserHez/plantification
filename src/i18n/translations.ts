@@ -169,6 +169,19 @@ export const translations = {
     noNotificationsDesc: "When your plants need attention, you'll see alerts here.",
     wateringAlerts: "Watering Alerts",
 
+    // Search
+    searchPlants: "Search plants...",
+    noResults: "No plants found",
+
+    // Planting Calendar
+    plantingCalendar: "Planting Calendar",
+    plantingCalendarDesc: "What to plant each month",
+    bestToPlant: "Best to plant",
+    monthlyTip: "Monthly tip",
+
+    // Next watering
+    nextWatering: "Next watering:",
+
     // 404
     pageNotFound: "Oops! Page not found",
     returnHome: "Return to Home",
@@ -343,6 +356,19 @@ export const translations = {
     noNotificationsDesc: "عندما تحتاج نباتاتك للاهتمام، ستظهر التنبيهات هنا.",
     wateringAlerts: "تنبيهات الري",
 
+    // Search
+    searchPlants: "ابحث عن نباتات...",
+    noResults: "لم يتم العثور على نباتات",
+
+    // Planting Calendar
+    plantingCalendar: "تقويم الزراعة",
+    plantingCalendarDesc: "ماذا تزرع كل شهر",
+    bestToPlant: "الأفضل للزراعة",
+    monthlyTip: "نصيحة الشهر",
+
+    // Next watering
+    nextWatering: "الري القادم:",
+
     // 404
     pageNotFound: "عذراً! الصفحة غير موجودة",
     returnHome: "العودة للرئيسية",
@@ -516,6 +542,19 @@ export const translations = {
     noNotifications: "Sem notificações de momento",
     noNotificationsDesc: "Quando as tuas plantas precisarem de atenção, verás os alertas aqui.",
     wateringAlerts: "Alertas de Rega",
+
+    // Search
+    searchPlants: "Pesquisar plantas...",
+    noResults: "Nenhuma planta encontrada",
+
+    // Planting Calendar
+    plantingCalendar: "Calendário de Plantação",
+    plantingCalendarDesc: "O que plantar em cada mês",
+    bestToPlant: "Melhor para plantar",
+    monthlyTip: "Dica do mês",
+
+    // Next watering
+    nextWatering: "Próxima rega:",
 
     // 404
     pageNotFound: "Ups! Página não encontrada",

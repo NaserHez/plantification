@@ -176,6 +176,7 @@ export const translations = {
     // Planting Calendar
     plantingCalendar: "Planting Calendar",
     plantingCalendarDesc: "What to plant each month",
+    plantThisMonth: "Plant this month",
     bestToPlant: "Best to plant",
     monthlyTip: "Monthly tip",
 
@@ -363,6 +364,7 @@ export const translations = {
     // Planting Calendar
     plantingCalendar: "تقويم الزراعة",
     plantingCalendarDesc: "ماذا تزرع كل شهر",
+    plantThisMonth: "ازرع هذا الشهر",
     bestToPlant: "الأفضل للزراعة",
     monthlyTip: "نصيحة الشهر",
 
@@ -550,6 +552,7 @@ export const translations = {
     // Planting Calendar
     plantingCalendar: "Calendário de Plantação",
     plantingCalendarDesc: "O que plantar em cada mês",
+    plantThisMonth: "Plantar este mês",
     bestToPlant: "Melhor para plantar",
     monthlyTip: "Dica do mês",
 

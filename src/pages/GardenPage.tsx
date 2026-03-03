@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Leaf, LayoutGrid, List, MapPin, GripVertical, ArrowLeft } from "lucide-react";
+import { Plus, Leaf, LayoutGrid, List, MapPin, GripVertical, ArrowLeft, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import PlantCard from "@/components/PlantCard";
@@ -82,6 +82,7 @@ export default function GardenPage() {
   const [layout, setLayout] = useState<LayoutMode>(() => {
     return (localStorage.getItem("garden_layout") as LayoutMode) || "cards";
   });
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { overdue, permissionGranted, requestPermission } = useWateringReminders(plants);
 
@@ -133,15 +134,24 @@ export default function GardenPage() {
     });
   };
 
+  const filteredPlants = useMemo(() => {
+    if (!searchQuery.trim()) return plants;
+    const q = searchQuery.toLowerCase();
+    return plants.filter((p) =>
+      (p.nickname || p.name).toLowerCase().includes(q) ||
+      (p.scientific_name || "").toLowerCase().includes(q)
+    );
+  }, [plants, searchQuery]);
+
   const locationGroups = useMemo(() => {
     const groups: Record<string, Plant[]> = {};
-    plants.forEach((p) => {
+    filteredPlants.forEach((p) => {
       const loc = p.location || "other";
       if (!groups[loc]) groups[loc] = [];
       groups[loc].push(p);
     });
     return groups;
-  }, [plants]);
+  }, [filteredPlants]);
 
   const locationLabels: Record<string, string> = {
     indoor: t("indoor"),
@@ -169,6 +179,21 @@ export default function GardenPage() {
       </div>
 
       <WateringReminders overdue={overdue} permissionGranted={permissionGranted} onRequestPermission={requestPermission} />
+
+      {plants.length > 0 && (
+        <div className="px-4 mb-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t("searchPlants")}
+              className="w-full h-9 pl-9 pr-3 rounded-xl bg-muted border-0 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+        </div>
+      )}
 
       {plants.length > 0 && (
         <div className="px-4 flex gap-1 mb-3">
@@ -199,7 +224,7 @@ export default function GardenPage() {
               <div key={i} className="aspect-[4/3] rounded-2xl bg-muted animate-pulse" />
             ))}
           </div>
-        ) : plants.length === 0 ? (
+        ) : filteredPlants.length === 0 && plants.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -214,6 +239,8 @@ export default function GardenPage() {
               {t("identifyPlant")}
             </Button>
           </motion.div>
+        ) : filteredPlants.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground text-sm">{t("noResults")}</div>
         ) : layout === "location" ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 mt-2">
             {Object.entries(locationGroups).map(([loc, group]) => (
@@ -241,7 +268,7 @@ export default function GardenPage() {
         ) : (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext
-              items={plants.map((p) => p.id)}
+              items={filteredPlants.map((p) => p.id)}
               strategy={layout === "list" ? verticalListSortingStrategy : rectSortingStrategy}
             >
               <motion.div
@@ -252,7 +279,7 @@ export default function GardenPage() {
                   layout === "cards" ? "grid grid-cols-2 gap-3" : "flex flex-col gap-2"
                 )}
               >
-                {plants.map((p) => (
+                {filteredPlants.map((p) => (
                   <SortablePlantCard key={p.id} plant={p} layout={layout} />
                 ))}
               </motion.div>

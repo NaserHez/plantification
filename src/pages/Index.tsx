@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Camera, Leaf, Sparkles, Stethoscope, Bot, Settings, Bell } from "lucide-react";
+import { Camera, Leaf, Sparkles, Stethoscope, Bot, Settings, Bell, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
@@ -71,6 +71,7 @@ export default function Index() {
             { icon: Sparkles, title: t("careTips"), desc: t("careTipsDesc"), color: "text-sun", path: "/garden" },
             { icon: Stethoscope, title: t("diagnose"), desc: t("diagnoseDesc"), color: "text-bloom", path: "/diagnose" },
             { icon: Bot, title: t("aiChat"), desc: t("aiChatDesc"), color: "text-water", path: "/chat" },
+            { icon: CalendarDays, title: t("plantingCalendar"), desc: t("plantingCalendarDesc"), color: "text-primary", path: "/planting-calendar" },
           ].map(({ icon: Icon, title, desc, color, path }) => (
             <button
               key={title}

@@ -1,13 +1,68 @@
 import { useNavigate } from "react-router-dom";
-import { Camera, Leaf, Sparkles, Stethoscope, Bot, Settings, Bell, CalendarDays } from "lucide-react";
+import { Camera, Leaf, Sparkles, Stethoscope, Bot, Settings, Bell, CalendarDays, ArrowRight, Sprout } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
 import { useLanguage } from "@/i18n/LanguageContext";
 
+const seasonalData: Record<string, Record<number, { plants: string[]; tip: string }>> = {
+  en: {
+    0: { plants: ["Onions", "Garlic", "Lettuce", "Spinach", "Peas"], tip: "Start seeds indoors & plan your garden layout." },
+    1: { plants: ["Tomatoes (indoors)", "Broccoli", "Cabbage", "Kale"], tip: "Begin indoor seed starting." },
+    2: { plants: ["Carrots", "Radishes", "Beets", "Potatoes", "Herbs"], tip: "Direct sow cool-season crops." },
+    3: { plants: ["Tomatoes", "Peppers", "Squash", "Beans", "Cucumbers"], tip: "Transplant after last frost." },
+    4: { plants: ["Melons", "Corn", "Sunflowers", "Basil", "Eggplant"], tip: "All warm-season crops can go outdoors." },
+    5: { plants: ["Sweet Potatoes", "Okra", "Herbs", "Flowers"], tip: "Succession plant for continuous harvests." },
+    6: { plants: ["Fall Broccoli", "Brussels Sprouts", "Kale", "Carrots"], tip: "Start fall garden planning." },
+    7: { plants: ["Lettuce", "Spinach", "Radishes", "Garlic", "Peas"], tip: "Plant cool-season crops for fall." },
+    8: { plants: ["Garlic", "Onions", "Cover Crops", "Spinach"], tip: "Plant garlic & cover crops." },
+    9: { plants: ["Garlic", "Tulip Bulbs", "Rye Grass"], tip: "Plant spring-blooming bulbs." },
+    10: { plants: ["Indoor Herbs", "Microgreens", "Sprouts"], tip: "Move gardening indoors." },
+    11: { plants: ["Indoor Herbs", "Microgreens", "Seed Planning"], tip: "Order seeds for next year." },
+  },
+  ar: {
+    0: { plants: ["البصل", "الثوم", "الخس", "السبانخ", "البازلاء"], tip: "ابدأ البذور في الداخل." },
+    1: { plants: ["الطماطم (داخلي)", "البروكلي", "الملفوف", "الكرنب"], tip: "ابدأ بذر البذور في الداخل." },
+    2: { plants: ["الجزر", "الفجل", "الشمندر", "البطاطس"], tip: "ازرع محاصيل الموسم البارد." },
+    3: { plants: ["الطماطم", "الفلفل", "القرع", "الفاصوليا", "الخيار"], tip: "انقل المحاصيل بعد آخر صقيع." },
+    4: { plants: ["البطيخ", "الذرة", "دوار الشمس", "الريحان"], tip: "جميع المحاصيل الدافئة للخارج." },
+    5: { plants: ["البطاطا الحلوة", "البامية", "الأعشاب", "الزهور"], tip: "ازرع بالتتابع لحصاد مستمر." },
+    6: { plants: ["بروكلي الخريف", "كرنب بروكسل", "الكرنب"], tip: "خطط لحديقة الخريف." },
+    7: { plants: ["الخس", "السبانخ", "الفجل", "الثوم"], tip: "ازرع محاصيل باردة للخريف." },
+    8: { plants: ["الثوم", "البصل", "محاصيل التغطية"], tip: "ازرع الثوم ومحاصيل التغطية." },
+    9: { plants: ["الثوم", "أبصال التوليب"], tip: "ازرع أبصال الربيع." },
+    10: { plants: ["أعشاب داخلية", "ميكروغرين", "براعم"], tip: "انقل البستنة للداخل." },
+    11: { plants: ["أعشاب داخلية", "ميكروغرين", "تخطيط البذور"], tip: "اطلب بذور العام القادم." },
+  },
+  pt: {
+    0: { plants: ["Cebolas", "Alho", "Alface", "Espinafre", "Ervilhas"], tip: "Comece sementes no interior." },
+    1: { plants: ["Tomates (interior)", "Brócolos", "Couve", "Couve-galega"], tip: "Comece a semear no interior." },
+    2: { plants: ["Cenouras", "Rabanetes", "Beterrabas", "Batatas"], tip: "Semeie culturas frias." },
+    3: { plants: ["Tomates", "Pimentos", "Abóboras", "Feijões", "Pepinos"], tip: "Transplante após última geada." },
+    4: { plants: ["Melões", "Milho", "Girassóis", "Manjericão"], tip: "Culturas quentes para o exterior." },
+    5: { plants: ["Batata-doce", "Quiabo", "Ervas", "Flores"], tip: "Plantações sucessivas." },
+    6: { plants: ["Brócolos de outono", "Couves-de-bruxelas", "Couve"], tip: "Planeie o jardim de outono." },
+    7: { plants: ["Alface", "Espinafre", "Rabanetes", "Alho"], tip: "Plante culturas frias para outono." },
+    8: { plants: ["Alho", "Cebolas", "Culturas de cobertura"], tip: "Plante alho e coberturas." },
+    9: { plants: ["Alho", "Bolbos de tulipas", "Azevém"], tip: "Plante bolbos de primavera." },
+    10: { plants: ["Ervas interiores", "Microvegetais", "Rebentos"], tip: "Jardinagem interior." },
+    11: { plants: ["Ervas interiores", "Microvegetais", "Planeamento"], tip: "Encomende sementes." },
+  },
+};
+
+const MONTH_NAMES: Record<string, string[]> = {
+  en: ["January","February","March","April","May","June","July","August","September","October","November","December"],
+  ar: ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"],
+  pt: ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"],
+};
+
 export default function Index() {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+
+  const currentMonth = new Date().getMonth();
+  const monthName = MONTH_NAMES[language]?.[currentMonth] || MONTH_NAMES.en[currentMonth];
+  const monthData = seasonalData[language]?.[currentMonth] || seasonalData.en[currentMonth];
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -58,13 +113,43 @@ export default function Index() {
         <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-sun/10" />
       </div>
 
+      {/* Seasonal Widget */}
+      <div className="px-6 max-w-md mx-auto mt-4">
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          onClick={() => navigate("/planting-calendar")}
+          className="bg-card rounded-2xl p-4 border border-border shadow-sm cursor-pointer hover:border-primary/30 transition-colors"
+        >
+          <div className="flex items-center justify-between mb-2.5">
+            <div className="flex items-center gap-2">
+              <Sprout className="w-5 h-5 text-primary" />
+              <h3 className="font-serif text-sm">{t("plantThisMonth")}</h3>
+            </div>
+            <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{monthName}</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5 mb-2.5">
+            {monthData.plants.slice(0, 5).map((p) => (
+              <span key={p} className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-accent text-accent-foreground">
+                {p}
+              </span>
+            ))}
+          </div>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">{monthData.tip}</p>
+            <ArrowRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 ms-2" />
+          </div>
+        </motion.div>
+      </div>
+
       {/* Feature cards */}
-      <div className="px-6 -mt-2 max-w-md mx-auto">
+      <div className="px-6 max-w-md mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="grid grid-cols-2 gap-3 mt-6"
+          className="grid grid-cols-2 gap-3 mt-4"
         >
           {[
             { icon: Camera, title: t("instantId"), desc: t("instantIdDesc"), color: "text-primary", path: "/identify" },

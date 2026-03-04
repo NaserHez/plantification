@@ -183,6 +183,10 @@ export const translations = {
     // Next watering
     nextWatering: "Next watering:",
 
+    // Weather
+    weatherTitle: "Weather & Garden",
+    gardeningTip: "Gardening Tip",
+
     // 404
     pageNotFound: "Oops! Page not found",
     returnHome: "Return to Home",
@@ -371,6 +375,10 @@ export const translations = {
     // Next watering
     nextWatering: "الري القادم:",
 
+    // Weather
+    weatherTitle: "الطقس والحديقة",
+    gardeningTip: "نصيحة بستنة",
+
     // 404
     pageNotFound: "عذراً! الصفحة غير موجودة",
     returnHome: "العودة للرئيسية",
@@ -558,6 +566,10 @@ export const translations = {
 
     // Next watering
     nextWatering: "Próxima rega:",
+
+    // Weather
+    weatherTitle: "Tempo & Jardim",
+    gardeningTip: "Dica de Jardinagem",
 
     // 404
     pageNotFound: "Ups! Página não encontrada",

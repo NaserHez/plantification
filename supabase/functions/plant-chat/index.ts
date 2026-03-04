@@ -46,6 +46,15 @@ serve(async (req) => {
 - Propagation advice
 - Best planting times for different plants and regions
 - Companion planting recommendations (which plants grow well together)
+- Pesticide recommendations (organic and chemical options, application methods, safety precautions)
+- Fertilizer recommendations (NPK ratios, organic vs synthetic, application frequency and timing)
+
+When recommending pesticides or fertilizers:
+- Always suggest organic/natural options first (neem oil, insecticidal soap, compost tea, fish emulsion, etc.)
+- Include chemical options when appropriate with proper safety warnings
+- Specify application rates and frequency
+- Mention safety precautions (gloves, ventilation, pet/child safety)
+- Consider the specific plant type when recommending products
 
 Keep answers concise, practical, and actionable. Use emojis sparingly for warmth. If unsure, say so rather than guessing. Format responses with markdown for readability.
 

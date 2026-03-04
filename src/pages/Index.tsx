@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
 import { useLanguage } from "@/i18n/LanguageContext";
+import WeatherWidget from "@/components/WeatherWidget";
 
 const seasonalData: Record<string, Record<number, { plants: string[]; tip: string }>> = {
   en: {
@@ -113,8 +114,13 @@ export default function Index() {
         <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-sun/10" />
       </div>
 
-      {/* Seasonal Widget */}
+      {/* Weather Widget */}
       <div className="px-6 max-w-md mx-auto mt-4">
+        <WeatherWidget />
+      </div>
+
+      {/* Seasonal Widget */}
+      <div className="px-6 max-w-md mx-auto mt-3">
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}

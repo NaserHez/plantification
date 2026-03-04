@@ -17,6 +17,7 @@ import PlantChatPage from "./pages/PlantChatPage";
 import AuthForm from "./components/AuthForm";
 import NotificationsPage from "./pages/NotificationsPage";
 import PlantingCalendarPage from "./pages/PlantingCalendarPage";
+import InstallBanner from "./components/InstallBanner";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -58,6 +59,7 @@ const App = () => (
                 <Route path="/planting-calendar" element={<PlantingCalendarPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <InstallBanner />
             </AuthGate>
           </BrowserRouter>
         </TooltipProvider>

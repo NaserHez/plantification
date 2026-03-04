@@ -59,6 +59,7 @@ const App = () => (
                 <Route path="/planting-calendar" element={<PlantingCalendarPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <InstallBanner />
             </AuthGate>
           </BrowserRouter>
         </TooltipProvider>

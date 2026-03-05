@@ -63,6 +63,18 @@ const MONTH_NAMES: Record<string, string[]> = {
 export default function Index() {
   const navigate = useNavigate();
   const { t, language } = useLanguage();
+  const [overdueCount, setOverdueCount] = useState(0);
+
+  useEffect(() => {
+    const fetchPlants = async () => {
+      const { data } = await supabase
+        .from("plants")
+        .select("id, name, nickname, watering_frequency, last_watered")
+        .order("created_at", { ascending: false });
+      setOverdueCount(getOverduePlants(data || []).length);
+    };
+    fetchPlants();
+  }, []);
 
   const currentMonth = new Date().getMonth();
   const monthName = MONTH_NAMES[language]?.[currentMonth] || MONTH_NAMES.en[currentMonth];

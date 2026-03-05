@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Droplets, BellOff } from "lucide-react";
+import { ArrowLeft, Droplets, BellOff, Bell, BellRing } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useWateringReminders } from "@/hooks/use-watering-reminders";
 import BottomNav from "@/components/BottomNav";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { Button } from "@/components/ui/button";
 
 export default function NotificationsPage() {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ export default function NotificationsPage() {
     fetchPlants();
   }, []);
 
-  const { overdue } = useWateringReminders(plants);
+  const { overdue, permissionGranted, requestPermission } = useWateringReminders(plants);
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -34,12 +35,39 @@ export default function NotificationsPage() {
         <h1 className="text-xl font-serif">{t("notifications")}</h1>
       </div>
 
-      <div className="px-4 max-w-md mx-auto mt-2">
+      <div className="px-4 max-w-md mx-auto mt-2 space-y-4">
+        {/* Notification permission banner */}
+        <motion.div
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 p-4 rounded-2xl bg-card border border-border"
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 shrink-0">
+            {permissionGranted ? (
+              <BellRing className="w-5 h-5 text-primary" />
+            ) : (
+              <BellOff className="w-5 h-5 text-muted-foreground" />
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium">
+              {permissionGranted ? t("notifEnabled") : t("notifDisabled")}
+            </p>
+          </div>
+          {!permissionGranted && (
+            <Button size="sm" onClick={requestPermission} className="rounded-xl shrink-0">
+              <Bell className="w-4 h-4 mr-1" />
+              {t("enableNotifications")}
+            </Button>
+          )}
+        </motion.div>
+
+        {/* Overdue plants list */}
         {overdue.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-center py-16"
+            className="text-center py-12"
           >
             <div className="w-16 h-16 rounded-2xl bg-accent flex items-center justify-center mx-auto mb-4">
               <BellOff className="w-8 h-8 text-muted-foreground" />

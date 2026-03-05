@@ -168,6 +168,7 @@ export const translations = {
     noNotifications: "No notifications right now",
     noNotificationsDesc: "When your plants need attention, you'll see alerts here.",
     wateringAlerts: "Watering Alerts",
+    waterAll: "Water All",
 
     // Search
     searchPlants: "Search plants...",
@@ -360,6 +361,7 @@ export const translations = {
     noNotifications: "لا توجد إشعارات حالياً",
     noNotificationsDesc: "عندما تحتاج نباتاتك للاهتمام، ستظهر التنبيهات هنا.",
     wateringAlerts: "تنبيهات الري",
+    waterAll: "ري الكل",
 
     // Search
     searchPlants: "ابحث عن نباتات...",
@@ -552,6 +554,7 @@ export const translations = {
     noNotifications: "Sem notificações de momento",
     noNotificationsDesc: "Quando as tuas plantas precisarem de atenção, verás os alertas aqui.",
     wateringAlerts: "Alertas de Rega",
+    waterAll: "Regar Todas",
 
     // Search
     searchPlants: "Pesquisar plantas...",

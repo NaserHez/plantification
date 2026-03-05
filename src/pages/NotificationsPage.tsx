@@ -14,6 +14,7 @@ export default function NotificationsPage() {
   const { t } = useLanguage();
   const [plants, setPlants] = useState<any[]>([]);
   const [wateringIds, setWateringIds] = useState<Set<string>>(new Set());
+  const [wateringAll, setWateringAll] = useState(false);
 
   const fetchPlants = async () => {
     const { data } = await supabase
@@ -39,9 +40,21 @@ export default function NotificationsPage() {
       return;
     }
     toast({ title: t("watered"), description: plantName });
-    // Refresh plants so overdue list updates
     await fetchPlants();
     setWateringIds((prev) => { const n = new Set(prev); n.delete(plantId); return n; });
+  };
+
+  const handleWaterAll = async () => {
+    if (overdue.length === 0) return;
+    setWateringAll(true);
+    const ids = overdue.map((p) => p.id);
+    const now = new Date().toISOString();
+    for (const id of ids) {
+      await supabase.from("plants").update({ last_watered: now }).eq("id", id);
+    }
+    toast({ title: t("watered"), description: `${ids.length} ${ids.length > 1 ? t("plants") : t("plant")}` });
+    await fetchPlants();
+    setWateringAll(false);
   };
 
   return (
@@ -95,10 +108,22 @@ export default function NotificationsPage() {
           </motion.div>
         ) : (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
-            <h2 className="font-serif text-sm text-muted-foreground flex items-center gap-2">
-              <Droplets className="w-4 h-4 text-water" />
-              {t("wateringAlerts")}
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="font-serif text-sm text-muted-foreground flex items-center gap-2">
+                <Droplets className="w-4 h-4 text-water" />
+                {t("wateringAlerts")}
+              </h2>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleWaterAll}
+                disabled={wateringAll}
+                className="rounded-xl gap-1.5 text-xs border-water/30 text-water hover:bg-water/10 hover:text-water"
+              >
+                <Droplets className={`w-3.5 h-3.5 ${wateringAll ? "animate-pulse" : ""}`} />
+                {t("waterAll")}
+              </Button>
+            </div>
             <AnimatePresence>
               {overdue.map((p) => (
                 <motion.div

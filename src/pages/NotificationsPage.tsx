@@ -1,30 +1,48 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Droplets, BellOff, Bell, BellRing } from "lucide-react";
-import { motion } from "framer-motion";
+import { ArrowLeft, Droplets, BellOff, Bell, BellRing, CheckCircle2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useWateringReminders } from "@/hooks/use-watering-reminders";
 import BottomNav from "@/components/BottomNav";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
 
 export default function NotificationsPage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [plants, setPlants] = useState<any[]>([]);
+  const [wateringIds, setWateringIds] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    const fetchPlants = async () => {
-      const { data } = await supabase
-        .from("plants")
-        .select("id, name, nickname, watering_frequency, last_watered")
-        .order("created_at", { ascending: false });
-      setPlants(data || []);
-    };
-    fetchPlants();
-  }, []);
+  const fetchPlants = async () => {
+    const { data } = await supabase
+      .from("plants")
+      .select("id, name, nickname, watering_frequency, last_watered")
+      .order("created_at", { ascending: false });
+    setPlants(data || []);
+  };
+
+  useEffect(() => { fetchPlants(); }, []);
 
   const { overdue, permissionGranted, requestPermission } = useWateringReminders(plants);
+
+  const handleMarkWatered = async (e: React.MouseEvent, plantId: string, plantName: string) => {
+    e.stopPropagation();
+    setWateringIds((prev) => new Set(prev).add(plantId));
+    const { error } = await supabase
+      .from("plants")
+      .update({ last_watered: new Date().toISOString() })
+      .eq("id", plantId);
+    if (error) {
+      setWateringIds((prev) => { const n = new Set(prev); n.delete(plantId); return n; });
+      return;
+    }
+    toast({ title: t("watered"), description: plantName });
+    // Refresh plants so overdue list updates
+    await fetchPlants();
+    setWateringIds((prev) => { const n = new Set(prev); n.delete(plantId); return n; });
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -81,18 +99,35 @@ export default function NotificationsPage() {
               <Droplets className="w-4 h-4 text-water" />
               {t("wateringAlerts")}
             </h2>
-            {overdue.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => navigate(`/plant/${p.id}`)}
-                className="w-full flex items-center justify-between p-4 rounded-2xl bg-water/10 border border-water/20 text-left hover:bg-water/15 transition-colors"
-              >
-                <span className="font-medium text-sm truncate">{p.nickname || p.name}</span>
-                <span className="text-xs text-water font-medium ml-2 whitespace-nowrap">
-                  {p.daysOverdue === 0 ? t("dueToday") : `${p.daysOverdue}${t("daysOverdue")}`}
-                </span>
-              </button>
-            ))}
+            <AnimatePresence>
+              {overdue.map((p) => (
+                <motion.div
+                  key={p.id}
+                  layout
+                  exit={{ opacity: 0, x: -40, height: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="flex items-center gap-2"
+                >
+                  <button
+                    onClick={() => navigate(`/plant/${p.id}`)}
+                    className="flex-1 flex items-center justify-between p-4 rounded-2xl bg-water/10 border border-water/20 text-left hover:bg-water/15 transition-colors"
+                  >
+                    <span className="font-medium text-sm truncate">{p.nickname || p.name}</span>
+                    <span className="text-xs text-water font-medium ml-2 whitespace-nowrap">
+                      {p.daysOverdue === 0 ? t("dueToday") : `${p.daysOverdue}${t("daysOverdue")}`}
+                    </span>
+                  </button>
+                  <button
+                    onClick={(e) => handleMarkWatered(e, p.id, p.nickname || p.name)}
+                    disabled={wateringIds.has(p.id)}
+                    className="shrink-0 flex items-center justify-center h-10 w-10 rounded-xl bg-primary/15 hover:bg-primary/25 text-primary transition-colors disabled:opacity-50"
+                    title={t("watered")}
+                  >
+                    <Droplets className={`w-5 h-5 ${wateringIds.has(p.id) ? "animate-pulse" : ""}`} />
+                  </button>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </motion.div>
         )}
       </div>

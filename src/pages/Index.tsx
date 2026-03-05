@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Camera, Leaf, Sparkles, Stethoscope, Bot, Settings, Bell, CalendarDays, ArrowRight, Sprout } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,8 @@ import { motion } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
 import { useLanguage } from "@/i18n/LanguageContext";
 import WeatherWidget from "@/components/WeatherWidget";
+import { supabase } from "@/integrations/supabase/client";
+import { getOverduePlants } from "@/hooks/use-watering-reminders";
 
 const seasonalData: Record<string, Record<number, { plants: string[]; tip: string }>> = {
   en: {

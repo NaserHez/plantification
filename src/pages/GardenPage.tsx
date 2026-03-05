@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import PlantCard from "@/components/PlantCard";
 import BottomNav from "@/components/BottomNav";
-import WateringReminders from "@/components/WateringReminders";
-import { useWateringReminders } from "@/hooks/use-watering-reminders";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -84,7 +82,7 @@ export default function GardenPage() {
   });
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { overdue, permissionGranted, requestPermission } = useWateringReminders(plants);
+  
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
@@ -178,7 +176,7 @@ export default function GardenPage() {
         </Button>
       </div>
 
-      <WateringReminders overdue={overdue} permissionGranted={permissionGranted} onRequestPermission={requestPermission} />
+      
 
       {plants.length > 0 && (
         <div className="px-4 mb-3">

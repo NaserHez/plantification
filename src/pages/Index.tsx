@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Camera, Leaf, Sparkles, Stethoscope, Bot, Settings, Bell, CalendarDays, ArrowRight, Sprout } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,8 @@ import { motion } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
 import { useLanguage } from "@/i18n/LanguageContext";
 import WeatherWidget from "@/components/WeatherWidget";
+import { supabase } from "@/integrations/supabase/client";
+import { getOverduePlants } from "@/hooks/use-watering-reminders";
 
 const seasonalData: Record<string, Record<number, { plants: string[]; tip: string }>> = {
   en: {
@@ -60,6 +63,18 @@ const MONTH_NAMES: Record<string, string[]> = {
 export default function Index() {
   const navigate = useNavigate();
   const { t, language } = useLanguage();
+  const [overdueCount, setOverdueCount] = useState(0);
+
+  useEffect(() => {
+    const fetchPlants = async () => {
+      const { data } = await supabase
+        .from("plants")
+        .select("id, name, nickname, watering_frequency, last_watered")
+        .order("created_at", { ascending: false });
+      setOverdueCount(getOverduePlants(data || []).length);
+    };
+    fetchPlants();
+  }, []);
 
   const currentMonth = new Date().getMonth();
   const monthName = MONTH_NAMES[language]?.[currentMonth] || MONTH_NAMES.en[currentMonth];
@@ -72,9 +87,14 @@ export default function Index() {
         <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
           <button
             onClick={() => navigate("/notifications")}
-            className="p-2 rounded-full bg-background/70 backdrop-blur-sm hover:bg-background/90 transition-colors"
+            className="relative p-2 rounded-full bg-background/70 backdrop-blur-sm hover:bg-background/90 transition-colors"
           >
             <Bell className="w-5 h-5 text-muted-foreground" />
+            {overdueCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+                {overdueCount > 9 ? "9+" : overdueCount}
+              </span>
+            )}
           </button>
           <button
             onClick={() => navigate("/settings")}

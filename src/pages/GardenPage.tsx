@@ -1,8 +1,8 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Leaf, LayoutGrid, List, MapPin, GripVertical, ArrowLeft, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import PlantCard from "@/components/PlantCard";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
@@ -81,8 +81,32 @@ export default function GardenPage() {
     return (localStorage.getItem("garden_layout") as LayoutMode) || "cards";
   });
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchVisible, setSearchVisible] = useState(false);
 
-  
+  // Pull-to-reveal search
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const touchStartY = useRef(0);
+  const pulling = useRef(false);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (scrollRef.current && scrollRef.current.scrollTop <= 0) {
+      touchStartY.current = e.touches[0].clientY;
+      pulling.current = true;
+    }
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!pulling.current) return;
+    const diff = e.touches[0].clientY - touchStartY.current;
+    if (diff > 60 && !searchVisible) {
+      setSearchVisible(true);
+      pulling.current = false;
+    }
+  }, [searchVisible]);
+
+  const handleTouchEnd = useCallback(() => {
+    pulling.current = false;
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
@@ -160,7 +184,13 @@ export default function GardenPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div
+      ref={scrollRef}
+      className="min-h-screen bg-background pb-20"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       <div className="px-4 pt-4 pb-2 flex items-center gap-3">
         <button onClick={() => navigate("/")} className="p-2 -ml-2 rounded-xl hover:bg-muted">
           <ArrowLeft className="w-5 h-5" />
@@ -176,22 +206,51 @@ export default function GardenPage() {
         </Button>
       </div>
 
-      
-
-      {plants.length > 0 && (
-        <div className="px-4 mb-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t("searchPlants")}
-              className="w-full h-9 pl-9 pr-3 rounded-xl bg-muted border-0 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
+      {/* Pull-down hint when search is hidden */}
+      {plants.length > 0 && !searchVisible && (
+        <div className="flex justify-center mb-1">
+          <button
+            onClick={() => setSearchVisible(true)}
+            className="flex items-center gap-1 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors py-1"
+          >
+            <Search className="w-3 h-3" />
+            {t("pullToSearch")}
+          </button>
         </div>
       )}
+
+      {/* Search bar - revealed on swipe down */}
+      <AnimatePresence>
+        {plants.length > 0 && searchVisible && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="px-4 mb-3 overflow-hidden"
+          >
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t("searchPlants")}
+                autoFocus
+                className="w-full h-9 pl-9 pr-8 rounded-xl bg-muted border-0 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+              {searchVisible && (
+                <button
+                  onClick={() => { setSearchVisible(false); setSearchQuery(""); }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-accent text-muted-foreground"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {plants.length > 0 && (
         <div className="px-4 flex gap-1 mb-3">

@@ -8,6 +8,17 @@ import BottomNav from "@/components/BottomNav";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function NotificationsPage() {
   const navigate = useNavigate();
@@ -113,16 +124,34 @@ export default function NotificationsPage() {
                 <Droplets className="w-4 h-4 text-water" />
                 {t("wateringAlerts")}
               </h2>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleWaterAll}
-                disabled={wateringAll}
-                className="rounded-xl gap-1.5 text-xs border-water/30 text-water hover:bg-water/10 hover:text-water"
-              >
-                <Droplets className={`w-3.5 h-3.5 ${wateringAll ? "animate-pulse" : ""}`} />
-                {t("waterAll")}
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={wateringAll}
+                    className="rounded-xl gap-1.5 text-xs border-water/30 text-water hover:bg-water/10 hover:text-water"
+                  >
+                    <Droplets className={`w-3.5 h-3.5 ${wateringAll ? "animate-pulse" : ""}`} />
+                    {t("waterAll")}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="rounded-2xl max-w-sm">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>{t("waterAll")}</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      {t("waterAllConfirm")}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="rounded-xl">{t("cancel")}</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleWaterAll} className="rounded-xl">
+                      <Droplets className="w-4 h-4 mr-1" />
+                      {t("waterAll")}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
             <AnimatePresence>
               {overdue.map((p) => (

@@ -90,6 +90,9 @@ export const translations = {
     sunlight: "Sunlight",
     nutrients: "Nutrients",
     preventiveCare: "Preventive Care",
+    confidence: "Confidence",
+    urgentActions: "Urgent Actions",
+    seasonalAdvice: "Seasonal Advice",
 
     // Plant Detail
     water: "Water",
@@ -169,6 +172,8 @@ export const translations = {
     noNotificationsDesc: "When your plants need attention, you'll see alerts here.",
     wateringAlerts: "Watering Alerts",
     waterAll: "Water All",
+    waterAllConfirm: "Mark all overdue plants as watered? This action cannot be undone.",
+    pullToSearch: "Pull down to search",
 
     // Search
     searchPlants: "Search plants...",
@@ -283,6 +288,9 @@ export const translations = {
     sunlight: "أشعة الشمس",
     nutrients: "المغذيات",
     preventiveCare: "الرعاية الوقائية",
+    confidence: "الثقة",
+    urgentActions: "إجراءات عاجلة",
+    seasonalAdvice: "نصائح موسمية",
 
     // Plant Detail
     water: "ري",
@@ -362,6 +370,8 @@ export const translations = {
     noNotificationsDesc: "عندما تحتاج نباتاتك للاهتمام، ستظهر التنبيهات هنا.",
     wateringAlerts: "تنبيهات الري",
     waterAll: "ري الكل",
+    waterAllConfirm: "هل تريد تسجيل ري جميع النباتات المتأخرة؟ لا يمكن التراجع عن هذا الإجراء.",
+    pullToSearch: "اسحب للأسفل للبحث",
 
     // Search
     searchPlants: "ابحث عن نباتات...",
@@ -476,6 +486,9 @@ export const translations = {
     sunlight: "Luz Solar",
     nutrients: "Nutrientes",
     preventiveCare: "Cuidados Preventivos",
+    confidence: "Confiança",
+    urgentActions: "Ações Urgentes",
+    seasonalAdvice: "Conselho Sazonal",
 
     // Plant Detail
     water: "Regar",
@@ -555,6 +568,8 @@ export const translations = {
     noNotificationsDesc: "Quando as tuas plantas precisarem de atenção, verás os alertas aqui.",
     wateringAlerts: "Alertas de Rega",
     waterAll: "Regar Todas",
+    waterAllConfirm: "Marcar todas as plantas em atraso como regadas? Esta ação não pode ser desfeita.",
+    pullToSearch: "Puxa para baixo para pesquisar",
 
     // Search
     searchPlants: "Pesquisar plantas...",

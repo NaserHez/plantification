@@ -90,6 +90,9 @@ export const translations = {
     sunlight: "Sunlight",
     nutrients: "Nutrients",
     preventiveCare: "Preventive Care",
+    confidence: "Confidence",
+    urgentActions: "Urgent Actions",
+    seasonalAdvice: "Seasonal Advice",
 
     // Plant Detail
     water: "Water",
@@ -285,6 +288,9 @@ export const translations = {
     sunlight: "أشعة الشمس",
     nutrients: "المغذيات",
     preventiveCare: "الرعاية الوقائية",
+    confidence: "الثقة",
+    urgentActions: "إجراءات عاجلة",
+    seasonalAdvice: "نصائح موسمية",
 
     // Plant Detail
     water: "ري",
@@ -480,6 +486,9 @@ export const translations = {
     sunlight: "Luz Solar",
     nutrients: "Nutrientes",
     preventiveCare: "Cuidados Preventivos",
+    confidence: "Confiança",
+    urgentActions: "Ações Urgentes",
+    seasonalAdvice: "Conselho Sazonal",
 
     // Plant Detail
     water: "Regar",

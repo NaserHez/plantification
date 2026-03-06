@@ -29,7 +29,8 @@ serve(async (req) => {
 
     const base64Image = image.includes(',') ? image.split(',')[1] : image;
 
-    const response = await fetch('https://api.plant.id/v3/identification', {
+    // Use the health_assessment endpoint for more detailed results
+    const response = await fetch('https://api.plant.id/v3/health_assessment', {
       method: 'POST',
       headers: {
         'Api-Key': apiKey,
@@ -37,7 +38,16 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         images: [base64Image],
+        similar_images: true,
         health: 'all',
+        details: [
+          'local_name',
+          'description',
+          'url',
+          'treatment',
+          'cause',
+          'classification',
+        ],
       }),
     });
 
@@ -52,9 +62,10 @@ serve(async (req) => {
     const data = await response.json();
     const healthResult = data.result?.disease;
 
-    let healthAssessment = { isHealthy: true, diseases: [] as any[] };
+    let healthAssessment = { isHealthy: true, diseases: [] as any[], overallConfidence: 0 };
     if (healthResult) {
       const isHealthy = healthResult.is_healthy?.binary ?? true;
+      const overallConfidence = Math.round((healthResult.is_healthy?.probability ?? 0) * 100);
       const diseases = (healthResult.suggestions || [])
         .filter((d: any) => d.name !== 'healthy')
         .slice(0, 5)
@@ -62,18 +73,28 @@ serve(async (req) => {
           name: d.name,
           probability: Math.round((d.probability || 0) * 100),
           description: d.details?.description || null,
-          treatment: d.details?.treatment?.biological?.join('. ') || d.details?.treatment?.chemical?.join('. ') || null,
+          cause: d.details?.cause || null,
+          treatment: d.details?.treatment?.biological?.join('. ') || null,
+          chemicalTreatment: d.details?.treatment?.chemical?.join('. ') || null,
+          prevention: d.details?.treatment?.prevention?.join('. ') || null,
+          similarImages: (d.similar_images || []).slice(0, 2).map((img: any) => ({
+            url: img.url,
+            similarity: Math.round((img.similarity || 0) * 100),
+          })),
         }));
-      healthAssessment = { isHealthy, diseases };
+      healthAssessment = { isHealthy, diseases, overallConfidence };
     }
 
-    // Generate care recommendations using Lovable AI
+    // Generate care recommendations using Lovable AI with richer context
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     let careRecommendations = null;
     if (LOVABLE_API_KEY) {
       try {
         const plantName = data.result?.classification?.suggestions?.[0]?.name || 'unknown plant';
-        const diseaseNames = healthAssessment.diseases.map(d => d.name).join(', ') || 'none detected';
+        const diseaseDetails = healthAssessment.diseases.map(d =>
+          `${d.name} (${d.probability}% confidence)${d.cause ? `, cause: ${d.cause}` : ''}`
+        ).join('; ') || 'none detected';
+
         const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -81,16 +102,27 @@ serve(async (req) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'google/gemini-3-flash-preview',
+            model: 'google/gemini-2.5-flash',
             messages: [
               {
                 role: 'system',
-                content: 'You are a plant care expert. Return ONLY valid JSON, no markdown or extra text.'
+                content: `You are a certified plant pathologist and horticulturist. Provide precise, actionable care recommendations based on the plant species and detected conditions. Prioritize organic/biological treatments over chemical ones. Return ONLY valid JSON, no markdown or extra text.`
               },
               {
                 role: 'user',
-                content: `Given a plant (likely "${plantName}") with health status: ${healthAssessment.isHealthy ? 'healthy' : 'issues detected'}, diseases: ${diseaseNames}.
-Provide care recommendations as JSON: {"watering":{"frequency":"...","amount":"...","tips":"..."},"sunlight":"...","nutrients":"...","preventiveCare":"..."}`
+                content: `Plant: "${plantName}"
+Health: ${healthAssessment.isHealthy ? 'healthy' : 'issues detected'} (confidence: ${healthAssessment.overallConfidence}%)
+Detected conditions: ${diseaseDetails}
+
+Provide detailed care recommendations as JSON:
+{
+  "watering": {"frequency": "specific schedule", "amount": "specific amount", "tips": "species-specific watering advice"},
+  "sunlight": "specific light requirements for this species",
+  "nutrients": "specific fertilizer type, NPK ratio, and schedule",
+  "preventiveCare": "species-specific preventive measures",
+  "urgentActions": "immediate steps if issues detected, or null if healthy",
+  "seasonalAdvice": "current season care adjustments"
+}`
               }
             ],
           }),

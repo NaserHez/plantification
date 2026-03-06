@@ -169,6 +169,8 @@ export const translations = {
     noNotificationsDesc: "When your plants need attention, you'll see alerts here.",
     wateringAlerts: "Watering Alerts",
     waterAll: "Water All",
+    waterAllConfirm: "Mark all overdue plants as watered? This action cannot be undone.",
+    pullToSearch: "Pull down to search",
 
     // Search
     searchPlants: "Search plants...",
@@ -362,6 +364,8 @@ export const translations = {
     noNotificationsDesc: "عندما تحتاج نباتاتك للاهتمام، ستظهر التنبيهات هنا.",
     wateringAlerts: "تنبيهات الري",
     waterAll: "ري الكل",
+    waterAllConfirm: "هل تريد تسجيل ري جميع النباتات المتأخرة؟ لا يمكن التراجع عن هذا الإجراء.",
+    pullToSearch: "اسحب للأسفل للبحث",
 
     // Search
     searchPlants: "ابحث عن نباتات...",
@@ -555,6 +559,8 @@ export const translations = {
     noNotificationsDesc: "Quando as tuas plantas precisarem de atenção, verás os alertas aqui.",
     wateringAlerts: "Alertas de Rega",
     waterAll: "Regar Todas",
+    waterAllConfirm: "Marcar todas as plantas em atraso como regadas? Esta ação não pode ser desfeita.",
+    pullToSearch: "Puxa para baixo para pesquisar",
 
     // Search
     searchPlants: "Pesquisar plantas...",

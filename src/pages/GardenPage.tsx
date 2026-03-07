@@ -83,29 +83,34 @@ export default function GardenPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchVisible, setSearchVisible] = useState(false);
 
-  // Pull-to-reveal search
+  // Pull-to-reveal search with smooth progress
   const scrollRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef(0);
   const pulling = useRef(false);
+  const [pullProgress, setPullProgress] = useState(0);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (scrollRef.current && scrollRef.current.scrollTop <= 0) {
+    if (scrollRef.current && scrollRef.current.scrollTop <= 0 && !searchVisible) {
       touchStartY.current = e.touches[0].clientY;
       pulling.current = true;
     }
-  }, []);
+  }, [searchVisible]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!pulling.current) return;
     const diff = e.touches[0].clientY - touchStartY.current;
-    if (diff > 60 && !searchVisible) {
+    const progress = Math.min(Math.max(diff / 80, 0), 1);
+    setPullProgress(progress);
+    if (diff > 80) {
       setSearchVisible(true);
       pulling.current = false;
+      setPullProgress(0);
     }
-  }, [searchVisible]);
+  }, []);
 
   const handleTouchEnd = useCallback(() => {
     pulling.current = false;
+    setPullProgress(0);
   }, []);
 
   const sensors = useSensors(
@@ -206,27 +211,36 @@ export default function GardenPage() {
         </Button>
       </div>
 
-      {/* Pull-down hint when search is hidden */}
-      {plants.length > 0 && !searchVisible && (
+      {/* Pull indicator - visual only, no text */}
+      {plants.length > 0 && !searchVisible && pullProgress > 0 && (
+        <div className="flex justify-center py-1">
+          <div
+            className="w-8 h-1 rounded-full bg-primary/40 transition-transform"
+            style={{ transform: `scaleX(${pullProgress})` }}
+          />
+        </div>
+      )}
+
+      {/* Search icon tap fallback */}
+      {plants.length > 0 && !searchVisible && pullProgress === 0 && (
         <div className="flex justify-center mb-1">
           <button
             onClick={() => setSearchVisible(true)}
-            className="flex items-center gap-1 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors py-1"
+            className="p-1.5 rounded-full hover:bg-muted text-muted-foreground/40 hover:text-muted-foreground transition-colors"
           >
-            <Search className="w-3 h-3" />
-            {t("pullToSearch")}
+            <Search className="w-4 h-4" />
           </button>
         </div>
       )}
 
-      {/* Search bar - revealed on swipe down */}
+      {/* Search bar */}
       <AnimatePresence>
         {plants.length > 0 && searchVisible && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
             className="px-4 mb-3 overflow-hidden"
           >
             <div className="relative">

@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      diagnosis_history: {
+        Row: {
+          care_recommendations: Json | null
+          created_at: string
+          diseases: Json | null
+          id: string
+          image_url: string | null
+          is_healthy: boolean
+          overall_confidence: number | null
+          plant_id: string
+          user_id: string
+        }
+        Insert: {
+          care_recommendations?: Json | null
+          created_at?: string
+          diseases?: Json | null
+          id?: string
+          image_url?: string | null
+          is_healthy?: boolean
+          overall_confidence?: number | null
+          plant_id: string
+          user_id: string
+        }
+        Update: {
+          care_recommendations?: Json | null
+          created_at?: string
+          diseases?: Json | null
+          id?: string
+          image_url?: string | null
+          is_healthy?: boolean
+          overall_confidence?: number | null
+          plant_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnosis_history_plant_id_fkey"
+            columns: ["plant_id"]
+            isOneToOne: false
+            referencedRelation: "plants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plant_photos: {
         Row: {
           caption: string | null

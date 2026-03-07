@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Droplets, Sun, MapPin, Trash2, Loader2, Stethoscope, Globe, RefreshCw, Bot, Home } from "lucide-react";
 import PlantGallery from "@/components/PlantGallery";
+import HealthTimeline from "@/components/HealthTimeline";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -282,6 +283,9 @@ export default function PlantDetailPage() {
           </div>
 
           {id && <PlantGallery plantId={id} />}
+          
+          {/* Health History Timeline */}
+          {id && <HealthTimeline plantId={id} />}
 
           <Button onClick={handleDelete} variant="outline" className="w-full mt-6 h-10 rounded-xl gap-2 text-destructive border-destructive/30 hover:bg-destructive/10">
             <Trash2 className="w-4 h-4" />

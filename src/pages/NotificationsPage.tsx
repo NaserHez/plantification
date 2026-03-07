@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Droplets, BellOff, Bell, BellRing, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Droplets, BellOff, Bell, BellRing } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useWateringReminders } from "@/hooks/use-watering-reminders";
@@ -30,7 +30,7 @@ export default function NotificationsPage() {
   const fetchPlants = async () => {
     const { data } = await supabase
       .from("plants")
-      .select("id, name, nickname, watering_frequency, last_watered")
+      .select("id, name, nickname, watering_frequency, last_watered, image_url")
       .order("created_at", { ascending: false });
     setPlants(data || []);
   };
@@ -66,6 +66,12 @@ export default function NotificationsPage() {
     toast({ title: t("watered"), description: `${ids.length} ${ids.length > 1 ? t("plants") : t("plant")}` });
     await fetchPlants();
     setWateringAll(false);
+  };
+
+  // Find plant image for overdue items
+  const getPlantImage = (plantId: string) => {
+    const plant = plants.find((p) => p.id === plantId);
+    return plant?.image_url || null;
   };
 
   return (
@@ -154,33 +160,49 @@ export default function NotificationsPage() {
               </AlertDialog>
             </div>
             <AnimatePresence>
-              {overdue.map((p) => (
-                <motion.div
-                  key={p.id}
-                  layout
-                  exit={{ opacity: 0, x: -40, height: 0 }}
-                  transition={{ duration: 0.25 }}
-                  className="flex items-center gap-2"
-                >
-                  <button
-                    onClick={() => navigate(`/plant/${p.id}`)}
-                    className="flex-1 flex items-center justify-between p-4 rounded-2xl bg-water/10 border border-water/20 text-left hover:bg-water/15 transition-colors"
+              {overdue.map((p) => {
+                const imgUrl = getPlantImage(p.id);
+                return (
+                  <motion.div
+                    key={p.id}
+                    layout
+                    exit={{ opacity: 0, x: -40, height: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="flex items-center gap-2"
                   >
-                    <span className="font-medium text-sm truncate">{p.nickname || p.name}</span>
-                    <span className="text-xs text-water font-medium ml-2 whitespace-nowrap">
-                      {p.daysOverdue === 0 ? t("dueToday") : `${p.daysOverdue}${t("daysOverdue")}`}
-                    </span>
-                  </button>
-                  <button
-                    onClick={(e) => handleMarkWatered(e, p.id, p.nickname || p.name)}
-                    disabled={wateringIds.has(p.id)}
-                    className="shrink-0 flex items-center justify-center h-10 w-10 rounded-xl bg-primary/15 hover:bg-primary/25 text-primary transition-colors disabled:opacity-50"
-                    title={t("watered")}
-                  >
-                    <Droplets className={`w-5 h-5 ${wateringIds.has(p.id) ? "animate-pulse" : ""}`} />
-                  </button>
-                </motion.div>
-              ))}
+                    <button
+                      onClick={() => navigate(`/plant/${p.id}`)}
+                      className="flex-1 flex items-center gap-3 p-3 rounded-2xl bg-water/10 border border-water/20 text-left hover:bg-water/15 transition-colors"
+                    >
+                      {imgUrl ? (
+                        <img
+                          src={imgUrl}
+                          alt={p.nickname || p.name}
+                          className="w-10 h-10 rounded-xl object-cover shrink-0"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-xl bg-water/20 flex items-center justify-center shrink-0 text-lg">
+                          🌿
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <span className="font-medium text-sm truncate block">{p.nickname || p.name}</span>
+                        <span className="text-xs text-water font-medium">
+                          {p.daysOverdue === 0 ? t("dueToday") : `${p.daysOverdue}${t("daysOverdue")}`}
+                        </span>
+                      </div>
+                    </button>
+                    <button
+                      onClick={(e) => handleMarkWatered(e, p.id, p.nickname || p.name)}
+                      disabled={wateringIds.has(p.id)}
+                      className="shrink-0 flex items-center justify-center h-10 w-10 rounded-xl bg-primary/15 hover:bg-primary/25 text-primary transition-colors disabled:opacity-50"
+                      title={t("watered")}
+                    >
+                      <Droplets className={`w-5 h-5 ${wateringIds.has(p.id) ? "animate-pulse" : ""}`} />
+                    </button>
+                  </motion.div>
+                );
+              })}
             </AnimatePresence>
           </motion.div>
         )}

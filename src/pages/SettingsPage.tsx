@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, LogOut, Moon, Sun, Monitor, User, Lock, Leaf, Loader2, Globe, Bell, BellOff, Languages } from "lucide-react";
+import { ArrowLeft, LogOut, Moon, Sun, Monitor, User, Lock, Leaf, Loader2, Globe, Bell, BellOff, Languages, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +24,12 @@ const APP_LANGUAGES = [
   { value: "pt", label: "Português (PT)", flag: "🇵🇹" },
 ];
 
+const NOTIF_TONES = [
+  { value: "default", label: "🔔 Default", labelAr: "🔔 افتراضي", labelPt: "🔔 Predefinido" },
+  { value: "gentle", label: "🌿 Gentle", labelAr: "🌿 لطيف", labelPt: "🌿 Suave" },
+  { value: "silent", label: "🔇 Silent", labelAr: "🔇 صامت", labelPt: "🔇 Silencioso" },
+];
+
 export default function SettingsPage() {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
@@ -36,6 +42,7 @@ export default function SettingsPage() {
   const [email, setEmail] = useState("");
   const [careLang, setCareLang] = useState("en");
   const [notifPermission, setNotifPermission] = useState<string>("default");
+  const [notifTone, setNotifTone] = useState(() => localStorage.getItem("notif_tone") || "default");
 
   useEffect(() => {
     const load = async () => {
@@ -63,6 +70,12 @@ export default function SettingsPage() {
     };
     load();
   }, []);
+
+  const handleToneChange = (tone: string) => {
+    setNotifTone(tone);
+    localStorage.setItem("notif_tone", tone);
+    toast.success(t("settingsSaved"));
+  };
 
   const handleSaveProfile = async () => {
     setSaving(true);
@@ -129,6 +142,12 @@ export default function SettingsPage() {
       </div>
     );
   }
+
+  const getToneLabel = (tone: typeof NOTIF_TONES[number]) => {
+    if (appLanguage === "ar") return tone.labelAr;
+    if (appLanguage === "pt") return tone.labelPt;
+    return tone.label;
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -204,6 +223,30 @@ export default function SettingsPage() {
             <Button onClick={handleRequestNotifications} variant="outline" className="w-full rounded-xl h-10 gap-2">
               <Bell className="w-4 h-4" /> {t("enableNotifications")}
             </Button>
+          )}
+
+          {/* Notification Tone */}
+          {notifPermission === "granted" && (
+            <div className="pt-2 border-t border-border">
+              <Label className="text-xs text-muted-foreground flex items-center gap-1.5 mb-2">
+                <Volume2 className="w-3.5 h-3.5" /> {t("notifTone")}
+              </Label>
+              <div className="grid grid-cols-3 gap-2">
+                {NOTIF_TONES.map((tone) => (
+                  <button
+                    key={tone.value}
+                    onClick={() => handleToneChange(tone.value)}
+                    className={`px-3 py-2 rounded-xl text-xs font-medium transition-colors border ${
+                      notifTone === tone.value
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-muted text-muted-foreground border-border hover:border-primary/30"
+                    }`}
+                  >
+                    {getToneLabel(tone)}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
         </div>
 

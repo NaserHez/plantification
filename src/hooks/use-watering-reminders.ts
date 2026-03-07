@@ -6,6 +6,7 @@ interface Plant {
   nickname?: string | null;
   last_watered?: string | null;
   watering_frequency?: string | null;
+  image_url?: string | null;
 }
 
 interface OverduePlant extends Plant {
@@ -56,10 +57,20 @@ export function useWateringReminders(plants: Plant[]) {
       const alreadyNotified = localStorage.getItem(notifiedKey);
       if (!alreadyNotified) {
         const names = overduePlants.slice(0, 3).map((p) => p.nickname || p.name).join(", ");
-        new Notification("🌱 Plants need water!", {
+        const tone = localStorage.getItem("notif_tone") || "default";
+        
+        // Use plant image in notification if available
+        const firstPlantImage = overduePlants[0]?.image_url;
+        
+        const notifOptions: NotificationOptions = {
           body: `${overduePlants.length} plant${overduePlants.length > 1 ? "s" : ""} overdue: ${names}`,
-          icon: "/favicon.ico",
-        });
+          icon: firstPlantImage || "/icons/icon-192.png",
+          badge: "/icons/icon-192.png",
+          tag: "watering-reminder",
+          silent: tone === "silent",
+        };
+
+        new Notification("🌱 Plants need water!", notifOptions);
         localStorage.setItem(notifiedKey, "true");
       }
     }

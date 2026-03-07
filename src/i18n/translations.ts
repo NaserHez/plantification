@@ -151,6 +151,7 @@ export const translations = {
     notifEnabled: "Notifications are enabled. You'll be reminded when plants need watering.",
     notifDisabled: "Enable notifications to get watering reminders when you open the app.",
     enableNotifications: "Enable Notifications",
+    notifTone: "Notification Tone",
     profile: "Profile",
     displayName: "Display Name",
     yourName: "Your name",
@@ -173,7 +174,6 @@ export const translations = {
     wateringAlerts: "Watering Alerts",
     waterAll: "Water All",
     waterAllConfirm: "Mark all overdue plants as watered? This action cannot be undone.",
-    pullToSearch: "Pull down to search",
 
     // Search
     searchPlants: "Search plants...",
@@ -192,6 +192,10 @@ export const translations = {
     // Weather
     weatherTitle: "Weather & Garden",
     gardeningTip: "Gardening Tip",
+
+    // Health History
+    healthHistory: "Health History",
+    noHealthHistory: "No health checks yet. Run a diagnosis to start tracking.",
 
     // 404
     pageNotFound: "Oops! Page not found",
@@ -349,6 +353,7 @@ export const translations = {
     notifEnabled: "الإشعارات مفعّلة. سيتم تذكيرك عندما تحتاج النباتات للري.",
     notifDisabled: "فعّل الإشعارات للحصول على تذكيرات الري عند فتح التطبيق.",
     enableNotifications: "تفعيل الإشعارات",
+    notifTone: "نغمة الإشعار",
     profile: "الملف الشخصي",
     displayName: "الاسم المعروض",
     yourName: "اسمك",
@@ -371,7 +376,6 @@ export const translations = {
     wateringAlerts: "تنبيهات الري",
     waterAll: "ري الكل",
     waterAllConfirm: "هل تريد تسجيل ري جميع النباتات المتأخرة؟ لا يمكن التراجع عن هذا الإجراء.",
-    pullToSearch: "اسحب للأسفل للبحث",
 
     // Search
     searchPlants: "ابحث عن نباتات...",
@@ -390,6 +394,10 @@ export const translations = {
     // Weather
     weatherTitle: "الطقس والحديقة",
     gardeningTip: "نصيحة بستنة",
+
+    // Health History
+    healthHistory: "سجل الصحة",
+    noHealthHistory: "لا توجد فحوصات صحية بعد. قم بتشخيص لبدء التتبع.",
 
     // 404
     pageNotFound: "عذراً! الصفحة غير موجودة",
@@ -547,6 +555,7 @@ export const translations = {
     notifEnabled: "Notificações ativadas. Serás lembrado quando as plantas precisarem de rega.",
     notifDisabled: "Ativa as notificações para receber lembretes de rega ao abrir a app.",
     enableNotifications: "Ativar Notificações",
+    notifTone: "Tom de Notificação",
     profile: "Perfil",
     displayName: "Nome de Exibição",
     yourName: "O teu nome",
@@ -569,7 +578,6 @@ export const translations = {
     wateringAlerts: "Alertas de Rega",
     waterAll: "Regar Todas",
     waterAllConfirm: "Marcar todas as plantas em atraso como regadas? Esta ação não pode ser desfeita.",
-    pullToSearch: "Puxa para baixo para pesquisar",
 
     // Search
     searchPlants: "Pesquisar plantas...",
@@ -588,6 +596,10 @@ export const translations = {
     // Weather
     weatherTitle: "Tempo & Jardim",
     gardeningTip: "Dica de Jardinagem",
+
+    // Health History
+    healthHistory: "Histórico de Saúde",
+    noHealthHistory: "Ainda sem verificações. Faz um diagnóstico para começar a acompanhar.",
 
     // 404
     pageNotFound: "Ups! Página não encontrada",

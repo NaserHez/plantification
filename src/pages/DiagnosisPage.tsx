@@ -49,6 +49,7 @@ export default function DiagnosisPage() {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<HealthResult | null>(null);
+  const [savingHistory, setSavingHistory] = useState(false);
 
   useEffect(() => {
     const fetchPlants = async () => {
@@ -88,6 +89,29 @@ export default function DiagnosisPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   }, []);
 
+  const saveDiagnosisHistory = async (diagResult: HealthResult) => {
+    if (!selectedPlantId) return;
+    setSavingHistory(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      await supabase.from("diagnosis_history").insert({
+        plant_id: selectedPlantId,
+        user_id: user.id,
+        is_healthy: diagResult.isHealthy,
+        overall_confidence: diagResult.overallConfidence || null,
+        diseases: diagResult.diseases as any,
+        care_recommendations: diagResult.careRecommendations as any,
+        image_url: capturedImage?.substring(0, 200) === capturedImage ? capturedImage : null, // Only save if URL, not base64
+      });
+    } catch {
+      // Silent fail for history saving
+    } finally {
+      setSavingHistory(false);
+    }
+  };
+
   const handleDiagnose = async () => {
     if (!capturedImage) return;
     setLoading(true);
@@ -98,6 +122,10 @@ export default function DiagnosisPage() {
       if (error) throw new Error(error.message);
       if (data.error) throw new Error(data.error);
       setResult(data);
+      // Auto-save to history if a plant is selected
+      if (selectedPlantId) {
+        saveDiagnosisHistory(data);
+      }
     } catch (err: any) {
       toast.error(err.message || "Diagnosis failed");
     } finally {
@@ -212,6 +240,11 @@ export default function DiagnosisPage() {
                 {result.overallConfidence != null && (
                   <p className="text-xs text-muted-foreground ml-8">
                     {t("confidence")}: {result.overallConfidence}%
+                  </p>
+                )}
+                {selectedPlantId && (
+                  <p className="text-[10px] text-muted-foreground ml-8 mt-1">
+                    {savingHistory ? "Saving to history..." : "✓ Saved to health history"}
                   </p>
                 )}
               </div>

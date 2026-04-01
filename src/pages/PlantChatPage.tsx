@@ -25,6 +25,7 @@ export default function PlantChatPage() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [plantContext, setPlantContext] = useState<string>("");
+  const [weatherContext, setWeatherContext] = useState<string>("");
   const [autoSent, setAutoSent] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -42,12 +43,38 @@ export default function PlantChatPage() {
         setPlantContext(summary);
       }
     };
+
+    const fetchWeather = async () => {
+      try {
+        let lat = 40.4168, lon = -3.7038;
+        try {
+          const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+            navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 })
+          );
+          lat = pos.coords.latitude;
+          lon = pos.coords.longitude;
+        } catch {}
+        const res = await fetch(
+          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m`
+        );
+        const data = await res.json();
+        setWeatherContext(
+          `Temperature: ${data.current.temperature_2m}°C, Humidity: ${data.current.relative_humidity_2m}%, Weather code: ${data.current.weather_code}, Wind: ${data.current.wind_speed_10m} km/h`
+        );
+      } catch {}
+    };
+
     fetchPlants();
+    fetchWeather();
   }, []);
 
   useEffect(() => {
     if (plantQuery && !autoSent && plantContext !== undefined) {
-      setInput(`Tell me about caring for my ${plantQuery}. What should I know?`);
+      if (plantQuery === "weather") {
+        setInput(t("weatherChatPrompt"));
+      } else {
+        setInput(`Tell me about caring for my ${plantQuery}. What should I know?`);
+      }
       setAutoSent(true);
     }
   }, [plantQuery, autoSent, plantContext]);
@@ -81,7 +108,12 @@ export default function PlantChatPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ messages: allMessages, language: localStorage.getItem("app_language") || "en", plantContext }),
+        body: JSON.stringify({
+          messages: allMessages,
+          language: localStorage.getItem("app_language") || "en",
+          plantContext,
+          weatherContext,
+        }),
       });
 
       if (!resp.ok || !resp.body) {
@@ -133,7 +165,7 @@ export default function PlantChatPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [input, isLoading, messages]);
+  }, [input, isLoading, messages, weatherContext]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {

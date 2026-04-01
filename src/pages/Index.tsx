@@ -183,6 +183,7 @@ export default function Index() {
             { icon: Stethoscope, title: t("diagnose"), desc: t("diagnoseDesc"), color: "text-bloom", path: "/diagnose" },
             { icon: Bot, title: t("aiChat"), desc: t("aiChatDesc"), color: "text-water", path: "/chat" },
             { icon: CalendarDays, title: t("plantingCalendar"), desc: t("plantingCalendarDesc"), color: "text-primary", path: "/planting-calendar" },
+            { icon: Thermometer, title: t("weatherCenter"), desc: t("askWeatherAi"), color: "text-sun", path: "/weather" },
           ].map(({ icon: Icon, title, desc, color, path }) => (
             <button
               key={title}

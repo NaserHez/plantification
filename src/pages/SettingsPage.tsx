@@ -43,6 +43,7 @@ export default function SettingsPage() {
   const [careLang, setCareLang] = useState("en");
   const [notifPermission, setNotifPermission] = useState<string>("default");
   const [notifTone, setNotifTone] = useState(() => localStorage.getItem("notif_tone") || "default");
+  const [reminderTime, setReminderTime] = useState(() => localStorage.getItem("reminder_time") || "08:00");
 
   useEffect(() => {
     const load = async () => {

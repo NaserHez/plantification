@@ -188,10 +188,23 @@ export const translations = {
 
     // Next watering
     nextWatering: "Next watering:",
+    upcomingWaterings: "Upcoming Waterings",
+    tomorrow: "tomorrow",
+    daysLeft: "d left",
 
     // Weather
     weatherTitle: "Weather & Garden",
     gardeningTip: "Gardening Tip",
+    weatherCenter: "Weather Center",
+    feelsLike: "Feels like",
+    hourlyForecast: "Hourly Forecast",
+    weeklyForecast: "7-Day Forecast",
+    askWeatherAi: "Ask AI about planting conditions",
+    weatherChatPrompt: "Based on the current weather conditions, what should I do in my garden today? Any planting or care recommendations?",
+
+    // Notification scheduling
+    reminderTime: "Reminder Time",
+    reminderTimeDesc: "Daily notification time",
 
     // Health History
     healthHistory: "Health History",

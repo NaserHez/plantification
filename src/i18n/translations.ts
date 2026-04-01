@@ -618,10 +618,23 @@ export const translations = {
 
     // Next watering
     nextWatering: "Próxima rega:",
+    upcomingWaterings: "Regas Programadas",
+    tomorrow: "amanhã",
+    daysLeft: "d restantes",
 
     // Weather
     weatherTitle: "Tempo & Jardim",
     gardeningTip: "Dica de Jardinagem",
+    weatherCenter: "Centro Meteorológico",
+    feelsLike: "Sensação de",
+    hourlyForecast: "Previsão Horária",
+    weeklyForecast: "Previsão 7 Dias",
+    askWeatherAi: "Perguntar à IA sobre condições de plantação",
+    weatherChatPrompt: "Com base nas condições meteorológicas atuais, o que devo fazer no meu jardim hoje? Alguma recomendação de plantação ou cuidados?",
+
+    // Notification scheduling
+    reminderTime: "Hora do Lembrete",
+    reminderTimeDesc: "Hora da notificação diária",
 
     // Health History
     healthHistory: "Histórico de Saúde",

@@ -403,10 +403,23 @@ export const translations = {
 
     // Next watering
     nextWatering: "الري القادم:",
+    upcomingWaterings: "الري القادم",
+    tomorrow: "غداً",
+    daysLeft: "يوم متبقي",
 
     // Weather
     weatherTitle: "الطقس والحديقة",
     gardeningTip: "نصيحة بستنة",
+    weatherCenter: "مركز الطقس",
+    feelsLike: "يبدو مثل",
+    hourlyForecast: "التوقعات بالساعة",
+    weeklyForecast: "توقعات ٧ أيام",
+    askWeatherAi: "اسأل الذكاء عن ظروف الزراعة",
+    weatherChatPrompt: "بناءً على الطقس الحالي، ماذا يجب أن أفعل في حديقتي اليوم؟ أي توصيات للزراعة أو العناية؟",
+
+    // Notification scheduling
+    reminderTime: "وقت التذكير",
+    reminderTimeDesc: "وقت الإشعار اليومي",
 
     // Health History
     healthHistory: "سجل الصحة",

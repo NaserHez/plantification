@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Camera, Leaf, Sparkles, Stethoscope, Bot, Settings, Bell, CalendarDays, ArrowRight, Sprout } from "lucide-react";
+import { Camera, Leaf, Sparkles, Stethoscope, Bot, Settings, Bell, CalendarDays, ArrowRight, Sprout, Thermometer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
@@ -183,6 +183,7 @@ export default function Index() {
             { icon: Stethoscope, title: t("diagnose"), desc: t("diagnoseDesc"), color: "text-bloom", path: "/diagnose" },
             { icon: Bot, title: t("aiChat"), desc: t("aiChatDesc"), color: "text-water", path: "/chat" },
             { icon: CalendarDays, title: t("plantingCalendar"), desc: t("plantingCalendarDesc"), color: "text-primary", path: "/planting-calendar" },
+            { icon: Thermometer, title: t("weatherCenter"), desc: t("askWeatherAi"), color: "text-sun", path: "/weather" },
           ].map(({ icon: Icon, title, desc, color, path }) => (
             <button
               key={title}

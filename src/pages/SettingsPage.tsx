@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, LogOut, Moon, Sun, Monitor, User, Lock, Leaf, Loader2, Globe, Bell, BellOff, Languages, Volume2 } from "lucide-react";
+import { ArrowLeft, LogOut, Moon, Sun, Monitor, User, Lock, Leaf, Loader2, Globe, Bell, BellOff, Languages, Volume2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,6 +43,7 @@ export default function SettingsPage() {
   const [careLang, setCareLang] = useState("en");
   const [notifPermission, setNotifPermission] = useState<string>("default");
   const [notifTone, setNotifTone] = useState(() => localStorage.getItem("notif_tone") || "default");
+  const [reminderTime, setReminderTime] = useState(() => localStorage.getItem("reminder_time") || "08:00");
 
   useEffect(() => {
     const load = async () => {
@@ -227,26 +228,45 @@ export default function SettingsPage() {
 
           {/* Notification Tone */}
           {notifPermission === "granted" && (
-            <div className="pt-2 border-t border-border">
-              <Label className="text-xs text-muted-foreground flex items-center gap-1.5 mb-2">
-                <Volume2 className="w-3.5 h-3.5" /> {t("notifTone")}
-              </Label>
-              <div className="grid grid-cols-3 gap-2">
-                {NOTIF_TONES.map((tone) => (
-                  <button
-                    key={tone.value}
-                    onClick={() => handleToneChange(tone.value)}
-                    className={`px-3 py-2 rounded-xl text-xs font-medium transition-colors border ${
-                      notifTone === tone.value
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "bg-muted text-muted-foreground border-border hover:border-primary/30"
-                    }`}
-                  >
-                    {getToneLabel(tone)}
-                  </button>
-                ))}
+            <>
+              <div className="pt-2 border-t border-border">
+                <Label className="text-xs text-muted-foreground flex items-center gap-1.5 mb-2">
+                  <Volume2 className="w-3.5 h-3.5" /> {t("notifTone")}
+                </Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {NOTIF_TONES.map((tone) => (
+                    <button
+                      key={tone.value}
+                      onClick={() => handleToneChange(tone.value)}
+                      className={`px-3 py-2 rounded-xl text-xs font-medium transition-colors border ${
+                        notifTone === tone.value
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-muted text-muted-foreground border-border hover:border-primary/30"
+                      }`}
+                    >
+                      {getToneLabel(tone)}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+
+              <div className="pt-2 border-t border-border">
+                <Label className="text-xs text-muted-foreground flex items-center gap-1.5 mb-2">
+                  <Clock className="w-3.5 h-3.5" /> {t("reminderTime")}
+                </Label>
+                <p className="text-[10px] text-muted-foreground mb-2">{t("reminderTimeDesc")}</p>
+                <Input
+                  type="time"
+                  value={reminderTime}
+                  onChange={(e) => {
+                    setReminderTime(e.target.value);
+                    localStorage.setItem("reminder_time", e.target.value);
+                    toast.success(t("settingsSaved"));
+                  }}
+                  className="rounded-xl h-10 w-32"
+                />
+              </div>
+            </>
           )}
         </div>
 

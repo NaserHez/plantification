@@ -188,10 +188,23 @@ export const translations = {
 
     // Next watering
     nextWatering: "Next watering:",
+    upcomingWaterings: "Upcoming Waterings",
+    tomorrow: "tomorrow",
+    daysLeft: "d left",
 
     // Weather
     weatherTitle: "Weather & Garden",
     gardeningTip: "Gardening Tip",
+    weatherCenter: "Weather Center",
+    feelsLike: "Feels like",
+    hourlyForecast: "Hourly Forecast",
+    weeklyForecast: "7-Day Forecast",
+    askWeatherAi: "Ask AI about planting conditions",
+    weatherChatPrompt: "Based on the current weather conditions, what should I do in my garden today? Any planting or care recommendations?",
+
+    // Notification scheduling
+    reminderTime: "Reminder Time",
+    reminderTimeDesc: "Daily notification time",
 
     // Health History
     healthHistory: "Health History",
@@ -390,10 +403,23 @@ export const translations = {
 
     // Next watering
     nextWatering: "الري القادم:",
+    upcomingWaterings: "الري القادم",
+    tomorrow: "غداً",
+    daysLeft: "يوم متبقي",
 
     // Weather
     weatherTitle: "الطقس والحديقة",
     gardeningTip: "نصيحة بستنة",
+    weatherCenter: "مركز الطقس",
+    feelsLike: "يبدو مثل",
+    hourlyForecast: "التوقعات بالساعة",
+    weeklyForecast: "توقعات ٧ أيام",
+    askWeatherAi: "اسأل الذكاء عن ظروف الزراعة",
+    weatherChatPrompt: "بناءً على الطقس الحالي، ماذا يجب أن أفعل في حديقتي اليوم؟ أي توصيات للزراعة أو العناية؟",
+
+    // Notification scheduling
+    reminderTime: "وقت التذكير",
+    reminderTimeDesc: "وقت الإشعار اليومي",
 
     // Health History
     healthHistory: "سجل الصحة",
@@ -592,10 +618,23 @@ export const translations = {
 
     // Next watering
     nextWatering: "Próxima rega:",
+    upcomingWaterings: "Regas Programadas",
+    tomorrow: "amanhã",
+    daysLeft: "d restantes",
 
     // Weather
     weatherTitle: "Tempo & Jardim",
     gardeningTip: "Dica de Jardinagem",
+    weatherCenter: "Centro Meteorológico",
+    feelsLike: "Sensação de",
+    hourlyForecast: "Previsão Horária",
+    weeklyForecast: "Previsão 7 Dias",
+    askWeatherAi: "Perguntar à IA sobre condições de plantação",
+    weatherChatPrompt: "Com base nas condições meteorológicas atuais, o que devo fazer no meu jardim hoje? Alguma recomendação de plantação ou cuidados?",
+
+    // Notification scheduling
+    reminderTime: "Hora do Lembrete",
+    reminderTimeDesc: "Hora da notificação diária",
 
     // Health History
     healthHistory: "Histórico de Saúde",

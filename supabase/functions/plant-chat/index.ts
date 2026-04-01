@@ -12,17 +12,34 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY is not configured');
 
-    const { messages, language, plantContext } = await req.json();
+    const { messages, language, plantContext, weatherContext } = await req.json();
+
+    // Detect the language of the last user message to respond in the same language
+    const lastUserMsg = [...messages].reverse().find((m: any) => m.role === 'user');
+    const userText = lastUserMsg?.content || '';
+
+    // Simple heuristic: if message contains Arabic characters, respond in Arabic
+    // If it contains Portuguese-specific characters or the app language is pt, respond in Portuguese
+    const hasArabic = /[\u0600-\u06FF]/.test(userText);
+    const hasPortuguese = /[àáãâéêíóôõúçÀÁÃÂÉÊÍÓÔÕÚÇ]/.test(userText);
+    
+    let detectedLang = language || 'en';
+    if (hasArabic) detectedLang = 'ar';
+    else if (hasPortuguese) detectedLang = 'pt';
 
     const langInstructions: Record<string, string> = {
       en: 'Respond in English.',
       ar: 'Respond entirely in Arabic (العربية). Use right-to-left friendly formatting.',
       pt: 'Respond entirely in European Portuguese (Português de Portugal). Use "tu" form.',
     };
-    const langNote = langInstructions[language] || langInstructions.en;
+    const langNote = langInstructions[detectedLang] || langInstructions.en;
 
     const gardenContext = plantContext
       ? `\n\nThe user has these plants in their garden:\n${plantContext}\n\nUse this information to give personalized advice. Reference their specific plants by name when relevant.`
+      : '';
+
+    const weatherInfo = weatherContext
+      ? `\n\nCurrent weather conditions:\n${weatherContext}\n\nUse this weather data to give relevant planting and care advice based on current conditions.`
       : '';
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -48,6 +65,13 @@ serve(async (req) => {
 - Companion planting recommendations (which plants grow well together)
 - Pesticide recommendations (organic and chemical options, application methods, safety precautions)
 - Fertilizer recommendations (NPK ratios, organic vs synthetic, application frequency and timing)
+- Weather-related planting advice (when to plant based on temperature, frost risk, rain, wind, humidity)
+
+When asked about weather or planting conditions:
+- Use the provided weather data to give specific, actionable advice
+- Recommend whether it's a good day to plant, transplant, or water
+- Warn about frost risk, heat stress, or excessive rain
+- Suggest adjustments to care routines based on current conditions
 
 When recommending pesticides or fertilizers:
 - Always suggest organic/natural options first (neem oil, insecticidal soap, compost tea, fish emulsion, etc.)
@@ -56,9 +80,11 @@ When recommending pesticides or fertilizers:
 - Mention safety precautions (gloves, ventilation, pet/child safety)
 - Consider the specific plant type when recommending products
 
+CRITICAL: Always respond in the SAME LANGUAGE as the user's last message. If they write in Arabic, respond in Arabic. If they write in Portuguese, respond in Portuguese. If they write in English, respond in English.
+
 Keep answers concise, practical, and actionable. Use emojis sparingly for warmth. If unsure, say so rather than guessing. Format responses with markdown for readability.
 
-${langNote}${gardenContext}`
+${langNote}${gardenContext}${weatherInfo}`
           },
           ...messages,
         ],

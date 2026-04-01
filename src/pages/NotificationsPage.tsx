@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Droplets, BellOff, Bell, BellRing } from "lucide-react";
+import { ArrowLeft, Droplets, BellOff, Bell, BellRing, CalendarClock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useWateringReminders } from "@/hooks/use-watering-reminders";
@@ -20,10 +20,49 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+interface PlantWithSchedule {
+  id: string;
+  name: string;
+  nickname?: string | null;
+  watering_frequency?: string | null;
+  last_watered?: string | null;
+  image_url?: string | null;
+}
+
+const frequencyToDays: Record<string, number> = {
+  daily: 1,
+  "every-2-days": 2,
+  weekly: 7,
+  biweekly: 14,
+  monthly: 30,
+};
+
+function getNextWateringDate(plant: PlantWithSchedule): Date | null {
+  if (!plant.last_watered || !plant.watering_frequency) return null;
+  const last = new Date(plant.last_watered);
+  const days = frequencyToDays[plant.watering_frequency] || 7;
+  const next = new Date(last.getTime() + days * 86400000);
+  return next;
+}
+
+function getUpcomingWaterings(plants: PlantWithSchedule[]) {
+  const now = new Date();
+  return plants
+    .filter((p) => p.last_watered && p.watering_frequency)
+    .map((p) => {
+      const nextDate = getNextWateringDate(p)!;
+      const daysUntil = Math.ceil((nextDate.getTime() - now.getTime()) / 86400000);
+      return { ...p, nextDate, daysUntil };
+    })
+    .filter((p) => p.daysUntil > 0)
+    .sort((a, b) => a.daysUntil - b.daysUntil)
+    .slice(0, 5);
+}
+
 export default function NotificationsPage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const [plants, setPlants] = useState<any[]>([]);
+  const [plants, setPlants] = useState<PlantWithSchedule[]>([]);
   const [wateringIds, setWateringIds] = useState<Set<string>>(new Set());
   const [wateringAll, setWateringAll] = useState(false);
 
@@ -38,6 +77,7 @@ export default function NotificationsPage() {
   useEffect(() => { fetchPlants(); }, []);
 
   const { overdue, permissionGranted, requestPermission } = useWateringReminders(plants);
+  const upcoming = getUpcomingWaterings(plants);
 
   const handleMarkWatered = async (e: React.MouseEvent, plantId: string, plantName: string) => {
     e.stopPropagation();
@@ -68,10 +108,8 @@ export default function NotificationsPage() {
     setWateringAll(false);
   };
 
-  // Find plant image for overdue items
-  const getPlantImage = (plantId: string) => {
-    const plant = plants.find((p) => p.id === plantId);
-    return plant?.image_url || null;
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
   };
 
   return (
@@ -111,7 +149,7 @@ export default function NotificationsPage() {
         </motion.div>
 
         {/* Overdue plants list */}
-        {overdue.length === 0 ? (
+        {overdue.length === 0 && upcoming.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -124,87 +162,112 @@ export default function NotificationsPage() {
             <p className="text-sm text-muted-foreground">{t("noNotificationsDesc")}</p>
           </motion.div>
         ) : (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="font-serif text-sm text-muted-foreground flex items-center gap-2">
-                <Droplets className="w-4 h-4 text-water" />
-                {t("wateringAlerts")}
-              </h2>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={wateringAll}
-                    className="rounded-xl gap-1.5 text-xs border-water/30 text-water hover:bg-water/10 hover:text-water"
-                  >
-                    <Droplets className={`w-3.5 h-3.5 ${wateringAll ? "animate-pulse" : ""}`} />
-                    {t("waterAll")}
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent className="rounded-2xl max-w-sm">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>{t("waterAll")}</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      {t("waterAllConfirm")}
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel className="rounded-xl">{t("cancel")}</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleWaterAll} className="rounded-xl">
-                      <Droplets className="w-4 h-4 mr-1" />
-                      {t("waterAll")}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-            <AnimatePresence>
-              {overdue.map((p) => {
-                const imgUrl = getPlantImage(p.id);
-                return (
-                  <motion.div
-                    key={p.id}
-                    layout
-                    exit={{ opacity: 0, x: -40, height: 0 }}
-                    transition={{ duration: 0.25 }}
-                    className="flex items-center gap-2"
-                  >
-                    <button
-                      onClick={() => navigate(`/plant/${p.id}`)}
-                      className="flex-1 flex items-center gap-3 p-3 rounded-2xl bg-water/10 border border-water/20 text-left hover:bg-water/15 transition-colors"
+          <>
+            {overdue.length > 0 && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-serif text-sm text-muted-foreground flex items-center gap-2">
+                    <Droplets className="w-4 h-4 text-water" />
+                    {t("wateringAlerts")}
+                  </h2>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={wateringAll}
+                        className="rounded-xl gap-1.5 text-xs border-water/30 text-water hover:bg-water/10 hover:text-water"
+                      >
+                        <Droplets className={`w-3.5 h-3.5 ${wateringAll ? "animate-pulse" : ""}`} />
+                        {t("waterAll")}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="rounded-2xl max-w-sm">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>{t("waterAll")}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          {t("waterAllConfirm")}
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="rounded-xl">{t("cancel")}</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleWaterAll} className="rounded-xl">
+                          <Droplets className="w-4 h-4 mr-1" />
+                          {t("waterAll")}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+                <AnimatePresence>
+                  {overdue.map((p) => (
+                    <motion.div
+                      key={p.id}
+                      layout
+                      exit={{ opacity: 0, x: -40, height: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="flex items-center gap-2"
                     >
-                      {imgUrl ? (
-                        <img
-                          src={imgUrl}
-                          alt={p.nickname || p.name}
-                          className="w-10 h-10 rounded-xl object-cover shrink-0"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-xl bg-water/20 flex items-center justify-center shrink-0 text-lg">
-                          🌿
+                      <button
+                        onClick={() => navigate(`/plant/${p.id}`)}
+                        className="flex-1 flex items-center gap-3 p-3 rounded-2xl bg-water/10 border border-water/20 text-left hover:bg-water/15 transition-colors"
+                      >
+                        {p.image_url ? (
+                          <img src={p.image_url} alt={p.nickname || p.name} className="w-10 h-10 rounded-xl object-cover shrink-0" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-xl bg-water/20 flex items-center justify-center shrink-0 text-lg">🌿</div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <span className="font-medium text-sm truncate block">{p.nickname || p.name}</span>
+                          <span className="text-xs text-water font-medium">
+                            {p.daysOverdue === 0 ? t("dueToday") : `${p.daysOverdue}${t("daysOverdue")}`}
+                          </span>
                         </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <span className="font-medium text-sm truncate block">{p.nickname || p.name}</span>
-                        <span className="text-xs text-water font-medium">
-                          {p.daysOverdue === 0 ? t("dueToday") : `${p.daysOverdue}${t("daysOverdue")}`}
-                        </span>
-                      </div>
-                    </button>
-                    <button
-                      onClick={(e) => handleMarkWatered(e, p.id, p.nickname || p.name)}
-                      disabled={wateringIds.has(p.id)}
-                      className="shrink-0 flex items-center justify-center h-10 w-10 rounded-xl bg-primary/15 hover:bg-primary/25 text-primary transition-colors disabled:opacity-50"
-                      title={t("watered")}
-                    >
-                      <Droplets className={`w-5 h-5 ${wateringIds.has(p.id) ? "animate-pulse" : ""}`} />
-                    </button>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-          </motion.div>
+                      </button>
+                      <button
+                        onClick={(e) => handleMarkWatered(e, p.id, p.nickname || p.name)}
+                        disabled={wateringIds.has(p.id)}
+                        className="shrink-0 flex items-center justify-center h-10 w-10 rounded-xl bg-primary/15 hover:bg-primary/25 text-primary transition-colors disabled:opacity-50"
+                        title={t("watered")}
+                      >
+                        <Droplets className={`w-5 h-5 ${wateringIds.has(p.id) ? "animate-pulse" : ""}`} />
+                      </button>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+            )}
+
+            {/* Next scheduled waterings */}
+            {upcoming.length > 0 && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="space-y-3">
+                <h2 className="font-serif text-sm text-muted-foreground flex items-center gap-2">
+                  <CalendarClock className="w-4 h-4 text-primary" />
+                  {t("upcomingWaterings")}
+                </h2>
+                {upcoming.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => navigate(`/plant/${p.id}`)}
+                    className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card border border-border text-left hover:border-primary/30 transition-colors"
+                  >
+                    {p.image_url ? (
+                      <img src={p.image_url} alt={p.nickname || p.name} className="w-10 h-10 rounded-xl object-cover shrink-0" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center shrink-0 text-lg">🌿</div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <span className="font-medium text-sm truncate block">{p.nickname || p.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {t("nextWatering")} {formatDate(p.nextDate)}
+                        {p.daysUntil === 1 ? ` (${t("tomorrow")})` : ` (${p.daysUntil}${t("daysLeft")})`}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </>
         )}
       </div>
 

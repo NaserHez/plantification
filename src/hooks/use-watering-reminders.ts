@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 interface Plant {
   id: string;
@@ -37,9 +37,55 @@ export function getOverduePlants(plants: Plant[]): OverduePlant[] {
     .sort((a, b) => b.daysOverdue - a.daysOverdue);
 }
 
+function scheduleNextNotification(overduePlants: OverduePlant[]) {
+  if (overduePlants.length === 0) return;
+
+  const reminderTime = localStorage.getItem("reminder_time") || "08:00";
+  const [hours, minutes] = reminderTime.split(":").map(Number);
+
+  const now = new Date();
+  const scheduledTime = new Date();
+  scheduledTime.setHours(hours, minutes, 0, 0);
+
+  // If the time has passed today, schedule for tomorrow
+  if (scheduledTime.getTime() <= now.getTime()) {
+    scheduledTime.setDate(scheduledTime.getDate() + 1);
+  }
+
+  const delay = scheduledTime.getTime() - now.getTime();
+
+  // Clear any existing scheduled notification
+  const existingTimer = (window as any).__wateringNotifTimer;
+  if (existingTimer) clearTimeout(existingTimer);
+
+  (window as any).__wateringNotifTimer = setTimeout(() => {
+    const notifiedKey = `notified_scheduled_${new Date().toDateString()}`;
+    if (localStorage.getItem(notifiedKey)) return;
+
+    const tone = localStorage.getItem("notif_tone") || "default";
+    const names = overduePlants.slice(0, 3).map((p) => p.nickname || p.name).join(", ");
+    const firstPlantImage = overduePlants[0]?.image_url;
+
+    const notifOptions: NotificationOptions = {
+      body: `${overduePlants.length} plant${overduePlants.length > 1 ? "s" : ""} overdue: ${names}`,
+      icon: firstPlantImage || "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
+      tag: "watering-reminder-scheduled",
+      silent: tone === "silent",
+    };
+
+    new Notification("🌱 Plants need water!", notifOptions);
+    localStorage.setItem(notifiedKey, "true");
+
+    // Reschedule for next day
+    scheduleNextNotification(overduePlants);
+  }, delay);
+}
+
 export function useWateringReminders(plants: Plant[]) {
   const [overdue, setOverdue] = useState<OverduePlant[]>([]);
   const [permissionGranted, setPermissionGranted] = useState(false);
+  const scheduledRef = useRef(false);
 
   useEffect(() => {
     if ("Notification" in window) {
@@ -51,17 +97,15 @@ export function useWateringReminders(plants: Plant[]) {
     const overduePlants = getOverduePlants(plants);
     setOverdue(overduePlants);
 
-    // Send browser notifications for overdue plants
+    // Send immediate notification on app open (once per day)
     if (permissionGranted && overduePlants.length > 0) {
       const notifiedKey = `notified_${new Date().toDateString()}`;
       const alreadyNotified = localStorage.getItem(notifiedKey);
       if (!alreadyNotified) {
         const names = overduePlants.slice(0, 3).map((p) => p.nickname || p.name).join(", ");
         const tone = localStorage.getItem("notif_tone") || "default";
-        
-        // Use plant image in notification if available
         const firstPlantImage = overduePlants[0]?.image_url;
-        
+
         const notifOptions: NotificationOptions = {
           body: `${overduePlants.length} plant${overduePlants.length > 1 ? "s" : ""} overdue: ${names}`,
           icon: firstPlantImage || "/icons/icon-192.png",
@@ -73,6 +117,12 @@ export function useWateringReminders(plants: Plant[]) {
         new Notification("🌱 Plants need water!", notifOptions);
         localStorage.setItem(notifiedKey, "true");
       }
+    }
+
+    // Schedule daily notification at the user's chosen time
+    if (permissionGranted && overduePlants.length > 0 && !scheduledRef.current) {
+      scheduledRef.current = true;
+      scheduleNextNotification(overduePlants);
     }
   }, [plants, permissionGranted]);
 

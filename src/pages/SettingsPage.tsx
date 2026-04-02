@@ -25,9 +25,11 @@ const APP_LANGUAGES = [
 ];
 
 const NOTIF_TONES = [
-  { value: "default", label: "🔔 Default", labelAr: "🔔 افتراضي", labelPt: "🔔 Predefinido" },
-  { value: "gentle", label: "🌿 Gentle", labelAr: "🌿 لطيف", labelPt: "🌿 Suave" },
-  { value: "silent", label: "🔇 Silent", labelAr: "🔇 صامت", labelPt: "🔇 Silencioso" },
+  { value: "default", label: "🔔 Default", labelAr: "🔔 افتراضي", labelPt: "🔔 Predefinido", freq: 800, pattern: [150, 80, 150] },
+  { value: "gentle", label: "🌿 Gentle", labelAr: "🌿 لطيف", labelPt: "🌿 Suave", freq: 440, pattern: [200, 100, 200] },
+  { value: "chirp", label: "🐦 Chirp", labelAr: "🐦 زقزقة", labelPt: "🐦 Chilrear", freq: 1200, pattern: [60, 40, 60, 40, 80] },
+  { value: "drops", label: "💧 Drops", labelAr: "💧 قطرات", labelPt: "💧 Gotas", freq: 600, pattern: [100, 150, 80, 150, 60] },
+  { value: "silent", label: "🔇 Silent", labelAr: "🔇 صامت", labelPt: "🔇 Silencioso", freq: 0, pattern: [] },
 ];
 
 export default function SettingsPage() {

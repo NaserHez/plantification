@@ -71,7 +71,16 @@ export default function Index() {
         .from("plants")
         .select("id, name, nickname, watering_frequency, last_watered")
         .order("created_at", { ascending: false });
-      setOverdueCount(getOverduePlants(data || []).length);
+      const count = getOverduePlants(data || []).length;
+      setOverdueCount(count);
+      // Update PWA badge
+      try {
+        if ("setAppBadge" in navigator && count > 0) {
+          (navigator as any).setAppBadge(count);
+        } else if ("clearAppBadge" in navigator && count === 0) {
+          (navigator as any).clearAppBadge();
+        }
+      } catch {}
     };
     fetchPlants();
   }, []);

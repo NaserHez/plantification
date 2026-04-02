@@ -259,7 +259,7 @@ export default function SettingsPage() {
                 <Label className="text-xs text-muted-foreground flex items-center gap-1.5 mb-2">
                   <Volume2 className="w-3.5 h-3.5" /> {t("notifTone")}
                 </Label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="flex flex-wrap gap-2">
                   {NOTIF_TONES.map((tone) => (
                     <button
                       key={tone.value}

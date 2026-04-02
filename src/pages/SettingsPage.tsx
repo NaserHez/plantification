@@ -74,9 +74,33 @@ export default function SettingsPage() {
     load();
   }, []);
 
+  const playTonePreview = (tone: typeof NOTIF_TONES[number]) => {
+    if (tone.value === "silent" || tone.freq === 0) return;
+    try {
+      const ctx = new AudioContext();
+      let t = ctx.currentTime;
+      tone.pattern.forEach((dur, i) => {
+        if (i % 2 === 0) {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.frequency.value = tone.freq + (i * 50);
+          osc.type = tone.value === "chirp" ? "square" : tone.value === "drops" ? "sine" : "triangle";
+          gain.gain.setValueAtTime(0.15, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + dur / 1000);
+          osc.connect(gain).connect(ctx.destination);
+          osc.start(t);
+          osc.stop(t + dur / 1000);
+        }
+        t += dur / 1000;
+      });
+    } catch {}
+  };
+
   const handleToneChange = (tone: string) => {
     setNotifTone(tone);
     localStorage.setItem("notif_tone", tone);
+    const toneObj = NOTIF_TONES.find((t) => t.value === tone);
+    if (toneObj) playTonePreview(toneObj);
     toast.success(t("settingsSaved"));
   };
 

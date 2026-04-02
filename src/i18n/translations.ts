@@ -682,6 +682,25 @@ export const translations = {
     healthHistory: "Histórico de Saúde",
     noHealthHistory: "Ainda sem verificações. Faz um diagnóstico para começar a acompanhar.",
 
+    // Auth extras
+    forgotPassword: "Esqueceste a palavra-passe?",
+    forgotPasswordDesc: "Introduz o teu email e enviaremos um link de redefinição.",
+    sendResetLink: "Enviar Link de Redefinição",
+    backToLogin: "Voltar ao login",
+    resetEmailSent: "Email de redefinição enviado! Verifica a caixa de entrada.",
+    resetPassword: "Redefinir Palavra-passe",
+    resetPasswordDesc: "Introduz a tua nova palavra-passe.",
+    confirmPassword: "Confirmar palavra-passe",
+    passwordsNoMatch: "As palavras-passe não coincidem",
+    redirectingHome: "A redirecionar para o início...",
+    signInWithGoogle: "Entrar com Google",
+    orContinueWith: "ou continuar com",
+    weather: "Tempo",
+    toneChirp: "🐦 Chilrear",
+    toneDrops: "💧 Gotas",
+    previewTone: "Pré-visualizar",
+    swipeToRemove: "Deslizar para remover",
+
     // 404
     pageNotFound: "Ups! Página não encontrada",
     returnHome: "Voltar ao Início",

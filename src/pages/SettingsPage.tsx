@@ -25,9 +25,11 @@ const APP_LANGUAGES = [
 ];
 
 const NOTIF_TONES = [
-  { value: "default", label: "🔔 Default", labelAr: "🔔 افتراضي", labelPt: "🔔 Predefinido" },
-  { value: "gentle", label: "🌿 Gentle", labelAr: "🌿 لطيف", labelPt: "🌿 Suave" },
-  { value: "silent", label: "🔇 Silent", labelAr: "🔇 صامت", labelPt: "🔇 Silencioso" },
+  { value: "default", label: "🔔 Default", labelAr: "🔔 افتراضي", labelPt: "🔔 Predefinido", freq: 800, pattern: [150, 80, 150] },
+  { value: "gentle", label: "🌿 Gentle", labelAr: "🌿 لطيف", labelPt: "🌿 Suave", freq: 440, pattern: [200, 100, 200] },
+  { value: "chirp", label: "🐦 Chirp", labelAr: "🐦 زقزقة", labelPt: "🐦 Chilrear", freq: 1200, pattern: [60, 40, 60, 40, 80] },
+  { value: "drops", label: "💧 Drops", labelAr: "💧 قطرات", labelPt: "💧 Gotas", freq: 600, pattern: [100, 150, 80, 150, 60] },
+  { value: "silent", label: "🔇 Silent", labelAr: "🔇 صامت", labelPt: "🔇 Silencioso", freq: 0, pattern: [] },
 ];
 
 export default function SettingsPage() {
@@ -72,9 +74,33 @@ export default function SettingsPage() {
     load();
   }, []);
 
+  const playTonePreview = (tone: typeof NOTIF_TONES[number]) => {
+    if (tone.value === "silent" || tone.freq === 0) return;
+    try {
+      const ctx = new AudioContext();
+      let t = ctx.currentTime;
+      tone.pattern.forEach((dur, i) => {
+        if (i % 2 === 0) {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.frequency.value = tone.freq + (i * 50);
+          osc.type = tone.value === "chirp" ? "square" : tone.value === "drops" ? "sine" : "triangle";
+          gain.gain.setValueAtTime(0.15, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + dur / 1000);
+          osc.connect(gain).connect(ctx.destination);
+          osc.start(t);
+          osc.stop(t + dur / 1000);
+        }
+        t += dur / 1000;
+      });
+    } catch {}
+  };
+
   const handleToneChange = (tone: string) => {
     setNotifTone(tone);
     localStorage.setItem("notif_tone", tone);
+    const toneObj = NOTIF_TONES.find((t) => t.value === tone);
+    if (toneObj) playTonePreview(toneObj);
     toast.success(t("settingsSaved"));
   };
 
@@ -233,7 +259,7 @@ export default function SettingsPage() {
                 <Label className="text-xs text-muted-foreground flex items-center gap-1.5 mb-2">
                   <Volume2 className="w-3.5 h-3.5" /> {t("notifTone")}
                 </Label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="flex flex-wrap gap-2">
                   {NOTIF_TONES.map((tone) => (
                     <button
                       key={tone.value}

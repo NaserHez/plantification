@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Droplets, BellOff, Bell, BellRing, CalendarClock } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useWateringReminders } from "@/hooks/use-watering-reminders";
 import BottomNav from "@/components/BottomNav";
@@ -59,6 +59,83 @@ function getUpcomingWaterings(plants: PlantWithSchedule[]) {
     .slice(0, 5);
 }
 
+function SwipeableNotification({
+  plant,
+  onWatered,
+  onNavigate,
+  isWatering,
+  t,
+}: {
+  plant: any;
+  onWatered: (e: React.MouseEvent, id: string, name: string) => void;
+  onNavigate: (id: string) => void;
+  isWatering: boolean;
+  t: (key: string) => string;
+}) {
+  const x = useMotionValue(0);
+  const bg = useTransform(x, [-120, 0, 120], ["hsl(200 70% 55%)", "transparent", "hsl(200 70% 55%)"]);
+  const opacity = useTransform(x, [-120, -60, 0, 60, 120], [1, 0.7, 1, 0.7, 1]);
+
+  const handleDragEnd = (_: any, info: { offset: { x: number }; velocity: { x: number } }) => {
+    if (Math.abs(info.offset.x) > 80 || Math.abs(info.velocity.x) > 300) {
+      // Trigger watering on swipe
+      onWatered({ stopPropagation: () => {} } as any, plant.id, plant.nickname || plant.name);
+    }
+  };
+
+  return (
+    <motion.div
+      layout
+      exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+      transition={{ duration: 0.25 }}
+      className="relative overflow-hidden rounded-2xl"
+    >
+      {/* Background swipe indicator */}
+      <motion.div
+        style={{ backgroundColor: bg }}
+        className="absolute inset-0 rounded-2xl flex items-center justify-between px-6"
+      >
+        <Droplets className="w-5 h-5 text-white" />
+        <Droplets className="w-5 h-5 text-white" />
+      </motion.div>
+
+      <motion.div
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.4}
+        style={{ x, opacity }}
+        onDragEnd={handleDragEnd}
+        className="flex items-center gap-2 relative z-10"
+      >
+        <button
+          onClick={() => onNavigate(plant.id)}
+          className="flex-1 flex items-center gap-3 p-3 rounded-2xl bg-water/10 border border-water/20 text-left hover:bg-water/15 transition-colors"
+        >
+          {plant.image_url ? (
+            <img src={plant.image_url} alt={plant.nickname || plant.name} className="w-10 h-10 rounded-xl object-cover shrink-0" />
+          ) : (
+            <div className="w-10 h-10 rounded-xl bg-water/20 flex items-center justify-center shrink-0 text-lg">🌿</div>
+          )}
+          <div className="flex-1 min-w-0">
+            <span className="font-medium text-sm truncate block">{plant.nickname || plant.name}</span>
+            <span className="text-xs text-water font-medium">
+              {plant.daysOverdue === 0 ? t("dueToday") : `${plant.daysOverdue}${t("daysOverdue")}`}
+            </span>
+          </div>
+        </button>
+        <button
+          onClick={(e) => onWatered(e, plant.id, plant.nickname || plant.name)}
+          disabled={isWatering}
+          className="shrink-0 flex items-center justify-center h-10 w-10 rounded-xl bg-primary/15 hover:bg-primary/25 text-primary transition-colors disabled:opacity-50"
+          title={t("watered")}
+        >
+          <Droplets className={`w-5 h-5 ${isWatering ? "animate-pulse" : ""}`} />
+        </button>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 export default function NotificationsPage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -78,6 +155,15 @@ export default function NotificationsPage() {
 
   const { overdue, permissionGranted, requestPermission } = useWateringReminders(plants);
   const upcoming = getUpcomingWaterings(plants);
+
+  // Update PWA badge
+  useEffect(() => {
+    if ("setAppBadge" in navigator && overdue.length > 0) {
+      (navigator as any).setAppBadge(overdue.length);
+    } else if ("clearAppBadge" in navigator && overdue.length === 0) {
+      (navigator as any).clearAppBadge();
+    }
+  }, [overdue.length]);
 
   const handleMarkWatered = async (e: React.MouseEvent, plantId: string, plantName: string) => {
     e.stopPropagation();
@@ -199,40 +285,17 @@ export default function NotificationsPage() {
                     </AlertDialogContent>
                   </AlertDialog>
                 </div>
+                <p className="text-[11px] text-muted-foreground">{t("swipeToRemove")}</p>
                 <AnimatePresence>
                   {overdue.map((p) => (
-                    <motion.div
+                    <SwipeableNotification
                       key={p.id}
-                      layout
-                      exit={{ opacity: 0, x: -40, height: 0 }}
-                      transition={{ duration: 0.25 }}
-                      className="flex items-center gap-2"
-                    >
-                      <button
-                        onClick={() => navigate(`/plant/${p.id}`)}
-                        className="flex-1 flex items-center gap-3 p-3 rounded-2xl bg-water/10 border border-water/20 text-left hover:bg-water/15 transition-colors"
-                      >
-                        {p.image_url ? (
-                          <img src={p.image_url} alt={p.nickname || p.name} className="w-10 h-10 rounded-xl object-cover shrink-0" />
-                        ) : (
-                          <div className="w-10 h-10 rounded-xl bg-water/20 flex items-center justify-center shrink-0 text-lg">🌿</div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <span className="font-medium text-sm truncate block">{p.nickname || p.name}</span>
-                          <span className="text-xs text-water font-medium">
-                            {p.daysOverdue === 0 ? t("dueToday") : `${p.daysOverdue}${t("daysOverdue")}`}
-                          </span>
-                        </div>
-                      </button>
-                      <button
-                        onClick={(e) => handleMarkWatered(e, p.id, p.nickname || p.name)}
-                        disabled={wateringIds.has(p.id)}
-                        className="shrink-0 flex items-center justify-center h-10 w-10 rounded-xl bg-primary/15 hover:bg-primary/25 text-primary transition-colors disabled:opacity-50"
-                        title={t("watered")}
-                      >
-                        <Droplets className={`w-5 h-5 ${wateringIds.has(p.id) ? "animate-pulse" : ""}`} />
-                      </button>
-                    </motion.div>
+                      plant={p}
+                      onWatered={handleMarkWatered}
+                      onNavigate={(id) => navigate(`/plant/${id}`)}
+                      isWatering={wateringIds.has(p.id)}
+                      t={t as any}
+                    />
                   ))}
                 </AnimatePresence>
               </motion.div>

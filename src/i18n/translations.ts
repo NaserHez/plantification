@@ -210,6 +210,29 @@ export const translations = {
     healthHistory: "Health History",
     noHealthHistory: "No health checks yet. Run a diagnosis to start tracking.",
 
+    // Auth extras
+    forgotPassword: "Forgot password?",
+    forgotPasswordDesc: "Enter your email and we'll send you a reset link.",
+    sendResetLink: "Send Reset Link",
+    backToLogin: "Back to sign in",
+    resetEmailSent: "Password reset email sent! Check your inbox.",
+    resetPassword: "Reset Password",
+    resetPasswordDesc: "Enter your new password below.",
+    confirmPassword: "Confirm password",
+    passwordsNoMatch: "Passwords do not match",
+    redirectingHome: "Redirecting to home...",
+    signInWithGoogle: "Sign in with Google",
+    orContinueWith: "or continue with",
+
+    // Bottom nav
+    weather: "Weather",
+
+    // Notification tones
+    toneChirp: "🐦 Chirp",
+    toneDrops: "💧 Drops",
+    previewTone: "Preview",
+    swipeToRemove: "Swipe to dismiss",
+
     // 404
     pageNotFound: "Oops! Page not found",
     returnHome: "Return to Home",
@@ -425,6 +448,25 @@ export const translations = {
     healthHistory: "سجل الصحة",
     noHealthHistory: "لا توجد فحوصات صحية بعد. قم بتشخيص لبدء التتبع.",
 
+    // Auth extras
+    forgotPassword: "نسيت كلمة المرور؟",
+    forgotPasswordDesc: "أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين.",
+    sendResetLink: "إرسال رابط إعادة التعيين",
+    backToLogin: "العودة لتسجيل الدخول",
+    resetEmailSent: "تم إرسال بريد إعادة تعيين كلمة المرور! تحقق من صندوق الوارد.",
+    resetPassword: "إعادة تعيين كلمة المرور",
+    resetPasswordDesc: "أدخل كلمة المرور الجديدة أدناه.",
+    confirmPassword: "تأكيد كلمة المرور",
+    passwordsNoMatch: "كلمتا المرور غير متطابقتين",
+    redirectingHome: "جاري التوجيه للرئيسية...",
+    signInWithGoogle: "تسجيل الدخول بجوجل",
+    orContinueWith: "أو المتابعة عبر",
+    weather: "الطقس",
+    toneChirp: "🐦 زقزقة",
+    toneDrops: "💧 قطرات",
+    previewTone: "معاينة",
+    swipeToRemove: "اسحب للحذف",
+
     // 404
     pageNotFound: "عذراً! الصفحة غير موجودة",
     returnHome: "العودة للرئيسية",
@@ -639,6 +681,25 @@ export const translations = {
     // Health History
     healthHistory: "Histórico de Saúde",
     noHealthHistory: "Ainda sem verificações. Faz um diagnóstico para começar a acompanhar.",
+
+    // Auth extras
+    forgotPassword: "Esqueceste a palavra-passe?",
+    forgotPasswordDesc: "Introduz o teu email e enviaremos um link de redefinição.",
+    sendResetLink: "Enviar Link de Redefinição",
+    backToLogin: "Voltar ao login",
+    resetEmailSent: "Email de redefinição enviado! Verifica a caixa de entrada.",
+    resetPassword: "Redefinir Palavra-passe",
+    resetPasswordDesc: "Introduz a tua nova palavra-passe.",
+    confirmPassword: "Confirmar palavra-passe",
+    passwordsNoMatch: "As palavras-passe não coincidem",
+    redirectingHome: "A redirecionar para o início...",
+    signInWithGoogle: "Entrar com Google",
+    orContinueWith: "ou continuar com",
+    weather: "Tempo",
+    toneChirp: "🐦 Chilrear",
+    toneDrops: "💧 Gotas",
+    previewTone: "Pré-visualizar",
+    swipeToRemove: "Deslizar para remover",
 
     // 404
     pageNotFound: "Ups! Página não encontrada",

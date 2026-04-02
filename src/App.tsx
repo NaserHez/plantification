@@ -19,6 +19,7 @@ import NotificationsPage from "./pages/NotificationsPage";
 import PlantingCalendarPage from "./pages/PlantingCalendarPage";
 import WeatherCenterPage from "./pages/WeatherCenterPage";
 import InstallBanner from "./components/InstallBanner";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,22 +48,27 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <AuthGate>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/identify" element={<IdentifyPage />} />
-                <Route path="/garden" element={<GardenPage />} />
-                <Route path="/plant/:id" element={<PlantDetailPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/diagnose" element={<DiagnosisPage />} />
-                <Route path="/chat" element={<PlantChatPage />} />
-                <Route path="/notifications" element={<NotificationsPage />} />
-                <Route path="/planting-calendar" element={<PlantingCalendarPage />} />
-                <Route path="/weather" element={<WeatherCenterPage />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <InstallBanner />
-            </AuthGate>
+            <Routes>
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/*" element={
+                <AuthGate>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/identify" element={<IdentifyPage />} />
+                    <Route path="/garden" element={<GardenPage />} />
+                    <Route path="/plant/:id" element={<PlantDetailPage />} />
+                    <Route path="/settings" element={<SettingsPage />} />
+                    <Route path="/diagnose" element={<DiagnosisPage />} />
+                    <Route path="/chat" element={<PlantChatPage />} />
+                    <Route path="/notifications" element={<NotificationsPage />} />
+                    <Route path="/planting-calendar" element={<PlantingCalendarPage />} />
+                    <Route path="/weather" element={<WeatherCenterPage />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                  <InstallBanner />
+                </AuthGate>
+              } />
+            </Routes>
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>

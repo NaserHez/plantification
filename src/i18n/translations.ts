@@ -448,6 +448,25 @@ export const translations = {
     healthHistory: "سجل الصحة",
     noHealthHistory: "لا توجد فحوصات صحية بعد. قم بتشخيص لبدء التتبع.",
 
+    // Auth extras
+    forgotPassword: "نسيت كلمة المرور؟",
+    forgotPasswordDesc: "أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين.",
+    sendResetLink: "إرسال رابط إعادة التعيين",
+    backToLogin: "العودة لتسجيل الدخول",
+    resetEmailSent: "تم إرسال بريد إعادة تعيين كلمة المرور! تحقق من صندوق الوارد.",
+    resetPassword: "إعادة تعيين كلمة المرور",
+    resetPasswordDesc: "أدخل كلمة المرور الجديدة أدناه.",
+    confirmPassword: "تأكيد كلمة المرور",
+    passwordsNoMatch: "كلمتا المرور غير متطابقتين",
+    redirectingHome: "جاري التوجيه للرئيسية...",
+    signInWithGoogle: "تسجيل الدخول بجوجل",
+    orContinueWith: "أو المتابعة عبر",
+    weather: "الطقس",
+    toneChirp: "🐦 زقزقة",
+    toneDrops: "💧 قطرات",
+    previewTone: "معاينة",
+    swipeToRemove: "اسحب للحذف",
+
     // 404
     pageNotFound: "عذراً! الصفحة غير موجودة",
     returnHome: "العودة للرئيسية",

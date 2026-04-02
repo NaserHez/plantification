@@ -19,6 +19,7 @@ import NotificationsPage from "./pages/NotificationsPage";
 import PlantingCalendarPage from "./pages/PlantingCalendarPage";
 import WeatherCenterPage from "./pages/WeatherCenterPage";
 import InstallBanner from "./components/InstallBanner";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

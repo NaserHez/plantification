@@ -210,6 +210,29 @@ export const translations = {
     healthHistory: "Health History",
     noHealthHistory: "No health checks yet. Run a diagnosis to start tracking.",
 
+    // Auth extras
+    forgotPassword: "Forgot password?",
+    forgotPasswordDesc: "Enter your email and we'll send you a reset link.",
+    sendResetLink: "Send Reset Link",
+    backToLogin: "Back to sign in",
+    resetEmailSent: "Password reset email sent! Check your inbox.",
+    resetPassword: "Reset Password",
+    resetPasswordDesc: "Enter your new password below.",
+    confirmPassword: "Confirm password",
+    passwordsNoMatch: "Passwords do not match",
+    redirectingHome: "Redirecting to home...",
+    signInWithGoogle: "Sign in with Google",
+    orContinueWith: "or continue with",
+
+    // Bottom nav
+    weather: "Weather",
+
+    // Notification tones
+    toneChirp: "🐦 Chirp",
+    toneDrops: "💧 Drops",
+    previewTone: "Preview",
+    swipeToRemove: "Swipe to dismiss",
+
     // 404
     pageNotFound: "Oops! Page not found",
     returnHome: "Return to Home",

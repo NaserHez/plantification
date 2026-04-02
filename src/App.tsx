@@ -60,6 +60,7 @@ const App = () => (
                 <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="/planting-calendar" element={<PlantingCalendarPage />} />
                 <Route path="/weather" element={<WeatherCenterPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <InstallBanner />

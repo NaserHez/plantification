@@ -1,4 +1,4 @@
-import { Camera, Leaf, Home, Settings, Stethoscope, Bot } from "lucide-react";
+import { Camera, Leaf, Home, Stethoscope, Bot, CloudSun } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -13,6 +13,7 @@ export default function BottomNav() {
     { path: "/identify", icon: Camera, label: t("identify") },
     { path: "/diagnose", icon: Stethoscope, label: t("health") },
     { path: "/chat", icon: Bot, label: t("aiChat") },
+    { path: "/weather", icon: CloudSun, label: t("weather") },
     { path: "/garden", icon: Leaf, label: t("garden") },
   ];
 
@@ -26,7 +27,7 @@ export default function BottomNav() {
               key={path}
               onClick={() => navigate(path)}
               className={cn(
-                "flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-all",
+                "flex flex-col items-center gap-0.5 px-2 py-2 rounded-xl transition-all",
                 active ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}
             >

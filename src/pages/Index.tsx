@@ -93,14 +93,14 @@ export default function Index() {
     <div className="min-h-screen bg-background pb-20">
       {/* Hero */}
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-accent/30 to-leaf-light/40 px-6 pt-12 pb-10">
-        <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+        <div className={`absolute top-4 ${language === "ar" ? "left-4" : "right-4"} flex items-center gap-2 z-10`}>
           <button
             onClick={() => navigate("/notifications")}
             className="relative p-2 rounded-full bg-background/70 backdrop-blur-sm hover:bg-background/90 transition-colors"
           >
             <Bell className="w-5 h-5 text-muted-foreground" />
             {overdueCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+              <span className={`absolute -top-0.5 ${language === "ar" ? "-left-0.5" : "-right-0.5"} flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground`}>
                 {overdueCount > 9 ? "9+" : overdueCount}
               </span>
             )}

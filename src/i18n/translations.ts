@@ -236,6 +236,14 @@ export const translations = {
     // 404
     pageNotFound: "Oops! Page not found",
     returnHome: "Return to Home",
+
+    // Care Journal
+    careJournal: "Care Journal",
+    addEntry: "Add Entry",
+    journalSaved: "Journal entry saved!",
+    journalDeleted: "Entry deleted",
+    journalPlaceholder: "How does your plant look today?",
+    noJournalEntries: "No journal entries yet. Start tracking your plant's progress!",
   },
   ar: {
     // Common
@@ -470,6 +478,14 @@ export const translations = {
     // 404
     pageNotFound: "عذراً! الصفحة غير موجودة",
     returnHome: "العودة للرئيسية",
+
+    // Care Journal
+    careJournal: "سجل العناية",
+    addEntry: "إضافة ملاحظة",
+    journalSaved: "تم حفظ الملاحظة!",
+    journalDeleted: "تم حذف الملاحظة",
+    journalPlaceholder: "كيف تبدو نبتتك اليوم؟",
+    noJournalEntries: "لا توجد ملاحظات بعد. ابدأ بتتبع تقدم نبتتك!",
   },
   pt: {
     // Common
@@ -704,6 +720,14 @@ export const translations = {
     // 404
     pageNotFound: "Ups! Página não encontrada",
     returnHome: "Voltar ao Início",
+
+    // Care Journal
+    careJournal: "Diário de Cuidados",
+    addEntry: "Adicionar Entrada",
+    journalSaved: "Entrada do diário guardada!",
+    journalDeleted: "Entrada eliminada",
+    journalPlaceholder: "Como está a tua planta hoje?",
+    noJournalEntries: "Ainda sem entradas. Começa a acompanhar o progresso da tua planta!",
   },
 } as const;
 

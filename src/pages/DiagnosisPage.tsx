@@ -116,8 +116,9 @@ export default function DiagnosisPage() {
     if (!capturedImage) return;
     setLoading(true);
     try {
+      const appLang = localStorage.getItem("app_language") || "en";
       const { data, error } = await supabase.functions.invoke("diagnose-plant", {
-        body: { image: capturedImage },
+        body: { image: capturedImage, language: appLang },
       });
       if (error) throw new Error(error.message);
       if (data.error) throw new Error(data.error);

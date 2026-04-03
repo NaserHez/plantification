@@ -108,7 +108,7 @@ serve(async (req) => {
             messages: [
               {
                 role: 'system',
-                content: `You are a certified plant pathologist and horticulturist. Provide precise, actionable care recommendations based on the plant species and detected conditions. Prioritize organic/biological treatments over chemical ones. Return ONLY valid JSON, no markdown or extra text.`
+                content: `You are a certified plant pathologist and horticulturist. Provide precise, actionable care recommendations based on the plant species and detected conditions. Prioritize organic/biological treatments over chemical ones. Return ONLY valid JSON, no markdown or extra text. Respond entirely in ${langName}.`
               },
               {
                 role: 'user',

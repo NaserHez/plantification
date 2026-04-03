@@ -478,6 +478,14 @@ export const translations = {
     // 404
     pageNotFound: "عذراً! الصفحة غير موجودة",
     returnHome: "العودة للرئيسية",
+
+    // Care Journal
+    careJournal: "سجل العناية",
+    addEntry: "إضافة ملاحظة",
+    journalSaved: "تم حفظ الملاحظة!",
+    journalDeleted: "تم حذف الملاحظة",
+    journalPlaceholder: "كيف تبدو نبتتك اليوم؟",
+    noJournalEntries: "لا توجد ملاحظات بعد. ابدأ بتتبع تقدم نبتتك!",
   },
   pt: {
     // Common

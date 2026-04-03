@@ -236,6 +236,14 @@ export const translations = {
     // 404
     pageNotFound: "Oops! Page not found",
     returnHome: "Return to Home",
+
+    // Care Journal
+    careJournal: "Care Journal",
+    addEntry: "Add Entry",
+    journalSaved: "Journal entry saved!",
+    journalDeleted: "Entry deleted",
+    journalPlaceholder: "How does your plant look today?",
+    noJournalEntries: "No journal entries yet. Start tracking your plant's progress!",
   },
   ar: {
     // Common

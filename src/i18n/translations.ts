@@ -720,6 +720,14 @@ export const translations = {
     // 404
     pageNotFound: "Ups! Página não encontrada",
     returnHome: "Voltar ao Início",
+
+    // Care Journal
+    careJournal: "Diário de Cuidados",
+    addEntry: "Adicionar Entrada",
+    journalSaved: "Entrada do diário guardada!",
+    journalDeleted: "Entrada eliminada",
+    journalPlaceholder: "Como está a tua planta hoje?",
+    noJournalEntries: "Ainda sem entradas. Começa a acompanhar o progresso da tua planta!",
   },
 } as const;
 

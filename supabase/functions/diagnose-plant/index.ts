@@ -19,7 +19,9 @@ serve(async (req) => {
       );
     }
 
-    const { image } = await req.json();
+    const { image, language } = await req.json();
+    const langMap: Record<string, string> = { en: "English", ar: "Arabic", pt: "European Portuguese (Portugal)" };
+    const langName = langMap[language] || "English";
     if (!image) {
       return new Response(
         JSON.stringify({ error: 'No image provided' }),

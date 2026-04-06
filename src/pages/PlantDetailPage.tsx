@@ -4,6 +4,7 @@ import { ArrowLeft, Droplets, Sun, MapPin, Trash2, Loader2, Stethoscope, Globe, 
 import PlantGallery from "@/components/PlantGallery";
 import HealthTimeline from "@/components/HealthTimeline";
 import PlantJournal from "@/components/PlantJournal";
+import PlantReportExport from "@/components/PlantReportExport";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -290,6 +291,9 @@ export default function PlantDetailPage() {
 
           {/* Care Journal */}
           {id && <PlantJournal plantId={id} />}
+
+          {/* Share & Export */}
+          {id && <PlantReportExport plantId={id} plantName={plant.nickname || plant.name} />}
 
           <Button onClick={handleDelete} variant="outline" className="w-full mt-6 h-10 rounded-xl gap-2 text-destructive border-destructive/30 hover:bg-destructive/10">
             <Trash2 className="w-4 h-4" />

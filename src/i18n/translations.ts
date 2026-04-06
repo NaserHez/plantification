@@ -766,6 +766,7 @@ export const translations = {
     generatedBy: "Gerado por",
     reportCopied: "Relatório copiado!",
     reportDownloaded: "Relatório transferido!",
+    exportPdf: "Relatório PDF",
   },
 } as const;
 

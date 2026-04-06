@@ -511,6 +511,7 @@ export const translations = {
     generatedBy: "تم الإنشاء بواسطة",
     reportCopied: "تم نسخ التقرير!",
     reportDownloaded: "تم تحميل التقرير!",
+    exportPdf: "تقرير PDF",
   },
   pt: {
     // Common

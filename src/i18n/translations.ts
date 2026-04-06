@@ -752,6 +752,18 @@ export const translations = {
     journalDeleted: "Entrada eliminada",
     journalPlaceholder: "Como está a tua planta hoje?",
     noJournalEntries: "Ainda sem entradas. Começa a acompanhar o progresso da tua planta!",
+
+    // Export & Share
+    shareExport: "Partilhar e Exportar",
+    shareReport: "Partilhar",
+    copyReport: "Copiar",
+    downloadReport: "Transferir",
+    plantReport: "Relatório da Planta",
+    plantInfo: "Info da Planta",
+    scientificName: "Nome Científico",
+    generatedBy: "Gerado por",
+    reportCopied: "Relatório copiado!",
+    reportDownloaded: "Relatório transferido!",
   },
 } as const;
 

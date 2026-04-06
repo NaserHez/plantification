@@ -292,6 +292,9 @@ export default function PlantDetailPage() {
           {/* Care Journal */}
           {id && <PlantJournal plantId={id} />}
 
+          {/* Share & Export */}
+          {id && <PlantReportExport plantId={id} plantName={plant.nickname || plant.name} />}
+
           <Button onClick={handleDelete} variant="outline" className="w-full mt-6 h-10 rounded-xl gap-2 text-destructive border-destructive/30 hover:bg-destructive/10">
             <Trash2 className="w-4 h-4" />
             {t("removePlant")}

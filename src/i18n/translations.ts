@@ -498,6 +498,18 @@ export const translations = {
     journalDeleted: "تم حذف الملاحظة",
     journalPlaceholder: "كيف تبدو نبتتك اليوم؟",
     noJournalEntries: "لا توجد ملاحظات بعد. ابدأ بتتبع تقدم نبتتك!",
+
+    // Export & Share
+    shareExport: "مشاركة وتصدير",
+    shareReport: "مشاركة",
+    copyReport: "نسخ",
+    downloadReport: "تحميل",
+    plantReport: "تقرير النبتة",
+    plantInfo: "معلومات النبتة",
+    scientificName: "الاسم العلمي",
+    generatedBy: "تم الإنشاء بواسطة",
+    reportCopied: "تم نسخ التقرير!",
+    reportDownloaded: "تم تحميل التقرير!",
   },
   pt: {
     // Common

@@ -112,6 +112,7 @@ function generateTextReport(data: ReportData, t: (k: any) => string): string {
 export default function PlantReportExport({ plantId, plantName }: PlantReportExportProps) {
   const { t, language } = useLanguage();
   const isRtl = language === "ar";
+  const [generating, setGenerating] = useState(false);
   const [pdfGenerating, setPdfGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
 

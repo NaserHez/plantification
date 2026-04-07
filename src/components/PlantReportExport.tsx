@@ -154,10 +154,36 @@ export default function PlantReportExport({ plantId, plantName }: PlantReportExp
     setPdfGenerating(true);
     try {
       const { default: jsPDF } = await import("jspdf");
+      const reshapeArabic = isRtl ? (await import("arabic-reshaper")).default : null;
+      const rtlText = (text: string) => {
+        if (!isRtl || !reshapeArabic) return text;
+        try {
+          const reshaped = reshapeArabic(text);
+          // Reverse for RTL display in jsPDF
+          return reshaped.split('').reverse().join('');
+        } catch { return text; }
+      };
       const data = await fetchReportData(plantId);
       const { plant, journal, health, photos } = data;
 
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+      // Register Arabic font
+      if (isRtl) {
+        pdf.addFileToVFS("Amiri-Regular.ttf", amiriRegularBase64);
+        pdf.addFont("Amiri-Regular.ttf", "Amiri", "normal");
+      }
+
+      const setFont = (style: string = "normal") => {
+        if (isRtl) {
+          pdf.setFont("Amiri", style === "italic" ? "normal" : style);
+        } else {
+          pdf.setFont("helvetica", style);
+        }
+      };
+      const textAlign = isRtl ? "right" as const : "left" as const;
+      const textX = (leftX: number) => isRtl ? pageW - leftX : leftX;
+
       const pageW = pdf.internal.pageSize.getWidth();
       const pageH = pdf.internal.pageSize.getHeight();
       const margin = 15;

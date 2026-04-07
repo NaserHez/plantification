@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
+import { amiriRegularBase64 } from "@/fonts/amiri-regular";
 
 interface PlantReportExportProps {
   plantId: string;
@@ -109,7 +110,8 @@ function generateTextReport(data: ReportData, t: (k: any) => string): string {
 }
 
 export default function PlantReportExport({ plantId, plantName }: PlantReportExportProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isRtl = language === "ar";
   const [generating, setGenerating] = useState(false);
   const [pdfGenerating, setPdfGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -152,10 +154,36 @@ export default function PlantReportExport({ plantId, plantName }: PlantReportExp
     setPdfGenerating(true);
     try {
       const { default: jsPDF } = await import("jspdf");
+      const reshapeArabic = isRtl ? (await import("arabic-reshaper")).default : null;
+      const rtlText = (text: string) => {
+        if (!isRtl || !reshapeArabic) return text;
+        try {
+          const reshaped = reshapeArabic(text);
+          // Reverse for RTL display in jsPDF
+          return reshaped.split('').reverse().join('');
+        } catch { return text; }
+      };
       const data = await fetchReportData(plantId);
       const { plant, journal, health, photos } = data;
 
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+      // Register Arabic font
+      if (isRtl) {
+        pdf.addFileToVFS("Amiri-Regular.ttf", amiriRegularBase64);
+        pdf.addFont("Amiri-Regular.ttf", "Amiri", "normal");
+      }
+
+      const setFont = (style: string = "normal") => {
+        if (isRtl) {
+          pdf.setFont("Amiri", style === "italic" ? "normal" : style);
+        } else {
+          pdf.setFont("helvetica", style);
+        }
+      };
+      const textAlign = isRtl ? "right" as const : "left" as const;
+      const textX = (leftX: number) => isRtl ? pageW - leftX : leftX;
+
       const pageW = pdf.internal.pageSize.getWidth();
       const pageH = pdf.internal.pageSize.getHeight();
       const margin = 15;
@@ -177,12 +205,12 @@ export default function PlantReportExport({ plantId, plantName }: PlantReportExp
 
       pdf.setTextColor(255, 255, 255);
       pdf.setFontSize(20);
-      pdf.setFont("helvetica", "bold");
-      pdf.text("Plantification", margin, 12);
+      setFont("bold");
+      pdf.text("Plantification", isRtl ? pageW - margin : margin, 12, { align: textAlign });
       pdf.setFontSize(10);
-      pdf.setFont("helvetica", "normal");
-      pdf.text(t("plantReport"), margin, 19);
-      pdf.text(new Date().toLocaleDateString(), pageW - margin, 19, { align: "right" });
+      setFont("normal");
+      pdf.text(rtlText(t("plantReport")), isRtl ? pageW - margin : margin, 19, { align: textAlign });
+      pdf.text(new Date().toLocaleDateString(), isRtl ? margin : pageW - margin, 19, { align: isRtl ? "left" : "right" });
 
       y = 36;
 
@@ -194,7 +222,6 @@ export default function PlantReportExport({ plantId, plantName }: PlantReportExp
           const imgW = Math.min(contentW, 80);
           const imgH = imgW * 0.75;
           const imgX = margin + (contentW - imgW) / 2;
-          // Rounded clip effect via rect background
           pdf.setFillColor(245, 245, 245);
           pdf.roundedRect(imgX - 2, y - 2, imgW + 4, imgH + 4, 3, 3, "F");
           pdf.addImage(imgData, "JPEG", imgX, y, imgW, imgH);
@@ -205,15 +232,15 @@ export default function PlantReportExport({ plantId, plantName }: PlantReportExp
       // ── Plant name ──
       pdf.setTextColor(30, 30, 30);
       pdf.setFontSize(22);
-      pdf.setFont("helvetica", "bold");
-      pdf.text(plant?.nickname || plant?.name || plantName, margin, y);
+      setFont("bold");
+      pdf.text(rtlText(plant?.nickname || plant?.name || plantName), isRtl ? pageW - margin : margin, y, { align: textAlign });
       y += 7;
 
       if (plant?.scientific_name) {
         pdf.setFontSize(11);
-        pdf.setFont("helvetica", "italic");
+        setFont("italic");
         pdf.setTextColor(120, 120, 120);
-        pdf.text(plant.scientific_name, margin, y);
+        pdf.text(plant.scientific_name, isRtl ? pageW - margin : margin, y, { align: textAlign });
         y += 6;
       }
 
@@ -228,18 +255,20 @@ export default function PlantReportExport({ plantId, plantName }: PlantReportExp
       if (infoItems.length > 0) {
         checkPage(16);
         const cardW = contentW / Math.min(infoItems.length, 4);
-        infoItems.forEach(([label, value], i) => {
+        const orderedItems = isRtl ? [...infoItems].reverse() : infoItems;
+        orderedItems.forEach(([label, value], i) => {
           const cx = margin + i * cardW;
           pdf.setFillColor(240, 253, 244);
           pdf.roundedRect(cx, y, cardW - 3, 14, 2, 2, "F");
           pdf.setFontSize(7);
-          pdf.setFont("helvetica", "normal");
+          setFont("normal");
           pdf.setTextColor(100, 100, 100);
-          pdf.text(label, cx + 3, y + 5);
+          const labelX = isRtl ? cx + cardW - 6 : cx + 3;
+          pdf.text(rtlText(label), labelX, y + 5, { align: textAlign });
           pdf.setFontSize(9);
-          pdf.setFont("helvetica", "bold");
+          setFont("bold");
           pdf.setTextColor(30, 30, 30);
-          pdf.text(value, cx + 3, y + 11);
+          pdf.text(rtlText(value), labelX, y + 11, { align: textAlign });
         });
         y += 20;
       }
@@ -248,17 +277,20 @@ export default function PlantReportExport({ plantId, plantName }: PlantReportExp
       if (plant?.care_tips) {
         checkPage(30);
         pdf.setFillColor(254, 249, 195);
-        const tipLines = pdf.splitTextToSize(plant.care_tips, contentW - 10);
+        const tipsText = rtlText(plant.care_tips);
+        const tipLines = pdf.splitTextToSize(tipsText, contentW - 10);
         const tipH = tipLines.length * 4.5 + 12;
         pdf.roundedRect(margin, y, contentW, tipH, 2, 2, "F");
         pdf.setFontSize(9);
-        pdf.setFont("helvetica", "bold");
+        setFont("bold");
         pdf.setTextColor(120, 100, 0);
-        pdf.text(t("careTipsLabel").replace(/[^\w\s]/g, "").trim(), margin + 5, y + 6);
-        pdf.setFont("helvetica", "normal");
+        const tipLabelText = rtlText(t("careTipsLabel").replace(/[^\w\s\u0600-\u06FF]/g, "").trim());
+        const tipTextX = isRtl ? pageW - margin - 5 : margin + 5;
+        pdf.text(tipLabelText, tipTextX, y + 6, { align: textAlign });
+        setFont("normal");
         pdf.setTextColor(80, 70, 0);
         pdf.setFontSize(8);
-        pdf.text(tipLines, margin + 5, y + 12);
+        pdf.text(tipLines, tipTextX, y + 12, { align: textAlign });
         y += tipH + 6;
       }
 
@@ -267,11 +299,13 @@ export default function PlantReportExport({ plantId, plantName }: PlantReportExp
         checkPage(14);
         y += 4;
         pdf.setFillColor(...color);
-        pdf.rect(margin, y, 3, 8, "F");
+        const barX = isRtl ? pageW - margin - 3 : margin;
+        pdf.rect(barX, y, 3, 8, "F");
         pdf.setFontSize(13);
-        pdf.setFont("helvetica", "bold");
+        setFont("bold");
         pdf.setTextColor(30, 30, 30);
-        pdf.text(title, margin + 6, y + 6);
+        const titleX = isRtl ? pageW - margin - 6 : margin + 6;
+        pdf.text(rtlText(title), titleX, y + 6, { align: textAlign });
         y += 12;
       };
 
@@ -288,19 +322,23 @@ export default function PlantReportExport({ plantId, plantName }: PlantReportExp
           pdf.roundedRect(margin, y, contentW, 12 + diseases.length * 4, 2, 2, "F");
 
           pdf.setFontSize(9);
-          pdf.setFont("helvetica", "bold");
+          setFont("bold");
           pdf.setTextColor(...(isHealthy ? [34, 197, 94] as [number, number, number] : [239, 68, 68] as [number, number, number]));
-          pdf.text(isHealthy ? "✓ Healthy" : "⚠ Issues", margin + 4, y + 5);
+          const statusText = isHealthy ? "✓ Healthy" : "⚠ Issues";
+          const statusX = isRtl ? pageW - margin - 4 : margin + 4;
+          pdf.text(rtlText(statusText), statusX, y + 5, { align: textAlign });
 
-          pdf.setFont("helvetica", "normal");
+          setFont("normal");
           pdf.setTextColor(100, 100, 100);
           pdf.setFontSize(8);
           const dateStr = new Date(h.created_at).toLocaleDateString();
-          pdf.text(dateStr + (h.overall_confidence ? ` (${h.overall_confidence}%)` : ""), pageW - margin - 4, y + 5, { align: "right" });
+          const dateX = isRtl ? margin + 4 : pageW - margin - 4;
+          pdf.text(dateStr + (h.overall_confidence ? ` (${h.overall_confidence}%)` : ""), dateX, y + 5, { align: isRtl ? "left" : "right" });
 
           diseases.forEach((d: any, i: number) => {
             pdf.setTextColor(80, 80, 80);
-            pdf.text(`• ${(d.name || "").replace(/_/g, " ")}`, margin + 6, y + 10 + i * 4);
+            const diseaseX = isRtl ? pageW - margin - 6 : margin + 6;
+            pdf.text(rtlText(`• ${(d.name || "").replace(/_/g, " ")}`), diseaseX, y + 10 + i * 4, { align: textAlign });
           });
 
           y += 14 + diseases.length * 4;
@@ -313,7 +351,8 @@ export default function PlantReportExport({ plantId, plantName }: PlantReportExp
 
         for (const j of journal) {
           const mood = j.mood || "stable";
-          const obsLines = j.observation ? pdf.splitTextToSize(j.observation, contentW - 14) : [];
+          const obsText = j.observation ? rtlText(j.observation) : "";
+          const obsLines = obsText ? pdf.splitTextToSize(obsText, contentW - 14) : [];
           const entryH = 12 + obsLines.length * 4 + (j.image_url ? 28 : 0);
           checkPage(entryH);
 
@@ -323,28 +362,32 @@ export default function PlantReportExport({ plantId, plantName }: PlantReportExp
           // Mood color bar
           const mColor = MOOD_COLORS[mood] || [59, 130, 246];
           pdf.setFillColor(...mColor);
-          pdf.rect(margin, y, 3, entryH, "F");
+          const moodBarX = isRtl ? pageW - margin - 3 : margin;
+          pdf.rect(moodBarX, y, 3, entryH, "F");
 
           pdf.setFontSize(9);
-          pdf.setFont("helvetica", "bold");
+          setFont("bold");
           pdf.setTextColor(...mColor);
-          pdf.text(MOODS[mood] || mood, margin + 6, y + 5);
+          const moodTextX = isRtl ? pageW - margin - 6 : margin + 6;
+          pdf.text(rtlText(MOODS[mood] || mood), moodTextX, y + 5, { align: textAlign });
 
-          pdf.setFont("helvetica", "normal");
+          setFont("normal");
           pdf.setTextColor(100, 100, 100);
           pdf.setFontSize(8);
-          pdf.text(new Date(j.entry_date).toLocaleDateString(), pageW - margin - 4, y + 5, { align: "right" });
+          const jDateX = isRtl ? margin + 4 : pageW - margin - 4;
+          pdf.text(new Date(j.entry_date).toLocaleDateString(), jDateX, y + 5, { align: isRtl ? "left" : "right" });
 
           if (obsLines.length > 0) {
             pdf.setTextColor(60, 60, 60);
-            pdf.text(obsLines, margin + 6, y + 11);
+            pdf.text(obsLines, moodTextX, y + 11, { align: textAlign });
           }
 
           if (j.image_url) {
             const jImg = await loadImageAsBase64(j.image_url);
             if (jImg) {
               const imgY = y + 10 + obsLines.length * 4;
-              pdf.addImage(jImg, "JPEG", margin + 6, imgY, 22, 22);
+              const imgJX = isRtl ? pageW - margin - 28 : margin + 6;
+              pdf.addImage(jImg, "JPEG", imgJX, imgY, 22, 22);
             }
           }
 
@@ -363,7 +406,8 @@ export default function PlantReportExport({ plantId, plantName }: PlantReportExp
           const col = i % photosPerRow;
           if (col === 0) checkPage(photoSize + 8);
 
-          const px = margin + col * (photoSize + 4);
+          const actualCol = isRtl ? (photosPerRow - 1 - col) : col;
+          const px = margin + actualCol * (photoSize + 4);
           const pImg = await loadImageAsBase64(photos[i].image_url);
           if (pImg) {
             pdf.setFillColor(240, 240, 240);
@@ -382,10 +426,11 @@ export default function PlantReportExport({ plantId, plantName }: PlantReportExp
       for (let p = 1; p <= totalPages; p++) {
         pdf.setPage(p);
         pdf.setFontSize(7);
-        pdf.setFont("helvetica", "normal");
+        setFont("normal");
         pdf.setTextColor(150, 150, 150);
-        pdf.text(`${t("generatedBy")} Plantification • ${new Date().toLocaleDateString()}`, margin, pageH - 6);
-        pdf.text(`${p} / ${totalPages}`, pageW - margin, pageH - 6, { align: "right" });
+        const footerText = rtlText(`${t("generatedBy")} Plantification • ${new Date().toLocaleDateString()}`);
+        pdf.text(footerText, isRtl ? pageW - margin : margin, pageH - 6, { align: textAlign });
+        pdf.text(`${p} / ${totalPages}`, isRtl ? margin : pageW - margin, pageH - 6, { align: isRtl ? "left" : "right" });
       }
 
       pdf.save(`${plantName.replace(/\s+/g, "_")}_report.pdf`);

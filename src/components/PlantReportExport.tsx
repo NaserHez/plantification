@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
+import { amiriRegularBase64 } from "@/fonts/amiri-regular";
 
 interface PlantReportExportProps {
   plantId: string;

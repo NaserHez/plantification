@@ -258,6 +258,14 @@ export const translations = {
     reportDownloaded: "Report downloaded!",
     exportPdf: "PDF Report",
     scanToView: "Scan to view plant",
+    community: "Community",
+    searchGardens: "Search gardens...",
+    noPublicGardens: "No public gardens yet",
+    noPublicPlants: "No public plants yet",
+    anonymousGardener: "Anonymous Gardener",
+    plantsShared: "plants shared",
+    makePublic: "Share publicly",
+    gardenBio: "Garden bio",
   },
   ar: {
     // Common
@@ -514,6 +522,14 @@ export const translations = {
     reportDownloaded: "تم تحميل التقرير!",
     exportPdf: "تقرير PDF",
     scanToView: "امسح لعرض النبات",
+    community: "المجتمع",
+    searchGardens: "ابحث عن الحدائق...",
+    noPublicGardens: "لا توجد حدائق عامة بعد",
+    noPublicPlants: "لا توجد نباتات عامة بعد",
+    anonymousGardener: "بستاني مجهول",
+    plantsShared: "نباتات مشتركة",
+    makePublic: "مشاركة علنياً",
+    gardenBio: "نبذة عن الحديقة",
   },
   pt: {
     // Common
@@ -770,6 +786,14 @@ export const translations = {
     reportDownloaded: "Relatório transferido!",
     exportPdf: "Relatório PDF",
     scanToView: "Digitalize para ver a planta",
+    community: "Comunidade",
+    searchGardens: "Pesquisar jardins...",
+    noPublicGardens: "Nenhum jardim público ainda",
+    noPublicPlants: "Nenhuma planta pública ainda",
+    anonymousGardener: "Jardineiro Anónimo",
+    plantsShared: "plantas partilhadas",
+    makePublic: "Partilhar publicamente",
+    gardenBio: "Bio do jardim",
   },
 } as const;
 

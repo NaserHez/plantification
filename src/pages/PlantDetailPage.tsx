@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Droplets, Sun, MapPin, Trash2, Loader2, Stethoscope, Globe, RefreshCw, Bot, Home } from "lucide-react";
+import { ArrowLeft, Droplets, Sun, MapPin, Trash2, Loader2, Stethoscope, Globe, RefreshCw, Bot, Home, Eye } from "lucide-react";
 import PlantGallery from "@/components/PlantGallery";
 import HealthTimeline from "@/components/HealthTimeline";
 import PlantJournal from "@/components/PlantJournal";
@@ -293,7 +293,28 @@ export default function PlantDetailPage() {
           {id && <PlantJournal plantId={id} />}
 
           {/* Share & Export */}
-          {id && <PlantReportExport plantId={id} plantName={plant.nickname || plant.name} />}
+          {id && (
+            <div className="mt-6 space-y-3">
+              <div className="flex items-center justify-between bg-card rounded-xl border border-border/50 px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <Eye className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium text-foreground">{t("makePublic")}</span>
+                </div>
+                <button
+                  onClick={async () => {
+                    const newVal = !plant.is_public;
+                    await supabase.from("plants").update({ is_public: newVal }).eq("id", id);
+                    setPlant({ ...plant, is_public: newVal });
+                    toast.success(newVal ? "Plant is now public" : "Plant is now private");
+                  }}
+                  className={`w-10 h-6 rounded-full transition-colors ${plant.is_public ? "bg-primary" : "bg-muted"} relative`}
+                >
+                  <span className={`block w-4 h-4 rounded-full bg-white shadow absolute top-1 transition-transform ${plant.is_public ? "translate-x-5" : "translate-x-1"}`} />
+                </button>
+              </div>
+              <PlantReportExport plantId={id} plantName={plant.nickname || plant.name} />
+            </div>
+          )}
 
           <Button onClick={handleDelete} variant="outline" className="w-full mt-6 h-10 rounded-xl gap-2 text-destructive border-destructive/30 hover:bg-destructive/10">
             <Trash2 className="w-4 h-4" />

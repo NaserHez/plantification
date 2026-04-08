@@ -769,6 +769,7 @@ export const translations = {
     reportCopied: "Relatório copiado!",
     reportDownloaded: "Relatório transferido!",
     exportPdf: "Relatório PDF",
+    scanToView: "Digitalize para ver a planta",
   },
 } as const;
 

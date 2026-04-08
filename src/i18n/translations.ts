@@ -522,6 +522,14 @@ export const translations = {
     reportDownloaded: "تم تحميل التقرير!",
     exportPdf: "تقرير PDF",
     scanToView: "امسح لعرض النبات",
+    community: "المجتمع",
+    searchGardens: "ابحث عن الحدائق...",
+    noPublicGardens: "لا توجد حدائق عامة بعد",
+    noPublicPlants: "لا توجد نباتات عامة بعد",
+    anonymousGardener: "بستاني مجهول",
+    plantsShared: "نباتات مشتركة",
+    makePublic: "مشاركة علنياً",
+    gardenBio: "نبذة عن الحديقة",
   },
   pt: {
     // Common

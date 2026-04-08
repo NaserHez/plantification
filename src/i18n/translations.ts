@@ -786,6 +786,14 @@ export const translations = {
     reportDownloaded: "Relatório transferido!",
     exportPdf: "Relatório PDF",
     scanToView: "Digitalize para ver a planta",
+    community: "Comunidade",
+    searchGardens: "Pesquisar jardins...",
+    noPublicGardens: "Nenhum jardim público ainda",
+    noPublicPlants: "Nenhuma planta pública ainda",
+    anonymousGardener: "Jardineiro Anónimo",
+    plantsShared: "plantas partilhadas",
+    makePublic: "Partilhar publicamente",
+    gardenBio: "Bio do jardim",
   },
 } as const;
 

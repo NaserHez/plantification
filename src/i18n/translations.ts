@@ -257,6 +257,7 @@ export const translations = {
     reportCopied: "Report copied to clipboard!",
     reportDownloaded: "Report downloaded!",
     exportPdf: "PDF Report",
+    scanToView: "Scan to view plant",
   },
   ar: {
     // Common
@@ -512,6 +513,7 @@ export const translations = {
     reportCopied: "تم نسخ التقرير!",
     reportDownloaded: "تم تحميل التقرير!",
     exportPdf: "تقرير PDF",
+    scanToView: "امسح لعرض النبات",
   },
   pt: {
     // Common
@@ -767,6 +769,7 @@ export const translations = {
     reportCopied: "Relatório copiado!",
     reportDownloaded: "Relatório transferido!",
     exportPdf: "Relatório PDF",
+    scanToView: "Digitalize para ver a planta",
   },
 } as const;
 

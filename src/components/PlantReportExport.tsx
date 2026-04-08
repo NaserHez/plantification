@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Share2, Download, Loader2, Copy, Check, FileText } from "lucide-react";
+import QRCode from "qrcode";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -419,6 +420,26 @@ export default function PlantReportExport({ plantId, plantName }: PlantReportExp
             y += photoSize * 0.75 + 5;
           }
         }
+      }
+
+      // ── QR Code ──
+      const plantUrl = `${window.location.origin}/plant/${plantId}`;
+      try {
+        const qrDataUrl = await QRCode.toDataURL(plantUrl, { width: 200, margin: 1, color: { dark: "#1e1e1e", light: "#ffffff" } });
+        checkPage(40);
+        y += 4;
+        const qrSize = 30;
+        const qrX = margin + (contentW - qrSize) / 2;
+        pdf.setFillColor(248, 250, 252);
+        pdf.roundedRect(qrX - 3, y - 2, qrSize + 6, qrSize + 12, 2, 2, "F");
+        pdf.addImage(qrDataUrl, "PNG", qrX, y, qrSize, qrSize);
+        pdf.setFontSize(7);
+        setFont("normal");
+        pdf.setTextColor(120, 120, 120);
+        pdf.text(rtlText(t("scanToView") || "Scan to view plant"), margin + contentW / 2, y + qrSize + 4, { align: "center" });
+        y += qrSize + 14;
+      } catch (e) {
+        console.warn("QR code generation failed:", e);
       }
 
       // ── Footer ──

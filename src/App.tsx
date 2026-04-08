@@ -52,6 +52,8 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/community" element={<CommunityPage />} />
+              <Route path="/garden/:userId" element={<PublicGardenPage />} />
               <Route path="/*" element={
                 <AuthGate>
                   <Routes>

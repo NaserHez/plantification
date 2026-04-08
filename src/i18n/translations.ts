@@ -258,6 +258,14 @@ export const translations = {
     reportDownloaded: "Report downloaded!",
     exportPdf: "PDF Report",
     scanToView: "Scan to view plant",
+    community: "Community",
+    searchGardens: "Search gardens...",
+    noPublicGardens: "No public gardens yet",
+    noPublicPlants: "No public plants yet",
+    anonymousGardener: "Anonymous Gardener",
+    plantsShared: "plants shared",
+    makePublic: "Share publicly",
+    gardenBio: "Garden bio",
   },
   ar: {
     // Common

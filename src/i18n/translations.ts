@@ -257,6 +257,7 @@ export const translations = {
     reportCopied: "Report copied to clipboard!",
     reportDownloaded: "Report downloaded!",
     exportPdf: "PDF Report",
+    scanToView: "Scan to view plant",
   },
   ar: {
     // Common

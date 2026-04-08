@@ -1,4 +1,4 @@
-import { Camera, Leaf, Home, Stethoscope, Bot, CloudSun } from "lucide-react";
+import { Camera, Leaf, Home, Stethoscope, Bot, CloudSun, Users } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/i18n/LanguageContext";

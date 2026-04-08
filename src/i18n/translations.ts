@@ -513,6 +513,7 @@ export const translations = {
     reportCopied: "تم نسخ التقرير!",
     reportDownloaded: "تم تحميل التقرير!",
     exportPdf: "تقرير PDF",
+    scanToView: "امسح لعرض النبات",
   },
   pt: {
     // Common

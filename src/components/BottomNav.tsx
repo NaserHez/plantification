@@ -15,6 +15,7 @@ export default function BottomNav() {
     { path: "/chat", icon: Bot, label: t("aiChat") },
     { path: "/weather", icon: CloudSun, label: t("weather") },
     { path: "/garden", icon: Leaf, label: t("garden") },
+    { path: "/community", icon: Users, label: t("community") },
   ];
 
   return (

@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, LogOut, Moon, Sun, Monitor, User, Lock, Leaf, Loader2, Globe, Bell, BellOff, Languages, Volume2, Clock } from "lucide-react";
+import { ArrowLeft, LogOut, Moon, Sun, Monitor, User, Lock, Leaf, Loader2, Globe, Bell, BellOff, Languages, Volume2, Clock, Sprout } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +39,7 @@ export default function SettingsPage() {
   const { t, language: appLanguage, setLanguage: setAppLanguage } = useLanguage();
   const [displayName, setDisplayName] = useState("");
   const [gardenName, setGardenName] = useState("My Garden");
+  const [gardenBio, setGardenBio] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [newPassword, setNewPassword] = useState("");
@@ -55,11 +57,12 @@ export default function SettingsPage() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("display_name")
+        .select("display_name, garden_bio")
         .eq("user_id", user.id)
         .maybeSingle();
 
       if (profile?.display_name) setDisplayName(profile.display_name);
+      if (profile?.garden_bio) setGardenBio(profile.garden_bio);
 
       const saved = localStorage.getItem("garden_name");
       if (saved) setGardenName(saved);
@@ -111,7 +114,7 @@ export default function SettingsPage() {
       if (!user) throw new Error("Not authenticated");
 
       const { error } = await supabase.from("profiles").upsert(
-        { user_id: user.id, display_name: displayName },
+        { user_id: user.id, display_name: displayName, garden_bio: gardenBio || null },
         { onConflict: "user_id" }
       );
       if (error) throw error;
@@ -314,6 +317,20 @@ export default function SettingsPage() {
               <Leaf className="w-3.5 h-3.5 text-primary" /> {t("gardenName")}
             </Label>
             <Input value={gardenName} onChange={(e) => setGardenName(e.target.value)} placeholder="My Garden" className="rounded-xl h-10" />
+          </div>
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
+              <Sprout className="w-3.5 h-3.5 text-primary" /> {t("gardenBio")}
+            </Label>
+            <Textarea
+              value={gardenBio}
+              onChange={(e) => setGardenBio(e.target.value)}
+              placeholder={t("gardenBioPlaceholder")}
+              rows={3}
+              maxLength={300}
+              className="rounded-xl resize-none"
+            />
+            <p className="text-[10px] text-muted-foreground mt-1">{gardenBio.length}/300</p>
           </div>
           <Button onClick={handleSaveProfile} disabled={saving} className="w-full rounded-xl h-10">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t("saveChanges")}

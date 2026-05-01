@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Droplets, BellOff, Bell, BellRing, CalendarClock } from "lucide-react";
+import { ArrowLeft, Droplets, BellOff, Bell, BellRing, CalendarClock, MapPin, List as ListIcon } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useWateringReminders } from "@/hooks/use-watering-reminders";
@@ -27,6 +27,7 @@ interface PlantWithSchedule {
   watering_frequency?: string | null;
   last_watered?: string | null;
   image_url?: string | null;
+  location?: string | null;
 }
 
 const frequencyToDays: Record<string, number> = {
@@ -143,10 +144,14 @@ export default function NotificationsPage() {
   const [wateringIds, setWateringIds] = useState<Set<string>>(new Set());
   const [wateringAll, setWateringAll] = useState(false);
 
+  const [groupByLocation, setGroupByLocation] = useState<boolean>(() => {
+    return localStorage.getItem("notif_group_by_location") !== "false";
+  });
+
   const fetchPlants = async () => {
     const { data } = await supabase
       .from("plants")
-      .select("id, name, nickname, watering_frequency, last_watered, image_url")
+      .select("id, name, nickname, watering_frequency, last_watered, image_url, location")
       .order("created_at", { ascending: false });
     setPlants(data || []);
   };
@@ -285,18 +290,73 @@ export default function NotificationsPage() {
                     </AlertDialogContent>
                   </AlertDialog>
                 </div>
-                <p className="text-[11px] text-muted-foreground">{t("swipeToRemove")}</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] text-muted-foreground">{t("swipeToRemove")}</p>
+                  <div className="flex gap-1 bg-muted rounded-lg p-0.5">
+                    <button
+                      onClick={() => { setGroupByLocation(true); localStorage.setItem("notif_group_by_location", "true"); }}
+                      className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium transition-colors ${groupByLocation ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
+                    >
+                      <MapPin className="w-3 h-3" /> {t("byLocation")}
+                    </button>
+                    <button
+                      onClick={() => { setGroupByLocation(false); localStorage.setItem("notif_group_by_location", "false"); }}
+                      className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium transition-colors ${!groupByLocation ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
+                    >
+                      <ListIcon className="w-3 h-3" /> {t("flatList")}
+                    </button>
+                  </div>
+                </div>
                 <AnimatePresence>
-                  {overdue.map((p) => (
-                    <SwipeableNotification
-                      key={p.id}
-                      plant={p}
-                      onWatered={handleMarkWatered}
-                      onNavigate={(id) => navigate(`/plant/${id}`)}
-                      isWatering={wateringIds.has(p.id)}
-                      t={t as any}
-                    />
-                  ))}
+                  {groupByLocation ? (
+                    Object.entries(
+                      overdue.reduce<Record<string, typeof overdue>>((acc, p) => {
+                        const loc = p.location || "other";
+                        (acc[loc] ||= []).push(p);
+                        return acc;
+                      }, {})
+                    ).map(([loc, group]) => {
+                      const labels: Record<string, string> = {
+                        indoor: t("indoor"),
+                        outdoor: t("outdoor"),
+                        balcony: t("balcony"),
+                        windowsill: t("windowsill"),
+                        other: t("other"),
+                      };
+                      return (
+                        <div key={loc} className="space-y-2 mb-2">
+                          <h3 className="font-serif text-xs text-muted-foreground flex items-center gap-1.5 px-1">
+                            <MapPin className="w-3 h-3" />
+                            {labels[loc] || loc}
+                            <span className="text-[10px]">({group.length})</span>
+                          </h3>
+                          <div className="space-y-2">
+                            {group.map((p) => (
+                              <SwipeableNotification
+                                key={p.id}
+                                plant={p}
+                                onWatered={handleMarkWatered}
+                                onNavigate={(id) => navigate(`/plant/${id}`)}
+                                isWatering={wateringIds.has(p.id)}
+                                t={t as any}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    overdue.map((p) => (
+                      <SwipeableNotification
+                        key={p.id}
+                        plant={p}
+                        onWatered={handleMarkWatered}
+                        onNavigate={(id) => navigate(`/plant/${id}`)}
+                        isWatering={wateringIds.has(p.id)}
+                        t={t as any}
+                      />
+                    ))
+                  )}
                 </AnimatePresence>
               </motion.div>
             )}

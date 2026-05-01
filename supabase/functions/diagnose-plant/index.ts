@@ -74,9 +74,10 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error('Plant.id API error:', response.status, errorText);
       return new Response(
-        JSON.stringify({ error: `API error: ${response.status}`, details: errorText }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Plant identification service temporarily unavailable' }),
+        { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 

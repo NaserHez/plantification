@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Leaf, LayoutGrid, List, MapPin, GripVertical, ArrowLeft, Search } from "lucide-react";
+import { Plus, Leaf, LayoutGrid, List, MapPin, GripVertical, ArrowLeft, Search, Share2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import PlantCard from "@/components/PlantCard";
@@ -206,6 +207,27 @@ export default function GardenPage() {
             {plants.length} {plants.length !== 1 ? t("plants") : t("plant")}
           </p>
         </div>
+        <Button
+          onClick={async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+            const url = `${window.location.origin}/garden/${user.id}`;
+            try {
+              if (navigator.share) {
+                await navigator.share({ title: t("myGarden"), url });
+              } else {
+                await navigator.clipboard.writeText(url);
+                toast.success(t("gardenLinkCopied"));
+              }
+            } catch {}
+          }}
+          size="icon"
+          variant="outline"
+          className="rounded-xl h-10 w-10"
+          title={t("shareGarden")}
+        >
+          <Share2 className="w-4 h-4" />
+        </Button>
         <Button onClick={() => navigate("/identify")} size="icon" className="rounded-xl h-10 w-10">
           <Plus className="w-5 h-5" />
         </Button>

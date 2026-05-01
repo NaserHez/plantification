@@ -318,6 +318,20 @@ export default function SettingsPage() {
             </Label>
             <Input value={gardenName} onChange={(e) => setGardenName(e.target.value)} placeholder="My Garden" className="rounded-xl h-10" />
           </div>
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
+              <Sprout className="w-3.5 h-3.5 text-primary" /> {t("gardenBio")}
+            </Label>
+            <Textarea
+              value={gardenBio}
+              onChange={(e) => setGardenBio(e.target.value)}
+              placeholder={t("gardenBioPlaceholder")}
+              rows={3}
+              maxLength={300}
+              className="rounded-xl resize-none"
+            />
+            <p className="text-[10px] text-muted-foreground mt-1">{gardenBio.length}/300</p>
+          </div>
           <Button onClick={handleSaveProfile} disabled={saving} className="w-full rounded-xl h-10">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t("saveChanges")}
           </Button>

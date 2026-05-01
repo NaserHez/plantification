@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Droplets, BellOff, Bell, BellRing, CalendarClock } from "lucide-react";
+import { ArrowLeft, Droplets, BellOff, Bell, BellRing, CalendarClock, MapPin, List as ListIcon } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useWateringReminders } from "@/hooks/use-watering-reminders";
@@ -27,6 +27,7 @@ interface PlantWithSchedule {
   watering_frequency?: string | null;
   last_watered?: string | null;
   image_url?: string | null;
+  location?: string | null;
 }
 
 const frequencyToDays: Record<string, number> = {
@@ -143,10 +144,14 @@ export default function NotificationsPage() {
   const [wateringIds, setWateringIds] = useState<Set<string>>(new Set());
   const [wateringAll, setWateringAll] = useState(false);
 
+  const [groupByLocation, setGroupByLocation] = useState<boolean>(() => {
+    return localStorage.getItem("notif_group_by_location") !== "false";
+  });
+
   const fetchPlants = async () => {
     const { data } = await supabase
       .from("plants")
-      .select("id, name, nickname, watering_frequency, last_watered, image_url")
+      .select("id, name, nickname, watering_frequency, last_watered, image_url, location")
       .order("created_at", { ascending: false });
     setPlants(data || []);
   };

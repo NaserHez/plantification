@@ -7,6 +7,7 @@ interface Plant {
   last_watered?: string | null;
   watering_frequency?: string | null;
   image_url?: string | null;
+  location?: string | null;
 }
 
 interface OverduePlant extends Plant {

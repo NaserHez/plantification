@@ -1,15 +1,17 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Search, Leaf, ArrowLeft, Heart, MessageCircle, Send, Trash2, Loader2, Image as ImageIcon, X } from "lucide-react";
+import { Users, Search, Leaf, ArrowLeft, Heart, MessageCircle, Send, Trash2, Loader2, Image as ImageIcon, X, Share2, MoreHorizontal, Flag, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
+import ReportDialog from "@/components/ReportDialog";
 
 interface PublicGarden {
   user_id: string;
@@ -40,6 +42,8 @@ interface Post {
   content: string;
   image_url: string | null;
   created_at: string;
+  plant_id?: string | null;
+  plant_name?: string | null;
   author?: PostAuthor;
   like_count: number;
   liked_by_me: boolean;
@@ -70,6 +74,14 @@ export default function CommunityPage() {
   // Feed
   const [posts, setPosts] = useState<Post[]>([]);
   const [feedLoading, setFeedLoading] = useState(true);
+  const [feedSearch, setFeedSearch] = useState("");
+  const [hiddenPostIds, setHiddenPostIds] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem("hidden_post_ids");
+      return new Set<string>(raw ? JSON.parse(raw) : []);
+    } catch { return new Set<string>(); }
+  });
+  const [reportTarget, setReportTarget] = useState<{ type: "post" | "comment"; postId: string; commentId?: string } | null>(null);
   const [newPost, setNewPost] = useState("");
   const [postImage, setPostImage] = useState<File | null>(null);
   const [postImagePreview, setPostImagePreview] = useState<string | null>(null);
@@ -77,6 +89,7 @@ export default function CommunityPage() {
   const [openComments, setOpenComments] = useState<Record<string, boolean>>({});
   const [commentsByPost, setCommentsByPost] = useState<Record<string, Comment[]>>({});
   const [newComment, setNewComment] = useState<Record<string, string>>({});
+  const postRefs = useRef<Record<string, HTMLElement | null>>({});
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id || null));
@@ -136,7 +149,7 @@ export default function CommunityPage() {
     setFeedLoading(true);
     const { data: postRows } = await supabase
       .from("community_posts")
-      .select("id, user_id, content, image_url, created_at")
+      .select("id, user_id, content, image_url, created_at, plant_id")
       .order("created_at", { ascending: false })
       .limit(50);
 
@@ -148,14 +161,19 @@ export default function CommunityPage() {
 
     const postIds = postRows.map((p) => p.id);
     const userIds = [...new Set(postRows.map((p) => p.user_id))];
+    const plantIds = [...new Set(postRows.map((p) => p.plant_id).filter(Boolean) as string[])];
 
-    const [{ data: profiles }, { data: likes }, { data: comments }] = await Promise.all([
+    const [{ data: profiles }, { data: likes }, { data: comments }, plantsRes] = await Promise.all([
       supabase.from("profiles").select("user_id, display_name, avatar_url").in("user_id", userIds),
       supabase.from("post_likes").select("post_id, user_id").in("post_id", postIds),
       supabase.from("post_comments").select("post_id").in("post_id", postIds),
+      plantIds.length
+        ? supabase.from("plants").select("id, name, nickname").in("id", plantIds)
+        : Promise.resolve({ data: [] as any[] }),
     ]);
 
     const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
+    const plantMap = new Map(((plantsRes as any).data || []).map((p: any) => [p.id, p.nickname || p.name]));
     const likeMap = new Map<string, { count: number; mine: boolean }>();
     (likes || []).forEach((l) => {
       const entry = likeMap.get(l.post_id) || { count: 0, mine: false };
@@ -170,6 +188,7 @@ export default function CommunityPage() {
       postRows.map((p) => ({
         ...p,
         author: profileMap.get(p.user_id) as PostAuthor | undefined,
+        plant_name: (p.plant_id ? plantMap.get(p.plant_id) : null) as string | null,
         like_count: likeMap.get(p.id)?.count || 0,
         liked_by_me: likeMap.get(p.id)?.mine || false,
         comment_count: commentCount.get(p.id) || 0,
@@ -177,6 +196,20 @@ export default function CommunityPage() {
     );
     setFeedLoading(false);
   }, [currentUserId]);
+
+  // Scroll to deep-linked post
+  useEffect(() => {
+    if (feedLoading || posts.length === 0) return;
+    const hash = window.location.hash;
+    if (!hash.startsWith("#post-")) return;
+    const id = hash.slice(6);
+    const el = postRefs.current[id];
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.add("ring-2", "ring-primary/50");
+      setTimeout(() => el.classList.remove("ring-2", "ring-primary/50"), 2400);
+    }
+  }, [feedLoading, posts]);
 
   useEffect(() => {
     if (currentUserId !== null) loadFeed();
@@ -289,11 +322,63 @@ export default function CommunityPage() {
     setPosts((prev) => prev.filter((p) => p.id !== postId));
   };
 
+  const handleSharePost = async (postId: string) => {
+    const url = `${window.location.origin}/community#post-${postId}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Plantification post", url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success(t("postLinkCopied"));
+      }
+    } catch (err: any) {
+      if (err.name !== "AbortError") {
+        try {
+          await navigator.clipboard.writeText(url);
+          toast.success(t("postLinkCopied"));
+        } catch { /* ignore */ }
+      }
+    }
+  };
+
+  const handleHidePost = (postId: string) => {
+    setHiddenPostIds((prev) => {
+      const next = new Set(prev);
+      next.add(postId);
+      try { localStorage.setItem("hidden_post_ids", JSON.stringify([...next])); } catch {}
+      return next;
+    });
+    toast.success(t("contentHidden"));
+  };
+
+  const handleDeleteComment = async (postId: string, commentId: string) => {
+    const { error } = await supabase.from("post_comments").delete().eq("id", commentId);
+    if (error) { toast.error(error.message); return; }
+    setCommentsByPost((prev) => ({
+      ...prev,
+      [postId]: (prev[postId] || []).filter((c) => c.id !== commentId),
+    }));
+    setPosts((prev) =>
+      prev.map((p) => (p.id === postId ? { ...p, comment_count: Math.max(0, p.comment_count - 1) } : p))
+    );
+  };
+
   const filteredGardens = gardens.filter((g) => {
     if (!search) return true;
     const q = search.toLowerCase();
     return (g.display_name || "").toLowerCase().includes(q) || (g.garden_bio || "").toLowerCase().includes(q);
   });
+
+  const visiblePosts = posts.filter((p) => !hiddenPostIds.has(p.id));
+  const filteredPosts = (() => {
+    const q = feedSearch.trim().toLowerCase();
+    if (!q) return visiblePosts;
+    return visiblePosts.filter((p) =>
+      (p.content || "").toLowerCase().includes(q) ||
+      (p.author?.display_name || "").toLowerCase().includes(q) ||
+      (p.plant_name || "").toLowerCase().includes(q)
+    );
+  })();
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -358,17 +443,35 @@ export default function CommunityPage() {
             </div>
           </div>
 
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder={t("searchPosts")}
+              value={feedSearch}
+              onChange={(e) => setFeedSearch(e.target.value)}
+              className="pl-9 bg-card/60 backdrop-blur border-border/50 rounded-xl h-9 text-sm"
+            />
+          </div>
+
           {/* Posts list */}
           {feedLoading ? (
             <div className="text-center py-8 text-muted-foreground text-sm">{t("loading")}...</div>
-          ) : posts.length === 0 ? (
+          ) : filteredPosts.length === 0 ? (
             <div className="text-center py-12">
               <MessageCircle className="w-10 h-10 mx-auto text-muted-foreground/40 mb-3" />
-              <p className="text-muted-foreground text-sm">{t("noPosts")}</p>
+              <p className="text-muted-foreground text-sm">
+                {feedSearch ? t("noPostsMatch") : t("noPosts")}
+              </p>
             </div>
           ) : (
-            posts.map((p) => (
-              <article key={p.id} className="bg-card rounded-2xl border border-border/50 p-4 space-y-3">
+            filteredPosts.map((p) => (
+              <article
+                key={p.id}
+                ref={(el) => { postRefs.current[p.id] = el; }}
+                id={`post-${p.id}`}
+                className="bg-card rounded-2xl border border-border/50 p-4 space-y-3 transition-shadow"
+              >
                 <div className="flex items-center gap-2.5">
                   <button onClick={() => navigate(`/garden/${p.user_id}`)}>
                     <Avatar className="w-9 h-9">
@@ -382,17 +485,51 @@ export default function CommunityPage() {
                     <p className="text-sm font-semibold text-foreground truncate">
                       {p.author?.display_name || t("anonymousGardener")}
                     </p>
-                    <p className="text-[10px] text-muted-foreground">{timeAgo(p.created_at, t)}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {timeAgo(p.created_at, t)}
+                      {p.plant_name && (
+                        <span className="ml-1.5 inline-flex items-center gap-0.5 text-primary">
+                          · <Leaf className="w-2.5 h-2.5" /> {p.plant_name}
+                        </span>
+                      )}
+                    </p>
                   </div>
-                  {p.user_id === currentUserId && (
-                    <button
-                      onClick={() => handleDeletePost(p.id)}
-                      className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                      title={t("deletePost")}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  )}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
+                        aria-label="Post actions"
+                      >
+                        <MoreHorizontal className="w-4 h-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="rounded-xl">
+                      <DropdownMenuItem onClick={() => handleSharePost(p.id)} className="gap-2 text-xs">
+                        <Share2 className="w-3.5 h-3.5" /> {t("sharePost")}
+                      </DropdownMenuItem>
+                      {p.user_id !== currentUserId && (
+                        <>
+                          <DropdownMenuItem
+                            onClick={() => setReportTarget({ type: "post", postId: p.id })}
+                            className="gap-2 text-xs text-destructive focus:text-destructive"
+                          >
+                            <Flag className="w-3.5 h-3.5" /> {t("reportPost")}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleHidePost(p.id)} className="gap-2 text-xs">
+                            <EyeOff className="w-3.5 h-3.5" /> {t("hideContent")}
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                      {p.user_id === currentUserId && (
+                        <DropdownMenuItem
+                          onClick={() => handleDeletePost(p.id)}
+                          className="gap-2 text-xs text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> {t("deletePost")}
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
                 {p.content && <p className="text-sm text-foreground whitespace-pre-wrap">{p.content}</p>}
@@ -419,12 +556,19 @@ export default function CommunityPage() {
                     <MessageCircle className="w-4 h-4" />
                     {p.comment_count}
                   </button>
+                  <button
+                    onClick={() => handleSharePost(p.id)}
+                    className="ml-auto flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground"
+                    title={t("sharePost")}
+                  >
+                    <Share2 className="w-4 h-4" />
+                  </button>
                 </div>
 
                 {openComments[p.id] && (
                   <div className="pt-2 border-t border-border/50 space-y-2">
                     {(commentsByPost[p.id] || []).map((c) => (
-                      <div key={c.id} className="flex items-start gap-2">
+                      <div key={c.id} className="flex items-start gap-2 group">
                         <Avatar className="w-7 h-7 shrink-0">
                           <AvatarImage src={c.author?.avatar_url || undefined} />
                           <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
@@ -440,6 +584,33 @@ export default function CommunityPage() {
                           </p>
                           <p className="text-xs text-foreground whitespace-pre-wrap">{c.content}</p>
                         </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted opacity-60 group-hover:opacity-100 transition-opacity"
+                              aria-label="Comment actions"
+                            >
+                              <MoreHorizontal className="w-3.5 h-3.5" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="rounded-xl">
+                            {c.user_id !== currentUserId ? (
+                              <DropdownMenuItem
+                                onClick={() => setReportTarget({ type: "comment", postId: p.id, commentId: c.id })}
+                                className="gap-2 text-xs text-destructive focus:text-destructive"
+                              >
+                                <Flag className="w-3.5 h-3.5" /> {t("reportComment")}
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteComment(p.id, c.id)}
+                                className="gap-2 text-xs text-destructive focus:text-destructive"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" /> {t("deleteComment")}
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     ))}
                     <div className="flex items-center gap-2 pt-1">
@@ -528,6 +699,16 @@ export default function CommunityPage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {reportTarget && (
+        <ReportDialog
+          open={!!reportTarget}
+          onOpenChange={(open) => { if (!open) setReportTarget(null); }}
+          targetType={reportTarget.type}
+          postId={reportTarget.postId}
+          commentId={reportTarget.commentId}
+        />
+      )}
 
       <BottomNav />
     </div>

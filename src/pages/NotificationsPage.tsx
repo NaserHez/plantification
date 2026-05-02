@@ -1,12 +1,13 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Droplets, BellOff, Bell, BellRing, CalendarClock, MapPin, List as ListIcon } from "lucide-react";
+import { ArrowLeft, Droplets, BellOff, Bell, BellRing, CalendarClock, MapPin, List as ListIcon, Heart, MessageCircle, CheckCheck } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useWateringReminders } from "@/hooks/use-watering-reminders";
 import BottomNav from "@/components/BottomNav";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -148,6 +149,20 @@ export default function NotificationsPage() {
     return localStorage.getItem("notif_group_by_location") !== "false";
   });
 
+  // Community activity
+  interface ActivityItem {
+    id: string;
+    type: "like" | "comment";
+    actor_id: string;
+    post_id: string;
+    comment_id?: string | null;
+    read_at: string | null;
+    created_at: string;
+    actor_name?: string | null;
+    actor_avatar?: string | null;
+  }
+  const [activity, setActivity] = useState<ActivityItem[]>([]);
+
   const fetchPlants = async () => {
     const { data } = await supabase
       .from("plants")
@@ -156,19 +171,72 @@ export default function NotificationsPage() {
     setPlants(data || []);
   };
 
-  useEffect(() => { fetchPlants(); }, []);
+  const fetchActivity = useCallback(async () => {
+    const { data } = await supabase
+      .from("community_notifications")
+      .select("id, type, actor_id, post_id, comment_id, read_at, created_at")
+      .order("created_at", { ascending: false })
+      .limit(30);
+    if (!data || data.length === 0) {
+      setActivity([]);
+      return;
+    }
+    const actorIds = [...new Set(data.map((n) => n.actor_id))];
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("user_id, display_name, avatar_url")
+      .in("user_id", actorIds);
+    const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
+    setActivity(
+      data.map((n) => ({
+        ...n,
+        type: n.type as "like" | "comment",
+        actor_name: profileMap.get(n.actor_id)?.display_name ?? null,
+        actor_avatar: profileMap.get(n.actor_id)?.avatar_url ?? null,
+      }))
+    );
+  }, []);
+
+  useEffect(() => {
+    fetchPlants();
+    fetchActivity();
+  }, [fetchActivity]);
+
+  const handleOpenActivity = async (n: ActivityItem) => {
+    if (!n.read_at) {
+      await supabase
+        .from("community_notifications")
+        .update({ read_at: new Date().toISOString() })
+        .eq("id", n.id);
+      setActivity((prev) =>
+        prev.map((a) => (a.id === n.id ? { ...a, read_at: new Date().toISOString() } : a))
+      );
+    }
+    navigate(`/community#post-${n.post_id}`);
+  };
+
+  const handleMarkAllRead = async () => {
+    const unread = activity.filter((a) => !a.read_at);
+    if (unread.length === 0) return;
+    const ids = unread.map((a) => a.id);
+    const now = new Date().toISOString();
+    await supabase.from("community_notifications").update({ read_at: now }).in("id", ids);
+    setActivity((prev) => prev.map((a) => ({ ...a, read_at: a.read_at ?? now })));
+  };
 
   const { overdue, permissionGranted, requestPermission } = useWateringReminders(plants);
   const upcoming = getUpcomingWaterings(plants);
 
-  // Update PWA badge
+  // Update PWA badge with overdue waterings + unread community activity
   useEffect(() => {
-    if ("setAppBadge" in navigator && overdue.length > 0) {
-      (navigator as any).setAppBadge(overdue.length);
-    } else if ("clearAppBadge" in navigator && overdue.length === 0) {
+    const unreadActivity = activity.filter((a) => !a.read_at).length;
+    const total = overdue.length + unreadActivity;
+    if ("setAppBadge" in navigator && total > 0) {
+      (navigator as any).setAppBadge(total);
+    } else if ("clearAppBadge" in navigator && total === 0) {
       (navigator as any).clearAppBadge();
     }
-  }, [overdue.length]);
+  }, [overdue.length, activity]);
 
   const handleMarkWatered = async (e: React.MouseEvent, plantId: string, plantName: string) => {
     e.stopPropagation();
@@ -240,7 +308,7 @@ export default function NotificationsPage() {
         </motion.div>
 
         {/* Overdue plants list */}
-        {overdue.length === 0 && upcoming.length === 0 ? (
+        {overdue.length === 0 && upcoming.length === 0 && activity.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -388,6 +456,71 @@ export default function NotificationsPage() {
                     </div>
                   </button>
                 ))}
+              </motion.div>
+            )}
+
+            {/* Community activity */}
+            {activity.length > 0 && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-serif text-sm text-muted-foreground flex items-center gap-2">
+                    <Heart className="w-4 h-4 text-bloom" />
+                    {t("activity")}
+                  </h2>
+                  {activity.some((a) => !a.read_at) && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleMarkAllRead}
+                      className="rounded-xl gap-1.5 text-xs h-7"
+                    >
+                      <CheckCheck className="w-3.5 h-3.5" />
+                      {t("markAllRead")}
+                    </Button>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  {activity.map((n) => {
+                    const isUnread = !n.read_at;
+                    const Icon = n.type === "like" ? Heart : MessageCircle;
+                    const iconColor = n.type === "like" ? "text-bloom" : "text-primary";
+                    return (
+                      <button
+                        key={n.id}
+                        onClick={() => handleOpenActivity(n)}
+                        className={`w-full flex items-center gap-3 p-3 rounded-2xl border text-left transition-colors ${
+                          isUnread
+                            ? "bg-primary/5 border-primary/30 hover:bg-primary/10"
+                            : "bg-card border-border hover:border-primary/30"
+                        }`}
+                      >
+                        <div className="relative shrink-0">
+                          <Avatar className="w-9 h-9">
+                            <AvatarImage src={n.actor_avatar || undefined} />
+                            <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                              {(n.actor_name || "?")[0]?.toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-card border border-border flex items-center justify-center ${iconColor}`}>
+                            <Icon className={`w-2.5 h-2.5 ${n.type === "like" ? "fill-bloom" : ""}`} />
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-foreground truncate">
+                            <span className="font-semibold">{n.actor_name || t("anonymousGardener")}</span>{" "}
+                            <span className="text-muted-foreground">
+                              {n.type === "like" ? t("likedYourPost") : t("commentedOnPost")}
+                            </span>
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {new Date(n.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
+                        {isUnread && <span className="w-2 h-2 rounded-full bg-primary shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
               </motion.div>
             )}
           </>

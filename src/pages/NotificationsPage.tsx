@@ -149,6 +149,20 @@ export default function NotificationsPage() {
     return localStorage.getItem("notif_group_by_location") !== "false";
   });
 
+  // Community activity
+  interface ActivityItem {
+    id: string;
+    type: "like" | "comment";
+    actor_id: string;
+    post_id: string;
+    comment_id?: string | null;
+    read_at: string | null;
+    created_at: string;
+    actor_name?: string | null;
+    actor_avatar?: string | null;
+  }
+  const [activity, setActivity] = useState<ActivityItem[]>([]);
+
   const fetchPlants = async () => {
     const { data } = await supabase
       .from("plants")
@@ -157,7 +171,58 @@ export default function NotificationsPage() {
     setPlants(data || []);
   };
 
-  useEffect(() => { fetchPlants(); }, []);
+  const fetchActivity = useCallback(async () => {
+    const { data } = await supabase
+      .from("community_notifications")
+      .select("id, type, actor_id, post_id, comment_id, read_at, created_at")
+      .order("created_at", { ascending: false })
+      .limit(30);
+    if (!data || data.length === 0) {
+      setActivity([]);
+      return;
+    }
+    const actorIds = [...new Set(data.map((n) => n.actor_id))];
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("user_id, display_name, avatar_url")
+      .in("user_id", actorIds);
+    const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
+    setActivity(
+      data.map((n) => ({
+        ...n,
+        type: n.type as "like" | "comment",
+        actor_name: profileMap.get(n.actor_id)?.display_name ?? null,
+        actor_avatar: profileMap.get(n.actor_id)?.avatar_url ?? null,
+      }))
+    );
+  }, []);
+
+  useEffect(() => {
+    fetchPlants();
+    fetchActivity();
+  }, [fetchActivity]);
+
+  const handleOpenActivity = async (n: ActivityItem) => {
+    if (!n.read_at) {
+      await supabase
+        .from("community_notifications")
+        .update({ read_at: new Date().toISOString() })
+        .eq("id", n.id);
+      setActivity((prev) =>
+        prev.map((a) => (a.id === n.id ? { ...a, read_at: new Date().toISOString() } : a))
+      );
+    }
+    navigate(`/community#post-${n.post_id}`);
+  };
+
+  const handleMarkAllRead = async () => {
+    const unread = activity.filter((a) => !a.read_at);
+    if (unread.length === 0) return;
+    const ids = unread.map((a) => a.id);
+    const now = new Date().toISOString();
+    await supabase.from("community_notifications").update({ read_at: now }).in("id", ids);
+    setActivity((prev) => prev.map((a) => ({ ...a, read_at: a.read_at ?? now })));
+  };
 
   const { overdue, permissionGranted, requestPermission } = useWateringReminders(plants);
   const upcoming = getUpcomingWaterings(plants);

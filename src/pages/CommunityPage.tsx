@@ -149,7 +149,7 @@ export default function CommunityPage() {
     setFeedLoading(true);
     const { data: postRows } = await supabase
       .from("community_posts")
-      .select("id, user_id, content, image_url, created_at")
+      .select("id, user_id, content, image_url, created_at, plant_id")
       .order("created_at", { ascending: false })
       .limit(50);
 
@@ -161,14 +161,19 @@ export default function CommunityPage() {
 
     const postIds = postRows.map((p) => p.id);
     const userIds = [...new Set(postRows.map((p) => p.user_id))];
+    const plantIds = [...new Set(postRows.map((p) => p.plant_id).filter(Boolean) as string[])];
 
-    const [{ data: profiles }, { data: likes }, { data: comments }] = await Promise.all([
+    const [{ data: profiles }, { data: likes }, { data: comments }, plantsRes] = await Promise.all([
       supabase.from("profiles").select("user_id, display_name, avatar_url").in("user_id", userIds),
       supabase.from("post_likes").select("post_id, user_id").in("post_id", postIds),
       supabase.from("post_comments").select("post_id").in("post_id", postIds),
+      plantIds.length
+        ? supabase.from("plants").select("id, name, nickname").in("id", plantIds)
+        : Promise.resolve({ data: [] as any[] }),
     ]);
 
     const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
+    const plantMap = new Map(((plantsRes as any).data || []).map((p: any) => [p.id, p.nickname || p.name]));
     const likeMap = new Map<string, { count: number; mine: boolean }>();
     (likes || []).forEach((l) => {
       const entry = likeMap.get(l.post_id) || { count: 0, mine: false };
@@ -183,6 +188,7 @@ export default function CommunityPage() {
       postRows.map((p) => ({
         ...p,
         author: profileMap.get(p.user_id) as PostAuthor | undefined,
+        plant_name: (p.plant_id ? plantMap.get(p.plant_id) : null) as string | null,
         like_count: likeMap.get(p.id)?.count || 0,
         liked_by_me: likeMap.get(p.id)?.mine || false,
         comment_count: commentCount.get(p.id) || 0,
@@ -190,6 +196,20 @@ export default function CommunityPage() {
     );
     setFeedLoading(false);
   }, [currentUserId]);
+
+  // Scroll to deep-linked post
+  useEffect(() => {
+    if (feedLoading || posts.length === 0) return;
+    const hash = window.location.hash;
+    if (!hash.startsWith("#post-")) return;
+    const id = hash.slice(6);
+    const el = postRefs.current[id];
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.add("ring-2", "ring-primary/50");
+      setTimeout(() => el.classList.remove("ring-2", "ring-primary/50"), 2400);
+    }
+  }, [feedLoading, posts]);
 
   useEffect(() => {
     if (currentUserId !== null) loadFeed();

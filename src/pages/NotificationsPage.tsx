@@ -227,14 +227,16 @@ export default function NotificationsPage() {
   const { overdue, permissionGranted, requestPermission } = useWateringReminders(plants);
   const upcoming = getUpcomingWaterings(plants);
 
-  // Update PWA badge
+  // Update PWA badge with overdue waterings + unread community activity
   useEffect(() => {
-    if ("setAppBadge" in navigator && overdue.length > 0) {
-      (navigator as any).setAppBadge(overdue.length);
-    } else if ("clearAppBadge" in navigator && overdue.length === 0) {
+    const unreadActivity = activity.filter((a) => !a.read_at).length;
+    const total = overdue.length + unreadActivity;
+    if ("setAppBadge" in navigator && total > 0) {
+      (navigator as any).setAppBadge(total);
+    } else if ("clearAppBadge" in navigator && total === 0) {
       (navigator as any).clearAppBadge();
     }
-  }, [overdue.length]);
+  }, [overdue.length, activity]);
 
   const handleMarkWatered = async (e: React.MouseEvent, plantId: string, plantName: string) => {
     e.stopPropagation();

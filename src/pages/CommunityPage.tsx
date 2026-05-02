@@ -556,12 +556,19 @@ export default function CommunityPage() {
                     <MessageCircle className="w-4 h-4" />
                     {p.comment_count}
                   </button>
+                  <button
+                    onClick={() => handleSharePost(p.id)}
+                    className="ml-auto flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground"
+                    title={t("sharePost")}
+                  >
+                    <Share2 className="w-4 h-4" />
+                  </button>
                 </div>
 
                 {openComments[p.id] && (
                   <div className="pt-2 border-t border-border/50 space-y-2">
                     {(commentsByPost[p.id] || []).map((c) => (
-                      <div key={c.id} className="flex items-start gap-2">
+                      <div key={c.id} className="flex items-start gap-2 group">
                         <Avatar className="w-7 h-7 shrink-0">
                           <AvatarImage src={c.author?.avatar_url || undefined} />
                           <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
@@ -577,6 +584,33 @@ export default function CommunityPage() {
                           </p>
                           <p className="text-xs text-foreground whitespace-pre-wrap">{c.content}</p>
                         </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted opacity-60 group-hover:opacity-100 transition-opacity"
+                              aria-label="Comment actions"
+                            >
+                              <MoreHorizontal className="w-3.5 h-3.5" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="rounded-xl">
+                            {c.user_id !== currentUserId ? (
+                              <DropdownMenuItem
+                                onClick={() => setReportTarget({ type: "comment", postId: p.id, commentId: c.id })}
+                                className="gap-2 text-xs text-destructive focus:text-destructive"
+                              >
+                                <Flag className="w-3.5 h-3.5" /> {t("reportComment")}
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteComment(p.id, c.id)}
+                                className="gap-2 text-xs text-destructive focus:text-destructive"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" /> {t("deleteComment")}
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     ))}
                     <div className="flex items-center gap-2 pt-1">

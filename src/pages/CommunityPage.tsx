@@ -42,6 +42,8 @@ interface Post {
   content: string;
   image_url: string | null;
   created_at: string;
+  plant_id?: string | null;
+  plant_name?: string | null;
   author?: PostAuthor;
   like_count: number;
   liked_by_me: boolean;

@@ -700,6 +700,16 @@ export default function CommunityPage() {
         </TabsContent>
       </Tabs>
 
+      {reportTarget && (
+        <ReportDialog
+          open={!!reportTarget}
+          onOpenChange={(open) => { if (!open) setReportTarget(null); }}
+          targetType={reportTarget.type}
+          postId={reportTarget.postId}
+          commentId={reportTarget.commentId}
+        />
+      )}
+
       <BottomNav />
     </div>
   );

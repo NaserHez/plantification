@@ -1,12 +1,13 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Droplets, BellOff, Bell, BellRing, CalendarClock, MapPin, List as ListIcon } from "lucide-react";
+import { ArrowLeft, Droplets, BellOff, Bell, BellRing, CalendarClock, MapPin, List as ListIcon, Heart, MessageCircle, CheckCheck } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useWateringReminders } from "@/hooks/use-watering-reminders";
 import BottomNav from "@/components/BottomNav";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
 import {
   AlertDialog,

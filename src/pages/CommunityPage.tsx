@@ -485,17 +485,51 @@ export default function CommunityPage() {
                     <p className="text-sm font-semibold text-foreground truncate">
                       {p.author?.display_name || t("anonymousGardener")}
                     </p>
-                    <p className="text-[10px] text-muted-foreground">{timeAgo(p.created_at, t)}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {timeAgo(p.created_at, t)}
+                      {p.plant_name && (
+                        <span className="ml-1.5 inline-flex items-center gap-0.5 text-primary">
+                          · <Leaf className="w-2.5 h-2.5" /> {p.plant_name}
+                        </span>
+                      )}
+                    </p>
                   </div>
-                  {p.user_id === currentUserId && (
-                    <button
-                      onClick={() => handleDeletePost(p.id)}
-                      className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                      title={t("deletePost")}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  )}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
+                        aria-label="Post actions"
+                      >
+                        <MoreHorizontal className="w-4 h-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="rounded-xl">
+                      <DropdownMenuItem onClick={() => handleSharePost(p.id)} className="gap-2 text-xs">
+                        <Share2 className="w-3.5 h-3.5" /> {t("sharePost")}
+                      </DropdownMenuItem>
+                      {p.user_id !== currentUserId && (
+                        <>
+                          <DropdownMenuItem
+                            onClick={() => setReportTarget({ type: "post", postId: p.id })}
+                            className="gap-2 text-xs text-destructive focus:text-destructive"
+                          >
+                            <Flag className="w-3.5 h-3.5" /> {t("reportPost")}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleHidePost(p.id)} className="gap-2 text-xs">
+                            <EyeOff className="w-3.5 h-3.5" /> {t("hideContent")}
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                      {p.user_id === currentUserId && (
+                        <DropdownMenuItem
+                          onClick={() => handleDeletePost(p.id)}
+                          className="gap-2 text-xs text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> {t("deletePost")}
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
                 {p.content && <p className="text-sm text-foreground whitespace-pre-wrap">{p.content}</p>}

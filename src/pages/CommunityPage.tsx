@@ -443,17 +443,35 @@ export default function CommunityPage() {
             </div>
           </div>
 
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder={t("searchPosts")}
+              value={feedSearch}
+              onChange={(e) => setFeedSearch(e.target.value)}
+              className="pl-9 bg-card/60 backdrop-blur border-border/50 rounded-xl h-9 text-sm"
+            />
+          </div>
+
           {/* Posts list */}
           {feedLoading ? (
             <div className="text-center py-8 text-muted-foreground text-sm">{t("loading")}...</div>
-          ) : posts.length === 0 ? (
+          ) : filteredPosts.length === 0 ? (
             <div className="text-center py-12">
               <MessageCircle className="w-10 h-10 mx-auto text-muted-foreground/40 mb-3" />
-              <p className="text-muted-foreground text-sm">{t("noPosts")}</p>
+              <p className="text-muted-foreground text-sm">
+                {feedSearch ? t("noPostsMatch") : t("noPosts")}
+              </p>
             </div>
           ) : (
-            posts.map((p) => (
-              <article key={p.id} className="bg-card rounded-2xl border border-border/50 p-4 space-y-3">
+            filteredPosts.map((p) => (
+              <article
+                key={p.id}
+                ref={(el) => { postRefs.current[p.id] = el; }}
+                id={`post-${p.id}`}
+                className="bg-card rounded-2xl border border-border/50 p-4 space-y-3 transition-shadow"
+              >
                 <div className="flex items-center gap-2.5">
                   <button onClick={() => navigate(`/garden/${p.user_id}`)}>
                     <Avatar className="w-9 h-9">

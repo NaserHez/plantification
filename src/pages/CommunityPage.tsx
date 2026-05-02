@@ -1,15 +1,17 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Search, Leaf, ArrowLeft, Heart, MessageCircle, Send, Trash2, Loader2, Image as ImageIcon, X } from "lucide-react";
+import { Users, Search, Leaf, ArrowLeft, Heart, MessageCircle, Send, Trash2, Loader2, Image as ImageIcon, X, Share2, MoreHorizontal, Flag, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
+import ReportDialog from "@/components/ReportDialog";
 
 interface PublicGarden {
   user_id: string;

@@ -74,6 +74,14 @@ export default function CommunityPage() {
   // Feed
   const [posts, setPosts] = useState<Post[]>([]);
   const [feedLoading, setFeedLoading] = useState(true);
+  const [feedSearch, setFeedSearch] = useState("");
+  const [hiddenPostIds, setHiddenPostIds] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem("hidden_post_ids");
+      return new Set<string>(raw ? JSON.parse(raw) : []);
+    } catch { return new Set<string>(); }
+  });
+  const [reportTarget, setReportTarget] = useState<{ type: "post" | "comment"; postId: string; commentId?: string } | null>(null);
   const [newPost, setNewPost] = useState("");
   const [postImage, setPostImage] = useState<File | null>(null);
   const [postImagePreview, setPostImagePreview] = useState<string | null>(null);
@@ -81,6 +89,7 @@ export default function CommunityPage() {
   const [openComments, setOpenComments] = useState<Record<string, boolean>>({});
   const [commentsByPost, setCommentsByPost] = useState<Record<string, Comment[]>>({});
   const [newComment, setNewComment] = useState<Record<string, string>>({});
+  const postRefs = useRef<Record<string, HTMLElement | null>>({});
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id || null));

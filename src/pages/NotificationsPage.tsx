@@ -306,7 +306,7 @@ export default function NotificationsPage() {
         </motion.div>
 
         {/* Overdue plants list */}
-        {overdue.length === 0 && upcoming.length === 0 ? (
+        {overdue.length === 0 && upcoming.length === 0 && activity.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

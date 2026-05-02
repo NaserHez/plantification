@@ -456,6 +456,71 @@ export default function NotificationsPage() {
                 ))}
               </motion.div>
             )}
+
+            {/* Community activity */}
+            {activity.length > 0 && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-serif text-sm text-muted-foreground flex items-center gap-2">
+                    <Heart className="w-4 h-4 text-bloom" />
+                    {t("activity")}
+                  </h2>
+                  {activity.some((a) => !a.read_at) && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleMarkAllRead}
+                      className="rounded-xl gap-1.5 text-xs h-7"
+                    >
+                      <CheckCheck className="w-3.5 h-3.5" />
+                      {t("markAllRead")}
+                    </Button>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  {activity.map((n) => {
+                    const isUnread = !n.read_at;
+                    const Icon = n.type === "like" ? Heart : MessageCircle;
+                    const iconColor = n.type === "like" ? "text-bloom" : "text-primary";
+                    return (
+                      <button
+                        key={n.id}
+                        onClick={() => handleOpenActivity(n)}
+                        className={`w-full flex items-center gap-3 p-3 rounded-2xl border text-left transition-colors ${
+                          isUnread
+                            ? "bg-primary/5 border-primary/30 hover:bg-primary/10"
+                            : "bg-card border-border hover:border-primary/30"
+                        }`}
+                      >
+                        <div className="relative shrink-0">
+                          <Avatar className="w-9 h-9">
+                            <AvatarImage src={n.actor_avatar || undefined} />
+                            <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                              {(n.actor_name || "?")[0]?.toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-card border border-border flex items-center justify-center ${iconColor}`}>
+                            <Icon className={`w-2.5 h-2.5 ${n.type === "like" ? "fill-bloom" : ""}`} />
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-foreground truncate">
+                            <span className="font-semibold">{n.actor_name || t("anonymousGardener")}</span>{" "}
+                            <span className="text-muted-foreground">
+                              {n.type === "like" ? t("likedYourPost") : t("commentedOnPost")}
+                            </span>
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {new Date(n.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
+                        {isUnread && <span className="w-2 h-2 rounded-full bg-primary shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
           </>
         )}
       </div>

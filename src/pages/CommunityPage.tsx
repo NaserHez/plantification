@@ -322,11 +322,63 @@ export default function CommunityPage() {
     setPosts((prev) => prev.filter((p) => p.id !== postId));
   };
 
+  const handleSharePost = async (postId: string) => {
+    const url = `${window.location.origin}/community#post-${postId}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Plantification post", url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success(t("postLinkCopied"));
+      }
+    } catch (err: any) {
+      if (err.name !== "AbortError") {
+        try {
+          await navigator.clipboard.writeText(url);
+          toast.success(t("postLinkCopied"));
+        } catch { /* ignore */ }
+      }
+    }
+  };
+
+  const handleHidePost = (postId: string) => {
+    setHiddenPostIds((prev) => {
+      const next = new Set(prev);
+      next.add(postId);
+      try { localStorage.setItem("hidden_post_ids", JSON.stringify([...next])); } catch {}
+      return next;
+    });
+    toast.success(t("contentHidden"));
+  };
+
+  const handleDeleteComment = async (postId: string, commentId: string) => {
+    const { error } = await supabase.from("post_comments").delete().eq("id", commentId);
+    if (error) { toast.error(error.message); return; }
+    setCommentsByPost((prev) => ({
+      ...prev,
+      [postId]: (prev[postId] || []).filter((c) => c.id !== commentId),
+    }));
+    setPosts((prev) =>
+      prev.map((p) => (p.id === postId ? { ...p, comment_count: Math.max(0, p.comment_count - 1) } : p))
+    );
+  };
+
   const filteredGardens = gardens.filter((g) => {
     if (!search) return true;
     const q = search.toLowerCase();
     return (g.display_name || "").toLowerCase().includes(q) || (g.garden_bio || "").toLowerCase().includes(q);
   });
+
+  const visiblePosts = posts.filter((p) => !hiddenPostIds.has(p.id));
+  const filteredPosts = (() => {
+    const q = feedSearch.trim().toLowerCase();
+    if (!q) return visiblePosts;
+    return visiblePosts.filter((p) =>
+      (p.content || "").toLowerCase().includes(q) ||
+      (p.author?.display_name || "").toLowerCase().includes(q) ||
+      (p.plant_name || "").toLowerCase().includes(q)
+    );
+  })();
 
   return (
     <div className="min-h-screen bg-background pb-20">

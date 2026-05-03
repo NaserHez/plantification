@@ -101,18 +101,20 @@ export default function CommunityPage() {
   }, []);
 
   // Load public gardens
-  useEffect(() => {
-    async function load() {
-      setGardensLoading(true);
-      const { data: plants } = await supabase
+  const loadGardens = useCallback(async () => {
+    setGardensLoading(true);
+    setGardensError(null);
+    try {
+      const { data: plants, error: plantsErr } = await supabase
         .from("plants")
         .select("user_id, name, image_url")
         .eq("is_public", true)
         .order("created_at", { ascending: false });
 
+      if (plantsErr) throw plantsErr;
+
       if (!plants || plants.length === 0) {
         setGardens([]);
-        setGardensLoading(false);
         return;
       }
 
@@ -125,10 +127,11 @@ export default function CommunityPage() {
       }
 
       const userIds = [...userMap.keys()];
-      const { data: profiles } = await supabase
+      const { data: profiles, error: profErr } = await supabase
         .from("profiles")
         .select("user_id, display_name, avatar_url, garden_bio")
         .in("user_id", userIds);
+      if (profErr) throw profErr;
 
       const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
       const result: PublicGarden[] = userIds.map((uid) => {
@@ -144,10 +147,14 @@ export default function CommunityPage() {
         };
       });
       setGardens(result.sort((a, b) => b.plant_count - a.plant_count));
+    } catch (err: any) {
+      setGardensError(err.message || "Failed to load public gardens");
+    } finally {
       setGardensLoading(false);
     }
-    load();
   }, []);
+
+  useEffect(() => { loadGardens(); }, [loadGardens]);
 
   // Load feed
   const loadFeed = useCallback(async () => {

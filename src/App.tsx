@@ -65,6 +65,7 @@ const App = () => (
                     <Route path="/settings" element={<SettingsPage />} />
                     <Route path="/diagnose" element={<DiagnosisPage />} />
                     <Route path="/chat" element={<PlantChatPage />} />
+                    <Route path="/chat-diagnostics" element={<ChatDiagnosticsPage />} />
                     <Route path="/notifications" element={<NotificationsPage />} />
                     <Route path="/planting-calendar" element={<PlantingCalendarPage />} />
                     <Route path="/weather" element={<WeatherCenterPage />} />

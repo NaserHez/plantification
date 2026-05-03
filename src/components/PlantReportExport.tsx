@@ -492,6 +492,16 @@ export default function PlantReportExport({ plantId, plantName }: PlantReportExp
         <Button
           variant="outline"
           size="sm"
+          onClick={openPreview}
+          disabled={pdfGenerating || generating}
+          className="h-8 rounded-lg gap-1.5 text-xs"
+        >
+          <Eye className="w-3.5 h-3.5" />
+          {t("exportPreview") || "Preview"}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
           onClick={handlePdfExport}
           disabled={pdfGenerating || generating}
           className="h-8 rounded-lg gap-1.5 text-xs"
@@ -520,6 +530,65 @@ export default function PlantReportExport({ plantId, plantName }: PlantReportExp
           {t("copyReport")}
         </Button>
       </div>
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="font-serif">{t("exportPreview") || "Export preview"}</DialogTitle>
+          </DialogHeader>
+          <div
+            className="mx-auto bg-white text-black rounded-lg shadow-md overflow-hidden border border-border"
+            style={{ width: "100%", aspectRatio: "0.707" }}
+          >
+            <div className="bg-[hsl(142,71%,45%)] h-8 flex items-center px-3">
+              <span className="text-white text-[10px] font-bold">Plantification</span>
+              <span className="ml-auto text-white/80 text-[8px]">{t("plantReport")}</span>
+            </div>
+            <div className="p-3 flex flex-col h-[calc(100%-2rem)]">
+              <div className="flex-1 space-y-2">
+                <div className="h-12 bg-gray-100 rounded" />
+                <div className="h-3 bg-gray-200 rounded w-2/3" />
+                <div className="h-2 bg-gray-100 rounded w-1/3" />
+                <div className="grid grid-cols-3 gap-1 mt-2">
+                  <div className="h-6 bg-green-50 rounded" />
+                  <div className="h-6 bg-green-50 rounded" />
+                  <div className="h-6 bg-green-50 rounded" />
+                </div>
+                <div className="space-y-1 mt-2">
+                  <div className="h-1.5 bg-gray-200 rounded" />
+                  <div className="h-1.5 bg-gray-200 rounded w-5/6" />
+                  <div className="h-1.5 bg-gray-200 rounded w-4/6" />
+                </div>
+              </div>
+              <div className="flex flex-col items-center gap-1 pt-2 border-t border-gray-100">
+                {qrPreview ? (
+                  <img src={qrPreview} alt="QR preview" className="w-14 h-14" />
+                ) : (
+                  <div className="w-14 h-14 bg-gray-100 rounded animate-pulse" />
+                )}
+                <span className="text-[7px] text-gray-500">{t("scanToView") || "Scan to view plant"}</span>
+              </div>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground text-center">
+            {t("qrAtBottom") || "The QR code appears centered at the bottom of the report."}
+          </p>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" size="sm" onClick={() => setPreviewOpen(false)} className="rounded-lg">
+              {t("cancel")}
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => { setPreviewOpen(false); handlePdfExport(); }}
+              disabled={pdfGenerating}
+              className="rounded-lg gap-1.5"
+            >
+              {pdfGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
+              {t("exportPdf")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

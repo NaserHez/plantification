@@ -511,7 +511,7 @@ export default function CommunityPage() {
               <AlertDescription className="flex items-center justify-between gap-3">
                 <span className="text-xs">{feedError}</span>
                 <Button size="sm" variant="outline" onClick={loadFeed} className="h-7 rounded-lg gap-1.5 text-xs">
-                  <RefreshCcw className="w-3 h-3" /> {t("retry") || "Retry"}
+                  <RefreshCcw className="w-3 h-3" /> {(t as any)("retry") || "Retry"}
                 </Button>
               </AlertDescription>
             </Alert>

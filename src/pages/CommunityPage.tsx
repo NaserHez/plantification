@@ -12,6 +12,9 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
 import ReportDialog from "@/components/ReportDialog";
+import { compressImage, MAX_UPLOAD_BYTES } from "@/lib/image-compress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle, RefreshCcw } from "lucide-react";
 
 interface PublicGarden {
   user_id: string;

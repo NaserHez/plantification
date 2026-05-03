@@ -714,7 +714,34 @@ export default function CommunityPage() {
           </div>
           <div className="space-y-3">
             {gardensLoading ? (
-              <div className="text-center py-12 text-muted-foreground text-sm">{t("loading")}...</div>
+              <div className="space-y-3">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="bg-card rounded-2xl border border-border/50 p-4 animate-pulse">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-full bg-muted" />
+                      <div className="flex-1 space-y-1.5">
+                        <div className="h-3 bg-muted rounded w-1/3" />
+                        <div className="h-2 bg-muted rounded w-1/4" />
+                      </div>
+                    </div>
+                    <div className="flex gap-1.5">
+                      {[0, 1, 2, 3].map((j) => (
+                        <div key={j} className="w-16 h-16 rounded-lg bg-muted" />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : gardensError ? (
+              <Alert variant="destructive" className="rounded-xl">
+                <AlertTriangle className="w-4 h-4" />
+                <AlertDescription className="flex items-center justify-between gap-3">
+                  <span className="text-xs">{gardensError}</span>
+                  <Button size="sm" variant="outline" onClick={loadGardens} className="h-7 rounded-lg gap-1.5 text-xs">
+                    <RefreshCcw className="w-3 h-3" /> {(t as any)("retry") || "Retry"}
+                  </Button>
+                </AlertDescription>
+              </Alert>
             ) : filteredGardens.length === 0 ? (
               <div className="text-center py-12">
                 <Leaf className="w-10 h-10 mx-auto text-muted-foreground/40 mb-3" />

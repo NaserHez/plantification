@@ -117,6 +117,24 @@ export default function PlantReportExport({ plantId, plantName }: PlantReportExp
   const [generating, setGenerating] = useState(false);
   const [pdfGenerating, setPdfGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [qrPreview, setQrPreview] = useState<string | null>(null);
+
+  const openPreview = async () => {
+    setPreviewOpen(true);
+    if (qrPreview) return;
+    try {
+      const url = `${window.location.origin}/plant/${plantId}`;
+      const dataUrl = await QRCode.toDataURL(url, {
+        width: 220,
+        margin: 1,
+        color: { dark: "#1e1e1e", light: "#ffffff" },
+      });
+      setQrPreview(dataUrl);
+    } catch {
+      // ignore
+    }
+  };
 
   const handleCopy = async () => {
     setGenerating(true);

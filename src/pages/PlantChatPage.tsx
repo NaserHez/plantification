@@ -223,7 +223,22 @@ export default function PlantChatPage() {
       </div>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-        {messages.length === 0 && (
+        {messages.length === 0 && sessionState === "signed-out" && (
+          <div className="flex flex-col items-center justify-center h-full text-center gap-3 py-16">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <Bot className="w-8 h-8 text-primary" />
+            </div>
+            <h2 className="font-serif text-lg">Sign in to chat</h2>
+            <p className="text-sm text-muted-foreground max-w-[260px]">
+              Plantify AI needs an account so it can remember your garden and personalize advice.
+            </p>
+            <Button onClick={() => navigate("/")} className="rounded-xl mt-2">
+              Sign in to continue
+            </Button>
+          </div>
+        )}
+
+        {messages.length === 0 && sessionState !== "signed-out" && (
           <div className="flex flex-col items-center justify-center h-full text-center gap-3 py-16">
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
               <Bot className="w-8 h-8 text-primary" />
@@ -241,6 +256,12 @@ export default function PlantChatPage() {
                 </button>
               ))}
             </div>
+            <button
+              onClick={() => navigate("/chat-diagnostics")}
+              className="text-[10px] text-muted-foreground underline mt-3"
+            >
+              Having issues? Run chat diagnostics
+            </button>
           </div>
         )}
 

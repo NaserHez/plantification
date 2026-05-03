@@ -490,7 +490,31 @@ export default function CommunityPage() {
 
           {/* Posts list */}
           {feedLoading ? (
-            <div className="text-center py-8 text-muted-foreground text-sm">{t("loading")}...</div>
+            <div className="space-y-3">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="bg-card rounded-2xl border border-border/50 p-4 space-y-3 animate-pulse">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-full bg-muted" />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-3 bg-muted rounded w-1/3" />
+                      <div className="h-2 bg-muted rounded w-1/4" />
+                    </div>
+                  </div>
+                  <div className="h-3 bg-muted rounded w-5/6" />
+                  <div className="h-32 bg-muted rounded-xl" />
+                </div>
+              ))}
+            </div>
+          ) : feedError ? (
+            <Alert variant="destructive" className="rounded-xl">
+              <AlertTriangle className="w-4 h-4" />
+              <AlertDescription className="flex items-center justify-between gap-3">
+                <span className="text-xs">{feedError}</span>
+                <Button size="sm" variant="outline" onClick={loadFeed} className="h-7 rounded-lg gap-1.5 text-xs">
+                  <RefreshCcw className="w-3 h-3" /> {t("retry") || "Retry"}
+                </Button>
+              </AlertDescription>
+            </Alert>
           ) : filteredPosts.length === 0 ? (
             <div className="text-center py-12">
               <MessageCircle className="w-10 h-10 mx-auto text-muted-foreground/40 mb-3" />

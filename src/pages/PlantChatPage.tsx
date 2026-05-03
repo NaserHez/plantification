@@ -104,6 +104,11 @@ export default function PlantChatPage() {
   const sendMessage = useCallback(async () => {
     const text = input.trim();
     if (!text || isLoading) return;
+    if (sessionState !== "signed-in") {
+      toast.error("Please sign in to chat with Plantify AI");
+      navigate("/");
+      return;
+    }
 
     const userMsg: Msg = { role: "user", content: text };
     setInput("");

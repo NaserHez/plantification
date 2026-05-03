@@ -233,11 +233,25 @@ export default function CommunityPage() {
     if (currentUserId !== null) loadFeed();
   }, [loadFeed, currentUserId]);
 
-  const handlePostImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePostImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = "";
     if (!file) return;
-    setPostImage(file);
-    setPostImagePreview(URL.createObjectURL(file));
+    if (file.size > MAX_UPLOAD_BYTES) {
+      toast.error(`Image too large (max ${(MAX_UPLOAD_BYTES / 1024 / 1024).toFixed(0)}MB)`);
+      return;
+    }
+    try {
+      const result = await compressImage(file);
+      setPostImage(result.file);
+      setPostImagePreview(URL.createObjectURL(result.file));
+      const savedKb = Math.max(0, Math.round((result.originalBytes - result.bytes) / 1024));
+      if (savedKb > 50) {
+        toast.success(`Image compressed (${savedKb} KB saved)`);
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Could not process image");
+    }
   };
 
   const handleCreatePost = async () => {
@@ -250,8 +264,10 @@ export default function CommunityPage() {
     try {
       let image_url: string | null = null;
       if (postImage) {
-        const path = `${currentUserId}/posts/${Date.now()}-${postImage.name}`;
-        const { error: upErr } = await supabase.storage.from("plant-images").upload(path, postImage);
+        const path = `${currentUserId}/posts/${Date.now()}.jpg`;
+        const { error: upErr } = await supabase.storage
+          .from("plant-images")
+          .upload(path, postImage, { contentType: "image/jpeg", cacheControl: "3600" });
         if (upErr) throw upErr;
         const { data } = supabase.storage.from("plant-images").getPublicUrl(path);
         image_url = data.publicUrl;

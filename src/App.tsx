@@ -14,6 +14,7 @@ import PlantDetailPage from "./pages/PlantDetailPage";
 import SettingsPage from "./pages/SettingsPage";
 import DiagnosisPage from "./pages/DiagnosisPage";
 import PlantChatPage from "./pages/PlantChatPage";
+import ChatDiagnosticsPage from "./pages/ChatDiagnosticsPage";
 import AuthForm from "./components/AuthForm";
 import NotificationsPage from "./pages/NotificationsPage";
 import PlantingCalendarPage from "./pages/PlantingCalendarPage";

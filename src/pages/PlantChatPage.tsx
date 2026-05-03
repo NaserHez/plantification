@@ -27,8 +27,20 @@ export default function PlantChatPage() {
   const [plantContext, setPlantContext] = useState<string>("");
   const [weatherContext, setWeatherContext] = useState<string>("");
   const [autoSent, setAutoSent] = useState(false);
+  const [sessionState, setSessionState] = useState<"checking" | "signed-in" | "signed-out">("checking");
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Track auth session for sign-in gate
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSessionState(data.session ? "signed-in" : "signed-out");
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setSessionState(session ? "signed-in" : "signed-out");
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     const fetchPlants = async () => {
@@ -92,6 +104,11 @@ export default function PlantChatPage() {
   const sendMessage = useCallback(async () => {
     const text = input.trim();
     if (!text || isLoading) return;
+    if (sessionState !== "signed-in") {
+      toast.error("Please sign in to chat with Plantify AI");
+      navigate("/");
+      return;
+    }
 
     const userMsg: Msg = { role: "user", content: text };
     setInput("");
@@ -206,7 +223,22 @@ export default function PlantChatPage() {
       </div>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-        {messages.length === 0 && (
+        {messages.length === 0 && sessionState === "signed-out" && (
+          <div className="flex flex-col items-center justify-center h-full text-center gap-3 py-16">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <Bot className="w-8 h-8 text-primary" />
+            </div>
+            <h2 className="font-serif text-lg">Sign in to chat</h2>
+            <p className="text-sm text-muted-foreground max-w-[260px]">
+              Plantify AI needs an account so it can remember your garden and personalize advice.
+            </p>
+            <Button onClick={() => navigate("/")} className="rounded-xl mt-2">
+              Sign in to continue
+            </Button>
+          </div>
+        )}
+
+        {messages.length === 0 && sessionState !== "signed-out" && (
           <div className="flex flex-col items-center justify-center h-full text-center gap-3 py-16">
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
               <Bot className="w-8 h-8 text-primary" />
@@ -224,6 +256,12 @@ export default function PlantChatPage() {
                 </button>
               ))}
             </div>
+            <button
+              onClick={() => navigate("/chat-diagnostics")}
+              className="text-[10px] text-muted-foreground underline mt-3"
+            >
+              Having issues? Run chat diagnostics
+            </button>
           </div>
         )}
 
@@ -282,7 +320,7 @@ export default function PlantChatPage() {
           />
           <Button
             onClick={sendMessage}
-            disabled={!input.trim() || isLoading}
+            disabled={!input.trim() || isLoading || sessionState !== "signed-in"}
             size="icon"
             className="rounded-xl h-11 w-11 shrink-0"
           >

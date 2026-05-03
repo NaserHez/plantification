@@ -12,6 +12,9 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
 import ReportDialog from "@/components/ReportDialog";
+import { compressImage, MAX_UPLOAD_BYTES } from "@/lib/image-compress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle, RefreshCcw } from "lucide-react";
 
 interface PublicGarden {
   user_id: string;
@@ -69,11 +72,13 @@ export default function CommunityPage() {
   // Gardens
   const [gardens, setGardens] = useState<PublicGarden[]>([]);
   const [gardensLoading, setGardensLoading] = useState(true);
+  const [gardensError, setGardensError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
   // Feed
   const [posts, setPosts] = useState<Post[]>([]);
   const [feedLoading, setFeedLoading] = useState(true);
+  const [feedError, setFeedError] = useState<string | null>(null);
   const [feedSearch, setFeedSearch] = useState("");
   const [hiddenPostIds, setHiddenPostIds] = useState<Set<string>>(() => {
     try {
@@ -96,18 +101,20 @@ export default function CommunityPage() {
   }, []);
 
   // Load public gardens
-  useEffect(() => {
-    async function load() {
-      setGardensLoading(true);
-      const { data: plants } = await supabase
+  const loadGardens = useCallback(async () => {
+    setGardensLoading(true);
+    setGardensError(null);
+    try {
+      const { data: plants, error: plantsErr } = await supabase
         .from("plants")
         .select("user_id, name, image_url")
         .eq("is_public", true)
         .order("created_at", { ascending: false });
 
+      if (plantsErr) throw plantsErr;
+
       if (!plants || plants.length === 0) {
         setGardens([]);
-        setGardensLoading(false);
         return;
       }
 
@@ -120,10 +127,11 @@ export default function CommunityPage() {
       }
 
       const userIds = [...userMap.keys()];
-      const { data: profiles } = await supabase
+      const { data: profiles, error: profErr } = await supabase
         .from("profiles")
         .select("user_id, display_name, avatar_url, garden_bio")
         .in("user_id", userIds);
+      if (profErr) throw profErr;
 
       const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
       const result: PublicGarden[] = userIds.map((uid) => {
@@ -139,62 +147,72 @@ export default function CommunityPage() {
         };
       });
       setGardens(result.sort((a, b) => b.plant_count - a.plant_count));
+    } catch (err: any) {
+      setGardensError(err.message || "Failed to load public gardens");
+    } finally {
       setGardensLoading(false);
     }
-    load();
   }, []);
+
+  useEffect(() => { loadGardens(); }, [loadGardens]);
 
   // Load feed
   const loadFeed = useCallback(async () => {
     setFeedLoading(true);
-    const { data: postRows } = await supabase
-      .from("community_posts")
-      .select("id, user_id, content, image_url, created_at, plant_id")
-      .order("created_at", { ascending: false })
-      .limit(50);
+    setFeedError(null);
+    try {
+      const { data: postRows, error: postErr } = await supabase
+        .from("community_posts")
+        .select("id, user_id, content, image_url, created_at, plant_id")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (postErr) throw postErr;
 
-    if (!postRows || postRows.length === 0) {
-      setPosts([]);
+      if (!postRows || postRows.length === 0) {
+        setPosts([]);
+        return;
+      }
+
+      const postIds = postRows.map((p) => p.id);
+      const userIds = [...new Set(postRows.map((p) => p.user_id))];
+      const plantIds = [...new Set(postRows.map((p) => p.plant_id).filter(Boolean) as string[])];
+
+      const [{ data: profiles }, { data: likes }, { data: comments }, plantsRes] = await Promise.all([
+        supabase.from("profiles").select("user_id, display_name, avatar_url").in("user_id", userIds),
+        supabase.from("post_likes").select("post_id, user_id").in("post_id", postIds),
+        supabase.from("post_comments").select("post_id").in("post_id", postIds),
+        plantIds.length
+          ? supabase.from("plants").select("id, name, nickname").in("id", plantIds)
+          : Promise.resolve({ data: [] as any[] }),
+      ]);
+
+      const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
+      const plantMap = new Map(((plantsRes as any).data || []).map((p: any) => [p.id, p.nickname || p.name]));
+      const likeMap = new Map<string, { count: number; mine: boolean }>();
+      (likes || []).forEach((l) => {
+        const entry = likeMap.get(l.post_id) || { count: 0, mine: false };
+        entry.count++;
+        if (l.user_id === currentUserId) entry.mine = true;
+        likeMap.set(l.post_id, entry);
+      });
+      const commentCount = new Map<string, number>();
+      (comments || []).forEach((c) => commentCount.set(c.post_id, (commentCount.get(c.post_id) || 0) + 1));
+
+      setPosts(
+        postRows.map((p) => ({
+          ...p,
+          author: profileMap.get(p.user_id) as PostAuthor | undefined,
+          plant_name: (p.plant_id ? plantMap.get(p.plant_id) : null) as string | null,
+          like_count: likeMap.get(p.id)?.count || 0,
+          liked_by_me: likeMap.get(p.id)?.mine || false,
+          comment_count: commentCount.get(p.id) || 0,
+        }))
+      );
+    } catch (err: any) {
+      setFeedError(err.message || "Failed to load feed");
+    } finally {
       setFeedLoading(false);
-      return;
     }
-
-    const postIds = postRows.map((p) => p.id);
-    const userIds = [...new Set(postRows.map((p) => p.user_id))];
-    const plantIds = [...new Set(postRows.map((p) => p.plant_id).filter(Boolean) as string[])];
-
-    const [{ data: profiles }, { data: likes }, { data: comments }, plantsRes] = await Promise.all([
-      supabase.from("profiles").select("user_id, display_name, avatar_url").in("user_id", userIds),
-      supabase.from("post_likes").select("post_id, user_id").in("post_id", postIds),
-      supabase.from("post_comments").select("post_id").in("post_id", postIds),
-      plantIds.length
-        ? supabase.from("plants").select("id, name, nickname").in("id", plantIds)
-        : Promise.resolve({ data: [] as any[] }),
-    ]);
-
-    const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
-    const plantMap = new Map(((plantsRes as any).data || []).map((p: any) => [p.id, p.nickname || p.name]));
-    const likeMap = new Map<string, { count: number; mine: boolean }>();
-    (likes || []).forEach((l) => {
-      const entry = likeMap.get(l.post_id) || { count: 0, mine: false };
-      entry.count++;
-      if (l.user_id === currentUserId) entry.mine = true;
-      likeMap.set(l.post_id, entry);
-    });
-    const commentCount = new Map<string, number>();
-    (comments || []).forEach((c) => commentCount.set(c.post_id, (commentCount.get(c.post_id) || 0) + 1));
-
-    setPosts(
-      postRows.map((p) => ({
-        ...p,
-        author: profileMap.get(p.user_id) as PostAuthor | undefined,
-        plant_name: (p.plant_id ? plantMap.get(p.plant_id) : null) as string | null,
-        like_count: likeMap.get(p.id)?.count || 0,
-        liked_by_me: likeMap.get(p.id)?.mine || false,
-        comment_count: commentCount.get(p.id) || 0,
-      }))
-    );
-    setFeedLoading(false);
   }, [currentUserId]);
 
   // Scroll to deep-linked post
@@ -215,11 +233,25 @@ export default function CommunityPage() {
     if (currentUserId !== null) loadFeed();
   }, [loadFeed, currentUserId]);
 
-  const handlePostImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePostImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = "";
     if (!file) return;
-    setPostImage(file);
-    setPostImagePreview(URL.createObjectURL(file));
+    if (file.size > MAX_UPLOAD_BYTES) {
+      toast.error(`Image too large (max ${(MAX_UPLOAD_BYTES / 1024 / 1024).toFixed(0)}MB)`);
+      return;
+    }
+    try {
+      const result = await compressImage(file);
+      setPostImage(result.file);
+      setPostImagePreview(URL.createObjectURL(result.file));
+      const savedKb = Math.max(0, Math.round((result.originalBytes - result.bytes) / 1024));
+      if (savedKb > 50) {
+        toast.success(`Image compressed (${savedKb} KB saved)`);
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Could not process image");
+    }
   };
 
   const handleCreatePost = async () => {
@@ -232,8 +264,10 @@ export default function CommunityPage() {
     try {
       let image_url: string | null = null;
       if (postImage) {
-        const path = `${currentUserId}/posts/${Date.now()}-${postImage.name}`;
-        const { error: upErr } = await supabase.storage.from("plant-images").upload(path, postImage);
+        const path = `${currentUserId}/posts/${Date.now()}.jpg`;
+        const { error: upErr } = await supabase.storage
+          .from("plant-images")
+          .upload(path, postImage, { contentType: "image/jpeg", cacheControl: "3600" });
         if (upErr) throw upErr;
         const { data } = supabase.storage.from("plant-images").getPublicUrl(path);
         image_url = data.publicUrl;
@@ -456,7 +490,31 @@ export default function CommunityPage() {
 
           {/* Posts list */}
           {feedLoading ? (
-            <div className="text-center py-8 text-muted-foreground text-sm">{t("loading")}...</div>
+            <div className="space-y-3">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="bg-card rounded-2xl border border-border/50 p-4 space-y-3 animate-pulse">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-full bg-muted" />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-3 bg-muted rounded w-1/3" />
+                      <div className="h-2 bg-muted rounded w-1/4" />
+                    </div>
+                  </div>
+                  <div className="h-3 bg-muted rounded w-5/6" />
+                  <div className="h-32 bg-muted rounded-xl" />
+                </div>
+              ))}
+            </div>
+          ) : feedError ? (
+            <Alert variant="destructive" className="rounded-xl">
+              <AlertTriangle className="w-4 h-4" />
+              <AlertDescription className="flex items-center justify-between gap-3">
+                <span className="text-xs">{feedError}</span>
+                <Button size="sm" variant="outline" onClick={loadFeed} className="h-7 rounded-lg gap-1.5 text-xs">
+                  <RefreshCcw className="w-3 h-3" /> {(t as any)("retry") || "Retry"}
+                </Button>
+              </AlertDescription>
+            </Alert>
           ) : filteredPosts.length === 0 ? (
             <div className="text-center py-12">
               <MessageCircle className="w-10 h-10 mx-auto text-muted-foreground/40 mb-3" />
@@ -656,7 +714,34 @@ export default function CommunityPage() {
           </div>
           <div className="space-y-3">
             {gardensLoading ? (
-              <div className="text-center py-12 text-muted-foreground text-sm">{t("loading")}...</div>
+              <div className="space-y-3">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="bg-card rounded-2xl border border-border/50 p-4 animate-pulse">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-full bg-muted" />
+                      <div className="flex-1 space-y-1.5">
+                        <div className="h-3 bg-muted rounded w-1/3" />
+                        <div className="h-2 bg-muted rounded w-1/4" />
+                      </div>
+                    </div>
+                    <div className="flex gap-1.5">
+                      {[0, 1, 2, 3].map((j) => (
+                        <div key={j} className="w-16 h-16 rounded-lg bg-muted" />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : gardensError ? (
+              <Alert variant="destructive" className="rounded-xl">
+                <AlertTriangle className="w-4 h-4" />
+                <AlertDescription className="flex items-center justify-between gap-3">
+                  <span className="text-xs">{gardensError}</span>
+                  <Button size="sm" variant="outline" onClick={loadGardens} className="h-7 rounded-lg gap-1.5 text-xs">
+                    <RefreshCcw className="w-3 h-3" /> {(t as any)("retry") || "Retry"}
+                  </Button>
+                </AlertDescription>
+              </Alert>
             ) : filteredGardens.length === 0 ? (
               <div className="text-center py-12">
                 <Leaf className="w-10 h-10 mx-auto text-muted-foreground/40 mb-3" />

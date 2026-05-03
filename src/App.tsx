@@ -14,6 +14,7 @@ import PlantDetailPage from "./pages/PlantDetailPage";
 import SettingsPage from "./pages/SettingsPage";
 import DiagnosisPage from "./pages/DiagnosisPage";
 import PlantChatPage from "./pages/PlantChatPage";
+import ChatDiagnosticsPage from "./pages/ChatDiagnosticsPage";
 import AuthForm from "./components/AuthForm";
 import NotificationsPage from "./pages/NotificationsPage";
 import PlantingCalendarPage from "./pages/PlantingCalendarPage";
@@ -64,6 +65,7 @@ const App = () => (
                     <Route path="/settings" element={<SettingsPage />} />
                     <Route path="/diagnose" element={<DiagnosisPage />} />
                     <Route path="/chat" element={<PlantChatPage />} />
+                    <Route path="/chat-diagnostics" element={<ChatDiagnosticsPage />} />
                     <Route path="/notifications" element={<NotificationsPage />} />
                     <Route path="/planting-calendar" element={<PlantingCalendarPage />} />
                     <Route path="/weather" element={<WeatherCenterPage />} />

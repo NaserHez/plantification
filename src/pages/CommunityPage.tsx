@@ -72,11 +72,13 @@ export default function CommunityPage() {
   // Gardens
   const [gardens, setGardens] = useState<PublicGarden[]>([]);
   const [gardensLoading, setGardensLoading] = useState(true);
+  const [gardensError, setGardensError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
   // Feed
   const [posts, setPosts] = useState<Post[]>([]);
   const [feedLoading, setFeedLoading] = useState(true);
+  const [feedError, setFeedError] = useState<string | null>(null);
   const [feedSearch, setFeedSearch] = useState("");
   const [hiddenPostIds, setHiddenPostIds] = useState<Set<string>>(() => {
     try {

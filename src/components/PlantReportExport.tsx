@@ -497,7 +497,7 @@ export default function PlantReportExport({ plantId, plantName }: PlantReportExp
           className="h-8 rounded-lg gap-1.5 text-xs"
         >
           <Eye className="w-3.5 h-3.5" />
-          {t("exportPreview") || "Preview"}
+          {((t as any)("exportPreview")) || "Preview"}
         </Button>
         <Button
           variant="outline"
@@ -534,7 +534,7 @@ export default function PlantReportExport({ plantId, plantName }: PlantReportExp
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="max-w-sm rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="font-serif">{t("exportPreview") || "Export preview"}</DialogTitle>
+            <DialogTitle className="font-serif">{((t as any)("exportPreview")) || "Export preview"}</DialogTitle>
           </DialogHeader>
           <div
             className="mx-auto bg-white text-black rounded-lg shadow-md overflow-hidden border border-border"
@@ -571,7 +571,7 @@ export default function PlantReportExport({ plantId, plantName }: PlantReportExp
             </div>
           </div>
           <p className="text-xs text-muted-foreground text-center">
-            {t("qrAtBottom") || "The QR code appears centered at the bottom of the report."}
+            {((t as any)("qrAtBottom")) || "The QR code appears centered at the bottom of the report."}
           </p>
           <DialogFooter className="gap-2 sm:gap-2">
             <Button variant="outline" size="sm" onClick={() => setPreviewOpen(false)} className="rounded-lg">

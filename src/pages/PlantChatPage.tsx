@@ -320,7 +320,7 @@ export default function PlantChatPage() {
           />
           <Button
             onClick={sendMessage}
-            disabled={!input.trim() || isLoading}
+            disabled={!input.trim() || isLoading || sessionState !== "signed-in"}
             size="icon"
             className="rounded-xl h-11 w-11 shrink-0"
           >

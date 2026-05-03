@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Share2, Download, Loader2, Copy, Check, FileText } from "lucide-react";
+import { Share2, Download, Loader2, Copy, Check, FileText, Eye } from "lucide-react";
 import QRCode from "qrcode";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";

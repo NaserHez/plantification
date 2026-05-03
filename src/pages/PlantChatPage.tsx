@@ -27,8 +27,20 @@ export default function PlantChatPage() {
   const [plantContext, setPlantContext] = useState<string>("");
   const [weatherContext, setWeatherContext] = useState<string>("");
   const [autoSent, setAutoSent] = useState(false);
+  const [sessionState, setSessionState] = useState<"checking" | "signed-in" | "signed-out">("checking");
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Track auth session for sign-in gate
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSessionState(data.session ? "signed-in" : "signed-out");
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setSessionState(session ? "signed-in" : "signed-out");
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     const fetchPlants = async () => {

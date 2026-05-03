@@ -159,54 +159,60 @@ export default function CommunityPage() {
   // Load feed
   const loadFeed = useCallback(async () => {
     setFeedLoading(true);
-    const { data: postRows } = await supabase
-      .from("community_posts")
-      .select("id, user_id, content, image_url, created_at, plant_id")
-      .order("created_at", { ascending: false })
-      .limit(50);
+    setFeedError(null);
+    try {
+      const { data: postRows, error: postErr } = await supabase
+        .from("community_posts")
+        .select("id, user_id, content, image_url, created_at, plant_id")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (postErr) throw postErr;
 
-    if (!postRows || postRows.length === 0) {
-      setPosts([]);
+      if (!postRows || postRows.length === 0) {
+        setPosts([]);
+        return;
+      }
+
+      const postIds = postRows.map((p) => p.id);
+      const userIds = [...new Set(postRows.map((p) => p.user_id))];
+      const plantIds = [...new Set(postRows.map((p) => p.plant_id).filter(Boolean) as string[])];
+
+      const [{ data: profiles }, { data: likes }, { data: comments }, plantsRes] = await Promise.all([
+        supabase.from("profiles").select("user_id, display_name, avatar_url").in("user_id", userIds),
+        supabase.from("post_likes").select("post_id, user_id").in("post_id", postIds),
+        supabase.from("post_comments").select("post_id").in("post_id", postIds),
+        plantIds.length
+          ? supabase.from("plants").select("id, name, nickname").in("id", plantIds)
+          : Promise.resolve({ data: [] as any[] }),
+      ]);
+
+      const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
+      const plantMap = new Map(((plantsRes as any).data || []).map((p: any) => [p.id, p.nickname || p.name]));
+      const likeMap = new Map<string, { count: number; mine: boolean }>();
+      (likes || []).forEach((l) => {
+        const entry = likeMap.get(l.post_id) || { count: 0, mine: false };
+        entry.count++;
+        if (l.user_id === currentUserId) entry.mine = true;
+        likeMap.set(l.post_id, entry);
+      });
+      const commentCount = new Map<string, number>();
+      (comments || []).forEach((c) => commentCount.set(c.post_id, (commentCount.get(c.post_id) || 0) + 1));
+
+      setPosts(
+        postRows.map((p) => ({
+          ...p,
+          author: profileMap.get(p.user_id) as PostAuthor | undefined,
+          plant_name: (p.plant_id ? plantMap.get(p.plant_id) : null) as string | null,
+          like_count: likeMap.get(p.id)?.count || 0,
+          liked_by_me: likeMap.get(p.id)?.mine || false,
+          comment_count: commentCount.get(p.id) || 0,
+        }))
+      );
+    } catch (err: any) {
+      setFeedError(err.message || "Failed to load feed");
+    } finally {
       setFeedLoading(false);
-      return;
     }
-
-    const postIds = postRows.map((p) => p.id);
-    const userIds = [...new Set(postRows.map((p) => p.user_id))];
-    const plantIds = [...new Set(postRows.map((p) => p.plant_id).filter(Boolean) as string[])];
-
-    const [{ data: profiles }, { data: likes }, { data: comments }, plantsRes] = await Promise.all([
-      supabase.from("profiles").select("user_id, display_name, avatar_url").in("user_id", userIds),
-      supabase.from("post_likes").select("post_id, user_id").in("post_id", postIds),
-      supabase.from("post_comments").select("post_id").in("post_id", postIds),
-      plantIds.length
-        ? supabase.from("plants").select("id, name, nickname").in("id", plantIds)
-        : Promise.resolve({ data: [] as any[] }),
-    ]);
-
-    const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
-    const plantMap = new Map(((plantsRes as any).data || []).map((p: any) => [p.id, p.nickname || p.name]));
-    const likeMap = new Map<string, { count: number; mine: boolean }>();
-    (likes || []).forEach((l) => {
-      const entry = likeMap.get(l.post_id) || { count: 0, mine: false };
-      entry.count++;
-      if (l.user_id === currentUserId) entry.mine = true;
-      likeMap.set(l.post_id, entry);
-    });
-    const commentCount = new Map<string, number>();
-    (comments || []).forEach((c) => commentCount.set(c.post_id, (commentCount.get(c.post_id) || 0) + 1));
-
-    setPosts(
-      postRows.map((p) => ({
-        ...p,
-        author: profileMap.get(p.user_id) as PostAuthor | undefined,
-        plant_name: (p.plant_id ? plantMap.get(p.plant_id) : null) as string | null,
-        like_count: likeMap.get(p.id)?.count || 0,
-        liked_by_me: likeMap.get(p.id)?.mine || false,
-        comment_count: commentCount.get(p.id) || 0,
-      }))
-    );
-    setFeedLoading(false);
   }, [currentUserId]);
 
   // Scroll to deep-linked post

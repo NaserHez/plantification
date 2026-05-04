@@ -181,7 +181,6 @@ serve(async (req) => {
     const langMap: Record<string, string> = { en: "English", ar: "Arabic", pt: "European Portuguese (Portugal)" };
     const langName = langMap[language] || "English";
     try {
-      const aiKey = Deno.env.get('LOVABLE_API_KEY');
       if (aiKey) {
         const aiRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
@@ -194,10 +193,10 @@ serve(async (req) => {
             messages: [
               {
                 role: 'user',
-                content: `Give brief care tips (3-4 sentences) for the plant "${suggestion.name}" in ${langName}. Include watering, sunlight, soil, and common issues. Be concise and practical. Respond entirely in ${langName}.`,
+                content: `Give brief care tips (3-4 sentences) for the plant "${suggestion.name}" in ${langName}. Include watering, sunlight, soil, and common issues. Prioritize organic/biological treatments. Be concise and practical. Respond entirely in ${langName}.`,
               },
             ],
-            max_tokens: 200,
+            max_tokens: 220,
           }),
         });
         if (aiRes.ok) {

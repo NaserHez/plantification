@@ -50,7 +50,21 @@ serve(async (req) => {
 
     console.log('Calling Plant.id API with health assessment...');
 
-    const response = await fetch('https://api.plant.id/v3/identification', {
+    // Request enriched plant details for higher accuracy
+    const detailsParam = [
+      'common_names',
+      'taxonomy',
+      'description',
+      'image',
+      'synonyms',
+      'edible_parts',
+      'watering',
+      'best_light_condition',
+      'best_soil_type',
+    ].join(',');
+
+    const idUrl = `https://api.plant.id/v3/identification?details=${encodeURIComponent(detailsParam)}&language=${encodeURIComponent(language || 'en')}`;
+    const response = await fetch(idUrl, {
       method: 'POST',
       headers: {
         'Api-Key': apiKey,
@@ -60,6 +74,9 @@ serve(async (req) => {
         images: [base64Image],
         similar_images: true,
         health: 'all',
+        classification_level: 'all',
+        // Higher threshold reduces false positives in the suggestion list
+        classification_raw: false,
       }),
     });
 

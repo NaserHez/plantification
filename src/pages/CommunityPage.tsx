@@ -484,11 +484,28 @@ export default function CommunityPage() {
               <div className="relative inline-block">
                 <img src={postImagePreview} alt="" className="max-h-40 rounded-xl object-cover" />
                 <button
-                  onClick={() => { setPostImage(null); setPostImagePreview(null); }}
+                  onClick={() => { setPostImage(null); setPostImagePreview(null); setImageInfo(null); }}
                   className="absolute top-1 right-1 bg-background/80 backdrop-blur p-1 rounded-full"
                 >
                   <X className="w-3 h-3" />
                 </button>
+              </div>
+            )}
+            {imageError && (
+              <Alert variant="destructive" className="rounded-xl py-2">
+                <AlertTriangle className="w-3.5 h-3.5" />
+                <AlertDescription className="text-xs">{imageError}</AlertDescription>
+              </Alert>
+            )}
+            {imageInfo && !imageError && (
+              <p className="text-[11px] text-muted-foreground">{imageInfo}</p>
+            )}
+            {posting && postImage && (
+              <div className="space-y-1">
+                <Progress value={uploadProgress} className="h-1.5" />
+                <p className="text-[10px] text-muted-foreground">
+                  Uploading… {uploadProgress}%
+                </p>
               </div>
             )}
             <div className="flex items-center justify-between gap-2">

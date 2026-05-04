@@ -239,9 +239,18 @@ export default function CommunityPage() {
   const handlePostImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
+    setImageError(null);
+    setImageInfo(null);
     if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setImageError(`That file isn't an image (${file.type || "unknown type"}). Please pick a JPG or PNG.`);
+      return;
+    }
     if (file.size > MAX_UPLOAD_BYTES) {
-      toast.error(`Image too large (max ${(MAX_UPLOAD_BYTES / 1024 / 1024).toFixed(0)}MB)`);
+      const mb = (file.size / 1024 / 1024).toFixed(1);
+      setImageError(
+        `Image is too large (${mb} MB). Max ${(MAX_UPLOAD_BYTES / 1024 / 1024).toFixed(0)} MB. Try a smaller photo or crop it first.`
+      );
       return;
     }
     try {
@@ -249,11 +258,14 @@ export default function CommunityPage() {
       setPostImage(result.file);
       setPostImagePreview(URL.createObjectURL(result.file));
       const savedKb = Math.max(0, Math.round((result.originalBytes - result.bytes) / 1024));
-      if (savedKb > 50) {
-        toast.success(`Image compressed (${savedKb} KB saved)`);
-      }
+      const sizeKb = Math.round(result.bytes / 1024);
+      setImageInfo(
+        savedKb > 50
+          ? `Compressed to ${result.width}×${result.height} · ${sizeKb} KB (saved ${savedKb} KB)`
+          : `Ready · ${result.width}×${result.height} · ${sizeKb} KB`
+      );
     } catch (err: any) {
-      toast.error(err.message || "Could not process image");
+      setImageError(err.message || "Could not process this image. Try a different file.");
     }
   };
 
@@ -264,14 +276,25 @@ export default function CommunityPage() {
       return;
     }
     setPosting(true);
+    setUploadProgress(0);
     try {
       let image_url: string | null = null;
       if (postImage) {
+        // Simulated progress for storage upload (Supabase JS client doesn't expose XHR progress)
+        setUploadProgress(10);
+        const tick = setInterval(() => {
+          setUploadProgress((p) => (p < 85 ? p + 7 : p));
+        }, 180);
         const path = `${currentUserId}/posts/${Date.now()}.jpg`;
         const { error: upErr } = await supabase.storage
           .from("plant-images")
           .upload(path, postImage, { contentType: "image/jpeg", cacheControl: "3600" });
-        if (upErr) throw upErr;
+        clearInterval(tick);
+        if (upErr) {
+          setUploadProgress(0);
+          throw upErr;
+        }
+        setUploadProgress(95);
         const { data } = supabase.storage.from("plant-images").getPublicUrl(path);
         image_url = data.publicUrl;
       }
@@ -281,14 +304,18 @@ export default function CommunityPage() {
         image_url,
       });
       if (error) throw error;
+      setUploadProgress(100);
       setNewPost("");
       setPostImage(null);
       setPostImagePreview(null);
+      setImageInfo(null);
+      setImageError(null);
       await loadFeed();
     } catch (err: any) {
       toast.error(err.message || "Failed to post");
     } finally {
       setPosting(false);
+      setTimeout(() => setUploadProgress(0), 600);
     }
   };
 

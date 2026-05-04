@@ -92,13 +92,87 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const suggestion = data.result?.classification?.suggestions?.[0];
+    const suggestions = data.result?.classification?.suggestions || [];
+    let suggestion = suggestions[0];
 
     if (!suggestion) {
       return new Response(
         JSON.stringify({ error: 'No plant identified', isMock: false }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // Cross-validate with Gemini vision when top suggestions are close or confidence is low
+    const aiKey = Deno.env.get('LOVABLE_API_KEY');
+    const top = suggestions.slice(0, 5);
+    const topProb = top[0]?.probability || 0;
+    const secondProb = top[1]?.probability || 0;
+    const ambiguous = topProb < 0.85 || (topProb - secondProb) < 0.15;
+    let aiBoosted = false;
+    let aiAgreement = false;
+
+    if (aiKey && top.length > 1 && ambiguous) {
+      try {
+        const candidateList = top.map((s: any, i: number) =>
+          `${i + 1}. ${s.name}${s.details?.common_names?.length ? ' (' + s.details.common_names.slice(0, 3).join(', ') + ')' : ''}`
+        ).join('\n');
+        const visionRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${aiKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash',
+            messages: [{
+              role: 'user',
+              content: [
+                { type: 'text', text: `You are a botanist. Look at this plant photo and choose the MOST LIKELY species from the candidates below. Reply with ONLY the number (1-${top.length}) of the best match. If none clearly match, reply "0".\n\nCandidates:\n${candidateList}` },
+                { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64Image}` } },
+              ],
+            }],
+            max_tokens: 10,
+          }),
+        });
+        if (visionRes.ok) {
+          const v = await visionRes.json();
+          const reply = (v.choices?.[0]?.message?.content || '').trim();
+          const pick = parseInt(reply.match(/\d+/)?.[0] || '0', 10);
+          if (pick >= 1 && pick <= top.length) {
+            const chosen = top[pick - 1];
+            aiAgreement = chosen.name === suggestion.name;
+            if (!aiAgreement) {
+              // AI disagreed — promote the AI's pick as the primary result
+              suggestion = chosen;
+              aiBoosted = true;
+            } else {
+              aiBoosted = true;
+            }
+          }
+        }
+      } catch (e) {
+        console.error('AI cross-validation error:', e);
+      }
+    }
+
+    // Compute refined confidence: boost when Plant.id and Gemini agree
+    const baseConfidence = Math.round((suggestion.probability || 0) * 100);
+    const refinedConfidence = aiBoosted
+      ? Math.min(99, baseConfidence + (aiAgreement ? 10 : 5))
+      : baseConfidence;
+
+    // Parse health assessment
+    const healthResult = data.result?.disease;
+    let healthAssessment = null;
+    if (healthResult) {
+      const isHealthy = healthResult.is_healthy?.binary ?? true;
+      const diseases = (healthResult.suggestions || [])
+        .filter((d: any) => d.name !== 'healthy')
+        .slice(0, 5)
+        .map((d: any) => ({
+          name: d.name,
+          probability: Math.round((d.probability || 0) * 100),
+          description: d.details?.description || null,
+          treatment: d.details?.treatment?.biological?.join('. ') || d.details?.treatment?.chemical?.join('. ') || null,
+        }));
+      healthAssessment = { isHealthy, diseases };
     }
 
     // Parse health assessment

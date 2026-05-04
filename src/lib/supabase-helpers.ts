@@ -35,7 +35,7 @@ export async function uploadPlantImage(userId: string, file: Blob, fileName: str
   return urlData.publicUrl;
 }
 
-export function compressImage(file: File, maxSize = 1500, quality = 0.85): Promise<string> {
+export function compressImage(file: File, maxSize = 1800, quality = 0.92): Promise<string> {
   return new Promise((resolve, reject) => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -43,14 +43,19 @@ export function compressImage(file: File, maxSize = 1500, quality = 0.85): Promi
 
     img.onload = () => {
       let { width, height } = img;
+      // Only downscale; never upscale — preserves leaf/flower detail for identification
       if (width > maxSize || height > maxSize) {
         const ratio = Math.min(maxSize / width, maxSize / height);
-        width *= ratio;
-        height *= ratio;
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
       }
       canvas.width = width;
       canvas.height = height;
-      ctx?.drawImage(img, 0, 0, width, height);
+      if (ctx) {
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, width, height);
+      }
       resolve(canvas.toDataURL('image/jpeg', quality));
     };
     img.onerror = reject;

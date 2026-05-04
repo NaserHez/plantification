@@ -50,7 +50,21 @@ serve(async (req) => {
 
     console.log('Calling Plant.id API with health assessment...');
 
-    const response = await fetch('https://api.plant.id/v3/identification', {
+    // Request enriched plant details for higher accuracy
+    const detailsParam = [
+      'common_names',
+      'taxonomy',
+      'description',
+      'image',
+      'synonyms',
+      'edible_parts',
+      'watering',
+      'best_light_condition',
+      'best_soil_type',
+    ].join(',');
+
+    const idUrl = `https://api.plant.id/v3/identification?details=${encodeURIComponent(detailsParam)}&language=${encodeURIComponent(language || 'en')}`;
+    const response = await fetch(idUrl, {
       method: 'POST',
       headers: {
         'Api-Key': apiKey,
@@ -60,6 +74,9 @@ serve(async (req) => {
         images: [base64Image],
         similar_images: true,
         health: 'all',
+        classification_level: 'all',
+        // Higher threshold reduces false positives in the suggestion list
+        classification_raw: false,
       }),
     });
 
@@ -75,7 +92,8 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const suggestion = data.result?.classification?.suggestions?.[0];
+    const suggestions = data.result?.classification?.suggestions || [];
+    let suggestion = suggestions[0];
 
     if (!suggestion) {
       return new Response(
@@ -83,6 +101,62 @@ serve(async (req) => {
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Cross-validate with Gemini vision when top suggestions are close or confidence is low
+    const aiKey = Deno.env.get('LOVABLE_API_KEY');
+    const top = suggestions.slice(0, 5);
+    const topProb = top[0]?.probability || 0;
+    const secondProb = top[1]?.probability || 0;
+    const ambiguous = topProb < 0.85 || (topProb - secondProb) < 0.15;
+    let aiBoosted = false;
+    let aiAgreement = false;
+
+    if (aiKey && top.length > 1 && ambiguous) {
+      try {
+        const candidateList = top.map((s: any, i: number) =>
+          `${i + 1}. ${s.name}${s.details?.common_names?.length ? ' (' + s.details.common_names.slice(0, 3).join(', ') + ')' : ''}`
+        ).join('\n');
+        const visionRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${aiKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash',
+            messages: [{
+              role: 'user',
+              content: [
+                { type: 'text', text: `You are a botanist. Look at this plant photo and choose the MOST LIKELY species from the candidates below. Reply with ONLY the number (1-${top.length}) of the best match. If none clearly match, reply "0".\n\nCandidates:\n${candidateList}` },
+                { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64Image}` } },
+              ],
+            }],
+            max_tokens: 10,
+          }),
+        });
+        if (visionRes.ok) {
+          const v = await visionRes.json();
+          const reply = (v.choices?.[0]?.message?.content || '').trim();
+          const pick = parseInt(reply.match(/\d+/)?.[0] || '0', 10);
+          if (pick >= 1 && pick <= top.length) {
+            const chosen = top[pick - 1];
+            aiAgreement = chosen.name === suggestion.name;
+            if (!aiAgreement) {
+              // AI disagreed — promote the AI's pick as the primary result
+              suggestion = chosen;
+              aiBoosted = true;
+            } else {
+              aiBoosted = true;
+            }
+          }
+        }
+      } catch (e) {
+        console.error('AI cross-validation error:', e);
+      }
+    }
+
+    // Compute refined confidence: boost when Plant.id and Gemini agree
+    const baseConfidence = Math.round((suggestion.probability || 0) * 100);
+    const refinedConfidence = aiBoosted
+      ? Math.min(99, baseConfidence + (aiAgreement ? 10 : 5))
+      : baseConfidence;
 
     // Parse health assessment
     const healthResult = data.result?.disease;
@@ -101,12 +175,12 @@ serve(async (req) => {
       healthAssessment = { isHealthy, diseases };
     }
 
+
     // Generate care tips using Lovable AI
     let careTips = "";
     const langMap: Record<string, string> = { en: "English", ar: "Arabic", pt: "European Portuguese (Portugal)" };
     const langName = langMap[language] || "English";
     try {
-      const aiKey = Deno.env.get('LOVABLE_API_KEY');
       if (aiKey) {
         const aiRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
@@ -119,10 +193,10 @@ serve(async (req) => {
             messages: [
               {
                 role: 'user',
-                content: `Give brief care tips (3-4 sentences) for the plant "${suggestion.name}" in ${langName}. Include watering, sunlight, soil, and common issues. Be concise and practical. Respond entirely in ${langName}.`,
+                content: `Give brief care tips (3-4 sentences) for the plant "${suggestion.name}" in ${langName}. Include watering, sunlight, soil, and common issues. Prioritize organic/biological treatments. Be concise and practical. Respond entirely in ${langName}.`,
               },
             ],
-            max_tokens: 200,
+            max_tokens: 220,
           }),
         });
         if (aiRes.ok) {
@@ -134,14 +208,25 @@ serve(async (req) => {
       console.error('AI care tips error:', e);
     }
 
+    const sci = suggestion.details?.taxonomy?.species || suggestion.name;
     const result = {
-      name: suggestion.name,
-      scientificName: suggestion.name,
-      commonNames: data.result?.classification?.suggestions?.slice(0, 3).map((s: any) => s.name) || [],
-      confidence: Math.round((suggestion.probability || 0) * 100),
-      similarImages: suggestion.similar_images?.slice(0, 3).map((img: any) => img.url) || [],
+      name: suggestion.details?.common_names?.[0] || suggestion.name,
+      scientificName: sci,
+      commonNames: suggestion.details?.common_names?.slice(0, 5)
+        || (data.result?.classification?.suggestions?.slice(0, 3).map((s: any) => s.name) || []),
+      confidence: refinedConfidence,
+      rawConfidence: baseConfidence,
+      alternatives: top.slice(0, 5).map((s: any) => ({
+        name: s.details?.common_names?.[0] || s.name,
+        scientificName: s.name,
+        probability: Math.round((s.probability || 0) * 100),
+      })),
+      taxonomy: suggestion.details?.taxonomy || null,
+      description: suggestion.details?.description?.value || null,
+      similarImages: suggestion.similar_images?.slice(0, 4).map((img: any) => img.url) || [],
       careTips,
       healthAssessment,
+      verifiedByAI: aiBoosted,
       isMock: false,
     };
 

@@ -14,6 +14,7 @@ import BottomNav from "@/components/BottomNav";
 import ReportDialog from "@/components/ReportDialog";
 import { compressImage, MAX_UPLOAD_BYTES } from "@/lib/image-compress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
 import { AlertTriangle, RefreshCcw } from "lucide-react";
 
 interface PublicGarden {

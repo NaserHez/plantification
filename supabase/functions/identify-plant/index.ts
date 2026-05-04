@@ -175,22 +175,6 @@ serve(async (req) => {
       healthAssessment = { isHealthy, diseases };
     }
 
-    // Parse health assessment
-    const healthResult = data.result?.disease;
-    let healthAssessment = null;
-    if (healthResult) {
-      const isHealthy = healthResult.is_healthy?.binary ?? true;
-      const diseases = (healthResult.suggestions || [])
-        .filter((d: any) => d.name !== 'healthy')
-        .slice(0, 5)
-        .map((d: any) => ({
-          name: d.name,
-          probability: Math.round((d.probability || 0) * 100),
-          description: d.details?.description || null,
-          treatment: d.details?.treatment?.biological?.join('. ') || d.details?.treatment?.chemical?.join('. ') || null,
-        }));
-      healthAssessment = { isHealthy, diseases };
-    }
 
     // Generate care tips using Lovable AI
     let careTips = "";

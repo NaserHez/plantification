@@ -208,14 +208,25 @@ serve(async (req) => {
       console.error('AI care tips error:', e);
     }
 
+    const sci = suggestion.details?.taxonomy?.species || suggestion.name;
     const result = {
-      name: suggestion.name,
-      scientificName: suggestion.name,
-      commonNames: data.result?.classification?.suggestions?.slice(0, 3).map((s: any) => s.name) || [],
-      confidence: Math.round((suggestion.probability || 0) * 100),
-      similarImages: suggestion.similar_images?.slice(0, 3).map((img: any) => img.url) || [],
+      name: suggestion.details?.common_names?.[0] || suggestion.name,
+      scientificName: sci,
+      commonNames: suggestion.details?.common_names?.slice(0, 5)
+        || (data.result?.classification?.suggestions?.slice(0, 3).map((s: any) => s.name) || []),
+      confidence: refinedConfidence,
+      rawConfidence: baseConfidence,
+      alternatives: top.slice(0, 5).map((s: any) => ({
+        name: s.details?.common_names?.[0] || s.name,
+        scientificName: s.name,
+        probability: Math.round((s.probability || 0) * 100),
+      })),
+      taxonomy: suggestion.details?.taxonomy || null,
+      description: suggestion.details?.description?.value || null,
+      similarImages: suggestion.similar_images?.slice(0, 4).map((img: any) => img.url) || [],
       careTips,
       healthAssessment,
+      verifiedByAI: aiBoosted,
       isMock: false,
     };
 

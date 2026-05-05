@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, Loader2, Lightbulb, ShieldAlert, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Lightbulb, ShieldAlert, ShieldCheck, Activity, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,13 +12,37 @@ import { uploadPlantImage } from "@/lib/supabase-helpers";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 
+interface Alternative {
+  name: string;
+  scientificName: string;
+  commonNames?: string[];
+  probability: number;
+}
+
+interface Diagnostics {
+  plantIdStatus?: number;
+  plantIdMs?: number;
+  aiMs?: number;
+  aiUsed?: boolean;
+  aiBoosted?: boolean;
+  aiAgreement?: boolean;
+  ambiguous?: boolean;
+  cached?: boolean;
+  clientCache?: boolean;
+  totalMs?: number;
+}
+
 interface IdentificationResult {
   name: string;
   scientificName: string;
   confidence: number;
+  rawConfidence?: number;
   commonNames?: string[];
+  alternatives?: Alternative[];
   similarImages?: string[];
   careTips?: string;
+  verifiedByAI?: boolean;
+  diagnostics?: Diagnostics;
   healthAssessment?: {
     isHealthy: boolean;
     diseases: Array<{

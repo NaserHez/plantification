@@ -311,6 +311,31 @@ export default function SettingsPage() {
           )}
         </div>
 
+        {/* Identification */}
+        <div className="bg-card rounded-2xl p-5 border border-border space-y-3">
+          <h2 className="font-serif text-lg flex items-center gap-2">
+            <Sprout className="w-4 h-4 text-primary" /> Identification
+          </h2>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1">
+              <Label className="text-sm">AI cross-validation</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                When Plant.id is uncertain, ask Gemini to pick the best match. Improves accuracy for ambiguous photos but adds AI cost.
+              </p>
+            </div>
+            <button
+              onClick={() => toggleAiValidation(!aiValidation)}
+              className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${aiValidation ? "bg-primary" : "bg-muted"}`}
+              aria-pressed={aiValidation}
+            >
+              <span className={`absolute top-0.5 ${aiValidation ? "left-5" : "left-0.5"} w-5 h-5 rounded-full bg-background transition-all`} />
+            </button>
+          </div>
+          <Button onClick={clearIdentifyCache} variant="outline" className="w-full rounded-xl h-10">
+            Clear identification cache
+          </Button>
+        </div>
+
         {/* Profile */}
         <div className="bg-card rounded-2xl p-5 border border-border space-y-3">
           <h2 className="font-serif text-lg flex items-center gap-2">

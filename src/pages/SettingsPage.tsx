@@ -48,6 +48,18 @@ export default function SettingsPage() {
   const [notifPermission, setNotifPermission] = useState<string>("default");
   const [notifTone, setNotifTone] = useState(() => localStorage.getItem("notif_tone") || "default");
   const [reminderTime, setReminderTime] = useState(() => localStorage.getItem("reminder_time") || "08:00");
+  const [aiValidation, setAiValidation] = useState(() => localStorage.getItem("identify_ai_validation") !== "false");
+
+  const toggleAiValidation = (val: boolean) => {
+    setAiValidation(val);
+    localStorage.setItem("identify_ai_validation", val ? "true" : "false");
+    toast.success(t("settingsSaved"));
+  };
+
+  const clearIdentifyCache = () => {
+    localStorage.removeItem("identify_cache_v1");
+    toast.success("Identification cache cleared");
+  };
 
   useEffect(() => {
     const load = async () => {

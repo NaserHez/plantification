@@ -150,6 +150,74 @@ export default function IdentifyPage() {
                 <p className="text-xs text-destructive mt-2">{t("mockWarning")}</p>
               )}
 
+              {/* Top matches */}
+              {result.alternatives && result.alternatives.length > 1 && (
+                <div className="mt-4">
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <Trophy className="w-4 h-4 text-primary" />
+                    <span className="text-xs font-medium">Top matches</span>
+                    <span className="text-[10px] text-muted-foreground">tap to choose</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {result.alternatives.map((alt, i) => (
+                      <button
+                        key={i}
+                        onClick={() => pickAlternative(i)}
+                        className={`w-full text-left p-2.5 rounded-xl border transition-colors ${
+                          selectedAlt === i
+                            ? "bg-primary/10 border-primary"
+                            : "bg-muted/40 border-border hover:border-primary/40"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium truncate">{alt.name}</p>
+                            <p className="text-[11px] text-muted-foreground italic truncate">{alt.scientificName}</p>
+                            {alt.commonNames && alt.commonNames.length > 0 && (
+                              <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+                                {alt.commonNames.join(', ')}
+                              </p>
+                            )}
+                          </div>
+                          <span className="text-xs font-semibold tabular-nums shrink-0">{alt.probability}%</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Diagnostics */}
+              {result.diagnostics && (
+                <div className="mt-4">
+                  <button
+                    onClick={() => setShowDiag((v) => !v)}
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl bg-muted/40 border border-border hover:border-primary/40"
+                  >
+                    <span className="flex items-center gap-1.5 text-xs font-medium">
+                      <Activity className="w-3.5 h-3.5 text-primary" /> Identification diagnostics
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {result.diagnostics.cached ? "cached" : `${result.diagnostics.totalMs}ms`}
+                    </span>
+                  </button>
+                  {showDiag && (
+                    <div className="mt-2 p-3 rounded-xl bg-card border border-border text-[11px] space-y-1 font-mono">
+                      <div className="flex justify-between"><span className="text-muted-foreground">Plant.id status</span><span>{result.diagnostics.plantIdStatus ?? '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Plant.id time</span><span>{result.diagnostics.plantIdMs ?? '—'} ms</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Gemini used</span><span>{result.diagnostics.aiUsed ? `yes (${result.diagnostics.aiMs}ms)` : 'no'}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Ambiguous</span><span>{result.diagnostics.ambiguous ? 'yes' : 'no'}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">AI agreement</span><span>{result.diagnostics.aiBoosted ? (result.diagnostics.aiAgreement ? 'agreed' : 'overrode') : '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">isMock</span><span>{String(result.isMock)}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Cached</span><span>{result.diagnostics.cached ? (result.diagnostics.clientCache ? 'client' : 'server') : 'no'}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Raw confidence</span><span>{result.rawConfidence ?? '—'}%</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Total time</span><span>{result.diagnostics.totalMs ?? '—'} ms</span></div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+
               {result.careTips && (
                 <div className="mt-4 p-3 rounded-xl bg-accent/50 border border-border">
                   <div className="flex items-center gap-1.5 mb-1">

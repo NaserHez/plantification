@@ -133,7 +133,7 @@ export default function PlantGallery({ plantId }: Props) {
           <button className="absolute top-4 right-4 p-2 rounded-full bg-background/20 text-background">
             <X className="w-6 h-6" />
           </button>
-          <img src={viewingPhoto} alt="" className="max-w-full max-h-full object-contain rounded-xl" />
+          <SignedImage src={viewingPhoto} alt="" className="max-w-full max-h-full object-contain rounded-xl" />
         </div>
       )}
     </div>

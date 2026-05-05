@@ -31,7 +31,27 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY is not configured');
 
-    const { messages, language, plantContext, weatherContext } = await req.json();
+    const body = await req.json();
+    const rawMessages = Array.isArray(body.messages) ? body.messages : [];
+    const rawLang = typeof body.language === 'string' ? body.language : 'en';
+    const language = /^[a-zA-Z]{2}(-[a-zA-Z]{2})?$/.test(rawLang) ? rawLang : 'en';
+    const plantContext = typeof body.plantContext === 'string' ? body.plantContext.slice(0, 4000) : '';
+    const weatherContext = typeof body.weatherContext === 'string' ? body.weatherContext.slice(0, 2000) : '';
+
+    // Strip any user-injected system role; clamp content length and types
+    const messages = rawMessages
+      .filter((m: any) => m && typeof m === 'object' && typeof m.content === 'string')
+      .map((m: any) => ({
+        role: m.role === 'assistant' ? 'assistant' : 'user',
+        content: m.content.slice(0, 4000),
+      }))
+      .slice(-30);
+
+    if (messages.length === 0) {
+      return new Response(JSON.stringify({ error: 'No messages provided' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     // Detect the language of the last user message to respond in the same language
     const lastUserMsg = [...messages].reverse().find((m: any) => m.role === 'user');

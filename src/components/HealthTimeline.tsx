@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ShieldCheck, ShieldAlert, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
+import SignedImage from "@/components/SignedImage";
 
 interface DiagnosisEntry {
   id: string;

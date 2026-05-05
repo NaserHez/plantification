@@ -81,20 +81,27 @@ export async function uploadPlantImage(userId: string, file: Blob, fileName: str
  * - Already-public http(s) URL or data: URL → returned as-is
  */
 const signedUrlCache = new Map<string, { url: string; expiresAt: number }>();
+async function signPlantImagePath(path: string): Promise<string | null> {
+  const cached = signedUrlCache.get(path);
+  if (cached && cached.expiresAt > Date.now()) return cached.url;
+  const { data, error } = await supabase.storage
+    .from('plant-images')
+    .createSignedUrl(path, 60 * 60);
+  if (error || !data?.signedUrl) return null;
+  signedUrlCache.set(path, { url: data.signedUrl, expiresAt: Date.now() + 55 * 60 * 1000 });
+  return data.signedUrl;
+}
 export async function getDisplayUrl(ref: string | null | undefined): Promise<string | null> {
   if (!ref) return null;
   if (ref.startsWith('plant-images:')) {
-    const path = ref.slice('plant-images:'.length);
-    const cached = signedUrlCache.get(path);
-    if (cached && cached.expiresAt > Date.now()) return cached.url;
-    const { data, error } = await supabase.storage
-      .from('plant-images')
-      .createSignedUrl(path, 60 * 60); // 1h
-    if (error || !data?.signedUrl) return null;
-    signedUrlCache.set(path, { url: data.signedUrl, expiresAt: Date.now() + 55 * 60 * 1000 });
-    return data.signedUrl;
+    return signPlantImagePath(ref.slice('plant-images:'.length));
   }
-  return ref; // public URL or data URL
+  // Backwards compat: legacy public URLs to the now-private plant-images bucket
+  const legacyMatch = ref.match(/\/storage\/v1\/object\/public\/plant-images\/(.+)$/);
+  if (legacyMatch) {
+    return signPlantImagePath(decodeURIComponent(legacyMatch[1]));
+  }
+  return ref; // public URL (e.g. community-images) or data URL
 }
 
 export function compressImage(file: File, maxSize = 1800, quality = 0.92): Promise<string> {

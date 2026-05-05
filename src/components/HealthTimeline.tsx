@@ -98,7 +98,7 @@ export default function HealthTimeline({ plantId }: { plantId: string }) {
                   </div>
                 )}
                 {entry.image_url && (
-                  <img src={entry.image_url} alt="" className="w-12 h-12 rounded-lg object-cover mt-2 border border-border" />
+                  <SignedImage src={entry.image_url} alt="" className="w-12 h-12 rounded-lg object-cover mt-2 border border-border" />
                 )}
               </div>
             </div>

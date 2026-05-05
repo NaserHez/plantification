@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { uploadPlantImage, compressImage } from "@/lib/supabase-helpers";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
+import SignedImage from "@/components/SignedImage";
 
 interface PlantPhoto {
   id: string;

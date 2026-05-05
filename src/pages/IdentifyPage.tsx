@@ -62,11 +62,21 @@ export default function IdentifyPage() {
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [nickname, setNickname] = useState("");
+  const [selectedAlt, setSelectedAlt] = useState<number>(0);
+  const [showDiag, setShowDiag] = useState(false);
 
   const handleResult = (res: IdentificationResult, img: string) => {
     setResult(res);
     setImageBase64(img);
     setNickname(res.name);
+    setSelectedAlt(0);
+  };
+
+  const pickAlternative = (i: number) => {
+    if (!result?.alternatives?.[i]) return;
+    const alt = result.alternatives[i];
+    setSelectedAlt(i);
+    setNickname(alt.name);
   };
 
   const handleSave = async () => {

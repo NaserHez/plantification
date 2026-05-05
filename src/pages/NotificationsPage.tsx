@@ -444,7 +444,7 @@ export default function NotificationsPage() {
                     className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card border border-border text-left hover:border-primary/30 transition-colors"
                   >
                     {p.image_url ? (
-                      <img src={p.image_url} alt={p.nickname || p.name} className="w-10 h-10 rounded-xl object-cover shrink-0" />
+                      <SignedImage src={p.image_url} alt={p.nickname || p.name} className="w-10 h-10 rounded-xl object-cover shrink-0" fallback={<div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center shrink-0 text-lg">🌿</div>} />
                     ) : (
                       <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center shrink-0 text-lg">🌿</div>
                     )}

@@ -86,23 +86,28 @@ export default function IdentifyPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      const chosen = result.alternatives?.[selectedAlt];
+      const finalName = chosen?.name || result.name;
+      const finalSci = chosen?.scientificName || result.scientificName;
+      const finalConfidence = chosen?.probability ?? result.confidence;
+
       const response = await fetch(imageBase64);
       const blob = await response.blob();
-      const safeName = result.name.replace(/[^a-zA-Z0-9-_]/g, '-');
+      const safeName = finalName.replace(/[^a-zA-Z0-9-_]/g, '-');
       const imageUrl = await uploadPlantImage(user.id, blob, `${safeName}.jpg`);
 
       const { error } = await supabase.from('plants').insert({
         user_id: user.id,
-        name: result.name,
-        nickname: nickname || result.name,
-        scientific_name: result.scientificName,
-        confidence: result.confidence,
+        name: finalName,
+        nickname: nickname || finalName,
+        scientific_name: finalSci,
+        confidence: finalConfidence,
         image_url: imageUrl,
         care_tips: result.careTips || null,
       });
 
       if (error) throw error;
-      toast.success(`${nickname || result.name} ${t("addedToGarden")}`);
+      toast.success(`${nickname || finalName} ${t("addedToGarden")}`);
       navigate("/garden");
     } catch (err: any) {
       toast.error(err.message || "Failed to save plant");

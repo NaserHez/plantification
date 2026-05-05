@@ -7,6 +7,7 @@ import { uploadPlantImage, compressImage } from "@/lib/supabase-helpers";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import SignedImage from "@/components/SignedImage";
 
 interface JournalEntry {
   id: string;

@@ -1,12 +1,52 @@
 import { supabase } from "@/integrations/supabase/client";
 
+async function sha256Hex(input: string): Promise<string> {
+  const buf = new TextEncoder().encode(input);
+  const digest = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+interface IdentifyCacheEntry { value: any; ts: number }
+const IDENTIFY_CACHE_KEY = 'identify_cache_v1';
+const IDENTIFY_CACHE_TTL = 1000 * 60 * 60 * 24 * 7; // 7 days
+
+function readIdCache(): Record<string, IdentifyCacheEntry> {
+  try { return JSON.parse(localStorage.getItem(IDENTIFY_CACHE_KEY) || '{}'); } catch { return {}; }
+}
+function writeIdCache(c: Record<string, IdentifyCacheEntry>) {
+  try { localStorage.setItem(IDENTIFY_CACHE_KEY, JSON.stringify(c)); } catch {}
+}
+
 export async function identifyPlant(imageBase64: string, language: string = "en") {
+  const useAiValidation = localStorage.getItem('identify_ai_validation') !== 'false';
+  // Hash a stable slice of the image to detect "same image" reuse
+  const sample = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
+  const imageHash = await sha256Hex(sample.slice(0, 4096) + ':' + sample.length);
+
+  // Client-side cache for instant reuse
+  const cache = readIdCache();
+  const cacheKey = `${imageHash}|${language}|${useAiValidation ? 1 : 0}`;
+  const hit = cache[cacheKey];
+  if (hit && Date.now() - hit.ts < IDENTIFY_CACHE_TTL) {
+    return { ...hit.value, diagnostics: { ...(hit.value.diagnostics || {}), cached: true, clientCache: true } };
+  }
+
   const { data, error } = await supabase.functions.invoke('identify-plant', {
-    body: { image: imageBase64, language },
+    body: { image: imageBase64, language, imageHash, useAiValidation },
   });
 
   if (error) throw new Error(error.message);
   if (data.error) throw new Error(data.error);
+
+  // Persist
+  cache[cacheKey] = { value: data, ts: Date.now() };
+  // Trim to last 30
+  const keys = Object.keys(cache);
+  if (keys.length > 30) {
+    keys.sort((a, b) => (cache[a].ts - cache[b].ts));
+    keys.slice(0, keys.length - 30).forEach(k => delete cache[k]);
+  }
+  writeIdCache(cache);
   return data;
 }
 

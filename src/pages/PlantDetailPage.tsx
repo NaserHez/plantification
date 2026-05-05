@@ -103,7 +103,7 @@ export default function PlantDetailPage() {
     <div className="min-h-screen bg-background pb-8">
       <div className="relative h-64 bg-muted">
         {plant.image_url ? (
-          <img src={plant.image_url} alt={plant.name} className="w-full h-full object-cover" />
+          <SignedImage src={plant.image_url} alt={plant.name} className="w-full h-full object-cover" fallback={<div className="w-full h-full flex items-center justify-center text-5xl">🌿</div>} />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-5xl">🌿</div>
         )}

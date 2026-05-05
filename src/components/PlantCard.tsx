@@ -2,6 +2,7 @@ import { Droplets, Sun, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import SignedImage from "@/components/SignedImage";
 
 interface PlantCardProps {
   id: string;
@@ -26,7 +27,7 @@ export default function PlantCard({ id, name, scientificName, imageUrl, sunlight
       >
         <div className="w-14 h-14 rounded-lg bg-muted overflow-hidden flex-shrink-0">
           {imageUrl ? (
-            <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
+            <SignedImage src={imageUrl} alt={name} className="w-full h-full object-cover" fallback={<div className="w-full h-full flex items-center justify-center"><span className="text-2xl">🌱</span></div>} />
           ) : (
             <div className="w-full h-full flex items-center justify-center"><span className="text-2xl">🌱</span></div>
           )}
@@ -53,7 +54,7 @@ export default function PlantCard({ id, name, scientificName, imageUrl, sunlight
     >
       <div className="aspect-[4/3] bg-muted overflow-hidden">
         {imageUrl ? (
-          <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
+          <SignedImage src={imageUrl} alt={name} className="w-full h-full object-cover" fallback={<div className="w-full h-full flex items-center justify-center"><span className="text-4xl">🌱</span></div>} />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <span className="text-4xl">🌱</span>

@@ -7,6 +7,7 @@ import { uploadPlantImage, compressImage } from "@/lib/supabase-helpers";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import SignedImage from "@/components/SignedImage";
 
 interface JournalEntry {
   id: string;
@@ -209,7 +210,7 @@ export default function PlantJournal({ plantId }: { plantId: string }) {
                 <p className="text-sm text-muted-foreground leading-relaxed">{entry.observation}</p>
               )}
               {entry.image_url && (
-                <img src={entry.image_url} alt="" className="w-16 h-16 rounded-lg object-cover mt-2 border border-border" />
+                <SignedImage src={entry.image_url} alt="" className="w-16 h-16 rounded-lg object-cover mt-2 border border-border" />
               )}
             </div>
           ))}

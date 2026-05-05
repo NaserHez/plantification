@@ -59,8 +59,14 @@ serve(async (req) => {
       );
     }
 
-    const { image, language, imageHash, useAiValidation = true } = await req.json();
-    if (!image) {
+    const body = await req.json();
+    const image = body.image;
+    const imageHash = body.imageHash;
+    const useAiValidation = body.useAiValidation !== false;
+    // Sanitize language: only allow short alphanumeric codes (e.g. en, ar, pt, pt-PT)
+    const rawLang = typeof body.language === 'string' ? body.language : 'en';
+    const language = /^[a-zA-Z]{2}(-[a-zA-Z]{2})?$/.test(rawLang) ? rawLang : 'en';
+    if (!image || typeof image !== 'string') {
       return new Response(
         JSON.stringify({ error: 'No image provided' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

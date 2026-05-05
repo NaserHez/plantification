@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { uploadPlantImage, compressImage } from "@/lib/supabase-helpers";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
+import SignedImage from "@/components/SignedImage";
 
 interface PlantPhoto {
   id: string;
@@ -103,7 +104,7 @@ export default function PlantGallery({ plantId }: Props) {
         <div className="grid grid-cols-3 gap-2">
           {photos.map((photo) => (
             <div key={photo.id} className="relative group aspect-square rounded-xl overflow-hidden border border-border">
-              <img
+              <SignedImage
                 src={photo.image_url}
                 alt=""
                 className="w-full h-full object-cover cursor-pointer"
@@ -132,7 +133,7 @@ export default function PlantGallery({ plantId }: Props) {
           <button className="absolute top-4 right-4 p-2 rounded-full bg-background/20 text-background">
             <X className="w-6 h-6" />
           </button>
-          <img src={viewingPhoto} alt="" className="max-w-full max-h-full object-contain rounded-xl" />
+          <SignedImage src={viewingPhoto} alt="" className="max-w-full max-h-full object-contain rounded-xl" />
         </div>
       )}
     </div>

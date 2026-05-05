@@ -288,7 +288,7 @@ export default function CommunityPage() {
         }, 180);
         const path = `${currentUserId}/posts/${Date.now()}.jpg`;
         const { error: upErr } = await supabase.storage
-          .from("plant-images")
+          .from("community-images")
           .upload(path, postImage, { contentType: "image/jpeg", cacheControl: "3600" });
         clearInterval(tick);
         if (upErr) {
@@ -296,7 +296,7 @@ export default function CommunityPage() {
           throw upErr;
         }
         setUploadProgress(95);
-        const { data } = supabase.storage.from("plant-images").getPublicUrl(path);
+        const { data } = supabase.storage.from("community-images").getPublicUrl(path);
         image_url = data.publicUrl;
       }
       const { error } = await supabase.from("community_posts").insert({

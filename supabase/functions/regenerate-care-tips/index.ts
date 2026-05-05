@@ -30,7 +30,15 @@ serve(async (req) => {
       });
     }
 
-    const { plantName, language } = await req.json();
+    const body = await req.json();
+    const rawName = typeof body.plantName === 'string' ? body.plantName : '';
+    const rawLang = typeof body.language === 'string' ? body.language : 'en';
+    const language = /^[a-zA-Z]{2}(-[a-zA-Z]{2})?$/.test(rawLang) ? rawLang : 'en';
+    // Sanitize plantName: limit length and restrict to safe botanical characters
+    const plantName = rawName
+      .replace(/[^\p{L}\p{N}\s'\-.×()]/gu, '')
+      .trim()
+      .slice(0, 100);
     if (!plantName) {
       return new Response(
         JSON.stringify({ error: 'No plant name provided' }),

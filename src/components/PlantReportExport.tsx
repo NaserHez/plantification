@@ -51,7 +51,10 @@ async function fetchReportData(plantId: string): Promise<ReportData> {
 
 async function loadImageAsBase64(url: string): Promise<string | null> {
   try {
-    const res = await fetch(url);
+    const { getDisplayUrl } = await import("@/lib/supabase-helpers");
+    const resolved = await getDisplayUrl(url);
+    if (!resolved) return null;
+    const res = await fetch(resolved);
     const blob = await res.blob();
     return new Promise((resolve) => {
       const reader = new FileReader();

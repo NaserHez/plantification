@@ -9,6 +9,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
+import SignedImage from "@/components/SignedImage";
 import {
   AlertDialog,
   AlertDialogAction,

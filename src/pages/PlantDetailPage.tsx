@@ -5,6 +5,7 @@ import PlantGallery from "@/components/PlantGallery";
 import HealthTimeline from "@/components/HealthTimeline";
 import PlantJournal from "@/components/PlantJournal";
 import PlantReportExport from "@/components/PlantReportExport";
+import SignedImage from "@/components/SignedImage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

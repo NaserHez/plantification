@@ -115,7 +115,7 @@ function SwipeableNotification({
           className="flex-1 flex items-center gap-3 p-3 rounded-2xl bg-water/10 border border-water/20 text-left hover:bg-water/15 transition-colors"
         >
           {plant.image_url ? (
-            <img src={plant.image_url} alt={plant.nickname || plant.name} className="w-10 h-10 rounded-xl object-cover shrink-0" />
+            <SignedImage src={plant.image_url} alt={plant.nickname || plant.name} className="w-10 h-10 rounded-xl object-cover shrink-0" fallback={<div className="w-10 h-10 rounded-xl bg-water/20 flex items-center justify-center shrink-0 text-lg">🌿</div>} />
           ) : (
             <div className="w-10 h-10 rounded-xl bg-water/20 flex items-center justify-center shrink-0 text-lg">🌿</div>
           )}

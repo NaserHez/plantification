@@ -94,7 +94,7 @@ export default function PublicGardenPage() {
               <div key={plant.id} className="bg-card rounded-2xl border border-border/50 overflow-hidden">
                 {plant.image_url ? (
                   <div className="aspect-square bg-muted">
-                    <img src={plant.image_url} alt={plant.nickname || plant.name} className="w-full h-full object-cover" loading="lazy" />
+                    <SignedImage src={plant.image_url} alt={plant.nickname || plant.name} className="w-full h-full object-cover" loading="lazy" />
                   </div>
                 ) : (
                   <div className="aspect-square bg-muted flex items-center justify-center">

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, Loader2, Lightbulb, ShieldAlert, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Lightbulb, ShieldAlert, ShieldCheck, Activity, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,13 +12,37 @@ import { uploadPlantImage } from "@/lib/supabase-helpers";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 
+interface Alternative {
+  name: string;
+  scientificName: string;
+  commonNames?: string[];
+  probability: number;
+}
+
+interface Diagnostics {
+  plantIdStatus?: number;
+  plantIdMs?: number;
+  aiMs?: number;
+  aiUsed?: boolean;
+  aiBoosted?: boolean;
+  aiAgreement?: boolean;
+  ambiguous?: boolean;
+  cached?: boolean;
+  clientCache?: boolean;
+  totalMs?: number;
+}
+
 interface IdentificationResult {
   name: string;
   scientificName: string;
   confidence: number;
+  rawConfidence?: number;
   commonNames?: string[];
+  alternatives?: Alternative[];
   similarImages?: string[];
   careTips?: string;
+  verifiedByAI?: boolean;
+  diagnostics?: Diagnostics;
   healthAssessment?: {
     isHealthy: boolean;
     diseases: Array<{
@@ -38,11 +62,21 @@ export default function IdentifyPage() {
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [nickname, setNickname] = useState("");
+  const [selectedAlt, setSelectedAlt] = useState<number>(0);
+  const [showDiag, setShowDiag] = useState(false);
 
   const handleResult = (res: IdentificationResult, img: string) => {
     setResult(res);
     setImageBase64(img);
     setNickname(res.name);
+    setSelectedAlt(0);
+  };
+
+  const pickAlternative = (i: number) => {
+    if (!result?.alternatives?.[i]) return;
+    const alt = result.alternatives[i];
+    setSelectedAlt(i);
+    setNickname(alt.name);
   };
 
   const handleSave = async () => {
@@ -52,23 +86,28 @@ export default function IdentifyPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      const chosen = result.alternatives?.[selectedAlt];
+      const finalName = chosen?.name || result.name;
+      const finalSci = chosen?.scientificName || result.scientificName;
+      const finalConfidence = chosen?.probability ?? result.confidence;
+
       const response = await fetch(imageBase64);
       const blob = await response.blob();
-      const safeName = result.name.replace(/[^a-zA-Z0-9-_]/g, '-');
+      const safeName = finalName.replace(/[^a-zA-Z0-9-_]/g, '-');
       const imageUrl = await uploadPlantImage(user.id, blob, `${safeName}.jpg`);
 
       const { error } = await supabase.from('plants').insert({
         user_id: user.id,
-        name: result.name,
-        nickname: nickname || result.name,
-        scientific_name: result.scientificName,
-        confidence: result.confidence,
+        name: finalName,
+        nickname: nickname || finalName,
+        scientific_name: finalSci,
+        confidence: finalConfidence,
         image_url: imageUrl,
         care_tips: result.careTips || null,
       });
 
       if (error) throw error;
-      toast.success(`${nickname || result.name} ${t("addedToGarden")}`);
+      toast.success(`${nickname || finalName} ${t("addedToGarden")}`);
       navigate("/garden");
     } catch (err: any) {
       toast.error(err.message || "Failed to save plant");
@@ -110,6 +149,74 @@ export default function IdentifyPage() {
               {result.isMock && (
                 <p className="text-xs text-destructive mt-2">{t("mockWarning")}</p>
               )}
+
+              {/* Top matches */}
+              {result.alternatives && result.alternatives.length > 1 && (
+                <div className="mt-4">
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <Trophy className="w-4 h-4 text-primary" />
+                    <span className="text-xs font-medium">Top matches</span>
+                    <span className="text-[10px] text-muted-foreground">tap to choose</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {result.alternatives.map((alt, i) => (
+                      <button
+                        key={i}
+                        onClick={() => pickAlternative(i)}
+                        className={`w-full text-left p-2.5 rounded-xl border transition-colors ${
+                          selectedAlt === i
+                            ? "bg-primary/10 border-primary"
+                            : "bg-muted/40 border-border hover:border-primary/40"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium truncate">{alt.name}</p>
+                            <p className="text-[11px] text-muted-foreground italic truncate">{alt.scientificName}</p>
+                            {alt.commonNames && alt.commonNames.length > 0 && (
+                              <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+                                {alt.commonNames.join(', ')}
+                              </p>
+                            )}
+                          </div>
+                          <span className="text-xs font-semibold tabular-nums shrink-0">{alt.probability}%</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Diagnostics */}
+              {result.diagnostics && (
+                <div className="mt-4">
+                  <button
+                    onClick={() => setShowDiag((v) => !v)}
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl bg-muted/40 border border-border hover:border-primary/40"
+                  >
+                    <span className="flex items-center gap-1.5 text-xs font-medium">
+                      <Activity className="w-3.5 h-3.5 text-primary" /> Identification diagnostics
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {result.diagnostics.cached ? "cached" : `${result.diagnostics.totalMs}ms`}
+                    </span>
+                  </button>
+                  {showDiag && (
+                    <div className="mt-2 p-3 rounded-xl bg-card border border-border text-[11px] space-y-1 font-mono">
+                      <div className="flex justify-between"><span className="text-muted-foreground">Plant.id status</span><span>{result.diagnostics.plantIdStatus ?? '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Plant.id time</span><span>{result.diagnostics.plantIdMs ?? '—'} ms</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Gemini used</span><span>{result.diagnostics.aiUsed ? `yes (${result.diagnostics.aiMs}ms)` : 'no'}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Ambiguous</span><span>{result.diagnostics.ambiguous ? 'yes' : 'no'}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">AI agreement</span><span>{result.diagnostics.aiBoosted ? (result.diagnostics.aiAgreement ? 'agreed' : 'overrode') : '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">isMock</span><span>{String(result.isMock)}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Cached</span><span>{result.diagnostics.cached ? (result.diagnostics.clientCache ? 'client' : 'server') : 'no'}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Raw confidence</span><span>{result.rawConfidence ?? '—'}%</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Total time</span><span>{result.diagnostics.totalMs ?? '—'} ms</span></div>
+                    </div>
+                  )}
+                </div>
+              )}
+
 
               {result.careTips && (
                 <div className="mt-4 p-3 rounded-xl bg-accent/50 border border-border">

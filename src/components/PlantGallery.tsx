@@ -104,7 +104,7 @@ export default function PlantGallery({ plantId }: Props) {
         <div className="grid grid-cols-3 gap-2">
           {photos.map((photo) => (
             <div key={photo.id} className="relative group aspect-square rounded-xl overflow-hidden border border-border">
-              <img
+              <SignedImage
                 src={photo.image_url}
                 alt=""
                 className="w-full h-full object-cover cursor-pointer"

@@ -60,6 +60,11 @@ export async function regenerateCareTips(plantName: string, language: string) {
   return data.careTips;
 }
 
+/**
+ * Upload an image to the private `plant-images` bucket.
+ * Returns a storage reference of the form `plant-images:<path>` so callers
+ * know to resolve it via a signed URL (see getDisplayUrl / SignedImage).
+ */
 export async function uploadPlantImage(userId: string, file: Blob, fileName: string) {
   const path = `${userId}/${Date.now()}-${fileName}`;
   const { data, error } = await supabase.storage
@@ -67,12 +72,29 @@ export async function uploadPlantImage(userId: string, file: Blob, fileName: str
     .upload(path, file, { contentType: 'image/jpeg' });
 
   if (error) throw error;
+  return `plant-images:${data.path}`;
+}
 
-  const { data: urlData } = supabase.storage
-    .from('plant-images')
-    .getPublicUrl(data.path);
-
-  return urlData.publicUrl;
+/**
+ * Resolve any stored image reference to a URL the browser can render.
+ * - `plant-images:<path>` → short-lived signed URL (private bucket)
+ * - Already-public http(s) URL or data: URL → returned as-is
+ */
+const signedUrlCache = new Map<string, { url: string; expiresAt: number }>();
+export async function getDisplayUrl(ref: string | null | undefined): Promise<string | null> {
+  if (!ref) return null;
+  if (ref.startsWith('plant-images:')) {
+    const path = ref.slice('plant-images:'.length);
+    const cached = signedUrlCache.get(path);
+    if (cached && cached.expiresAt > Date.now()) return cached.url;
+    const { data, error } = await supabase.storage
+      .from('plant-images')
+      .createSignedUrl(path, 60 * 60); // 1h
+    if (error || !data?.signedUrl) return null;
+    signedUrlCache.set(path, { url: data.signedUrl, expiresAt: Date.now() + 55 * 60 * 1000 });
+    return data.signedUrl;
+  }
+  return ref; // public URL or data URL
 }
 
 export function compressImage(file: File, maxSize = 1800, quality = 0.92): Promise<string> {

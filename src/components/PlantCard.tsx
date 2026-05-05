@@ -54,7 +54,7 @@ export default function PlantCard({ id, name, scientificName, imageUrl, sunlight
     >
       <div className="aspect-[4/3] bg-muted overflow-hidden">
         {imageUrl ? (
-          <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
+          <SignedImage src={imageUrl} alt={name} className="w-full h-full object-cover" fallback={<div className="w-full h-full flex items-center justify-center"><span className="text-4xl">🌱</span></div>} />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <span className="text-4xl">🌱</span>

@@ -153,6 +153,23 @@ export default function PlantDetailPage() {
             {plant.confidence}% {t("match")}
           </span>
         )}
+        <input
+          ref={photoInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={handleChangePhoto}
+          className="hidden"
+        />
+        <button
+          onClick={() => photoInputRef.current?.click()}
+          disabled={uploadingPhoto}
+          className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-background/80 backdrop-blur-sm border border-border hover:bg-background disabled:opacity-60"
+          title="Change photo"
+        >
+          {uploadingPhoto ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Camera className="w-3.5 h-3.5" />}
+          {uploadingPhoto ? "Uploading…" : "Change photo"}
+        </button>
       </div>
 
       <motion.div

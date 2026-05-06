@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Droplets, Sun, MapPin, Trash2, Loader2, Stethoscope, Globe, RefreshCw, Bot, Home, Eye } from "lucide-react";
+import { ArrowLeft, Droplets, Sun, MapPin, Trash2, Loader2, Stethoscope, Globe, RefreshCw, Bot, Home, Eye, Camera } from "lucide-react";
 import PlantGallery from "@/components/PlantGallery";
+import { uploadPlantImage, compressImage } from "@/lib/supabase-helpers";
 import HealthTimeline from "@/components/HealthTimeline";
 import PlantJournal from "@/components/PlantJournal";
 import PlantReportExport from "@/components/PlantReportExport";

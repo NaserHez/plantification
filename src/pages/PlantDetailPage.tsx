@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Droplets, Sun, MapPin, Trash2, Loader2, Stethoscope, Globe, RefreshCw, Bot, Home, Eye } from "lucide-react";
+import { ArrowLeft, Droplets, Sun, MapPin, Trash2, Loader2, Stethoscope, Globe, RefreshCw, Bot, Home, Eye, Camera } from "lucide-react";
 import PlantGallery from "@/components/PlantGallery";
+import { uploadPlantImage, compressImage } from "@/lib/supabase-helpers";
 import HealthTimeline from "@/components/HealthTimeline";
 import PlantJournal from "@/components/PlantJournal";
 import PlantReportExport from "@/components/PlantReportExport";
@@ -32,6 +33,32 @@ export default function PlantDetailPage() {
   const [saving, setSaving] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [tipsLanguage, setTipsLanguage] = useState(localStorage.getItem("plant_language") || "en");
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  const handleChangePhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingPhoto(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+      const compressed = await compressImage(file);
+      const resp = await fetch(compressed);
+      const blob = await resp.blob();
+      const safeName = (plant?.name || "plant").replace(/[^a-zA-Z0-9-_]/g, "-");
+      const ref = await uploadPlantImage(user.id, blob, `${safeName}.jpg`);
+      const { error } = await supabase.from("plants").update({ image_url: ref }).eq("id", id);
+      if (error) throw error;
+      setPlant((p: any) => ({ ...p, image_url: ref }));
+      toast.success("Photo updated");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update photo");
+    } finally {
+      setUploadingPhoto(false);
+      if (photoInputRef.current) photoInputRef.current.value = "";
+    }
+  };
 
   useEffect(() => {
     const fetch = async () => {
@@ -126,6 +153,23 @@ export default function PlantDetailPage() {
             {plant.confidence}% {t("match")}
           </span>
         )}
+        <input
+          ref={photoInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={handleChangePhoto}
+          className="hidden"
+        />
+        <button
+          onClick={() => photoInputRef.current?.click()}
+          disabled={uploadingPhoto}
+          className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-background/80 backdrop-blur-sm border border-border hover:bg-background disabled:opacity-60"
+          title="Change photo"
+        >
+          {uploadingPhoto ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Camera className="w-3.5 h-3.5" />}
+          {uploadingPhoto ? "Uploading…" : "Change photo"}
+        </button>
       </div>
 
       <motion.div

@@ -33,6 +33,32 @@ export default function PlantDetailPage() {
   const [saving, setSaving] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [tipsLanguage, setTipsLanguage] = useState(localStorage.getItem("plant_language") || "en");
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  const handleChangePhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingPhoto(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+      const compressed = await compressImage(file);
+      const resp = await fetch(compressed);
+      const blob = await resp.blob();
+      const safeName = (plant?.name || "plant").replace(/[^a-zA-Z0-9-_]/g, "-");
+      const ref = await uploadPlantImage(user.id, blob, `${safeName}.jpg`);
+      const { error } = await supabase.from("plants").update({ image_url: ref }).eq("id", id);
+      if (error) throw error;
+      setPlant((p: any) => ({ ...p, image_url: ref }));
+      toast.success(t("photoUpdated") || "Photo updated");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update photo");
+    } finally {
+      setUploadingPhoto(false);
+      if (photoInputRef.current) photoInputRef.current.value = "";
+    }
+  };
 
   useEffect(() => {
     const fetch = async () => {

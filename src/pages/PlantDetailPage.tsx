@@ -51,7 +51,7 @@ export default function PlantDetailPage() {
       const { error } = await supabase.from("plants").update({ image_url: ref }).eq("id", id);
       if (error) throw error;
       setPlant((p: any) => ({ ...p, image_url: ref }));
-      toast.success(t("photoUpdated") || "Photo updated");
+      toast.success("Photo updated");
     } catch (err: any) {
       toast.error(err.message || "Failed to update photo");
     } finally {

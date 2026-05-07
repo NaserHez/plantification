@@ -387,6 +387,51 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          auth: string | null
+          created_at: string
+          enabled: boolean
+          endpoint: string
+          id: string
+          last_sent_date: string | null
+          p256dh: string | null
+          reminder_time: string
+          timezone: string
+          tone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auth?: string | null
+          created_at?: string
+          enabled?: boolean
+          endpoint: string
+          id?: string
+          last_sent_date?: string | null
+          p256dh?: string | null
+          reminder_time?: string
+          timezone?: string
+          tone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auth?: string | null
+          created_at?: string
+          enabled?: boolean
+          endpoint?: string
+          id?: string
+          last_sent_date?: string | null
+          p256dh?: string | null
+          reminder_time?: string
+          timezone?: string
+          tone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

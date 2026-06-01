@@ -1,1 +1,4 @@
 project_id = "etyvbbfgehngrunmxcum"
+
+[functions.send-watering-reminders]
+verify_jwt = false

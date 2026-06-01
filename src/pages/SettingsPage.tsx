@@ -12,6 +12,7 @@ import { useTheme } from "next-themes";
 import BottomNav from "@/components/BottomNav";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { Language } from "@/i18n/translations";
+import { ensurePushSubscription, syncPushSettings, isPushSupported } from "@/lib/push";
 
 const CARE_LANGUAGES = [
   { value: "en", label: "English", flag: "🇬🇧" },
@@ -116,6 +117,7 @@ export default function SettingsPage() {
     localStorage.setItem("notif_tone", tone);
     const toneObj = NOTIF_TONES.find((t) => t.value === tone);
     if (toneObj) playTonePreview(toneObj);
+    syncPushSettings().catch(() => {});
     toast.success(t("settingsSaved"));
   };
 
@@ -161,14 +163,22 @@ export default function SettingsPage() {
   };
 
   const handleRequestNotifications = async () => {
-    if ("Notification" in window) {
-      const result = await Notification.requestPermission();
-      setNotifPermission(result);
-      if (result === "granted") {
+    if (!("Notification" in window)) return;
+    const result = await Notification.requestPermission();
+    setNotifPermission(result);
+    if (result === "granted") {
+      const ok = await ensurePushSubscription();
+      if (ok) {
         toast.success(t("notifEnabled"));
       } else {
-        toast.error("Notification permission denied");
+        toast.error(
+          isPushSupported()
+            ? "Couldn't register for background reminders. Try installing the app to your home screen."
+            : "Background reminders aren't supported in this browser."
+        );
       }
+    } else {
+      toast.error("Notification permission denied");
     }
   };
 
@@ -302,6 +312,7 @@ export default function SettingsPage() {
                   onChange={(e) => {
                     setReminderTime(e.target.value);
                     localStorage.setItem("reminder_time", e.target.value);
+                    syncPushSettings().catch(() => {});
                     toast.success(t("settingsSaved"));
                   }}
                   className="rounded-xl h-10 w-32"

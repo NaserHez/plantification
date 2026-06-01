@@ -18,6 +18,10 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.ts",
+      injectRegister: false,
       includeAssets: ["favicon.ico", "icons/icon-192.png", "icons/icon-512.png"],
       manifest: {
         name: "Plantification",
@@ -32,16 +36,12 @@ export default defineConfig(({ mode }) => ({
           { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
         ],
       },
-      workbox: {
+      injectManifest: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp}"],
-        navigateFallbackDenylist: [/^\/~oauth/],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/api\.open-meteo\.com\/.*/i,
-            handler: "NetworkFirst",
-            options: { cacheName: "weather-cache", expiration: { maxEntries: 10, maxAgeSeconds: 3600 } },
-          },
-        ],
+      },
+      devOptions: {
+        enabled: false,
+        type: "module",
       },
     }),
   ].filter(Boolean),

@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { ensurePushSubscription } from "@/lib/push";
 
 interface Plant {
   id: string;
@@ -90,7 +91,10 @@ export function useWateringReminders(plants: Plant[]) {
 
   useEffect(() => {
     if ("Notification" in window) {
-      setPermissionGranted(Notification.permission === "granted");
+      const granted = Notification.permission === "granted";
+      setPermissionGranted(granted);
+      // Make sure server-side push subscription exists so reminders fire when app is closed.
+      if (granted) ensurePushSubscription().catch(() => {});
     }
   }, []);
 
@@ -130,8 +134,10 @@ export function useWateringReminders(plants: Plant[]) {
   const requestPermission = async () => {
     if ("Notification" in window) {
       const result = await Notification.requestPermission();
-      setPermissionGranted(result === "granted");
-      return result === "granted";
+      const granted = result === "granted";
+      setPermissionGranted(granted);
+      if (granted) await ensurePushSubscription();
+      return granted;
     }
     return false;
   };

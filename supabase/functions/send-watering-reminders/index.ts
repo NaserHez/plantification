@@ -81,7 +81,6 @@ serve(async (req) => {
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
     // Optional debug: ?dryRun=1 returns the plan without sending
-    const url = new URL(req.url);
     const dryRun = url.searchParams.get("dryRun") === "1";
     // Optional: ?userId=... to force-send to one user (for testing from the app)
     const forceUserId = url.searchParams.get("userId");

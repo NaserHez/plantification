@@ -62,6 +62,29 @@ export default function SettingsPage() {
     toast.success("Identification cache cleared");
   };
 
+  const clearAppCache = async () => {
+    try {
+      toast.loading("Clearing app cache…", { id: "clear-app-cache" });
+      if ("serviceWorker" in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((r) => r.unregister()));
+      }
+      if ("caches" in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      }
+      toast.success("Cache cleared. Reloading…", { id: "clear-app-cache" });
+      setTimeout(() => {
+        const url = new URL(window.location.href);
+        url.searchParams.set("_r", Date.now().toString());
+        window.location.replace(url.toString());
+      }, 600);
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to clear cache", { id: "clear-app-cache" });
+    }
+  };
+
   useEffect(() => {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -345,6 +368,12 @@ export default function SettingsPage() {
           <Button onClick={clearIdentifyCache} variant="outline" className="w-full rounded-xl h-10">
             Clear identification cache
           </Button>
+          <Button onClick={clearAppCache} variant="outline" className="w-full rounded-xl h-10">
+            Clear app cache & reload
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            Use after publishing a new version to fetch the latest update immediately.
+          </p>
         </div>
 
         {/* Profile */}

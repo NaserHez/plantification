@@ -1,9 +1,27 @@
 import { supabase } from "@/integrations/supabase/client";
 
-// Public VAPID key — safe to embed in client.
-// Paired with the VAPID_PRIVATE_KEY edge-function secret.
-export const VAPID_PUBLIC_KEY =
-  "BNTOUyNKwCnybWwaXY5taN1HNIUNX8ykl3MuA-Ck5WRLp0T1NE1jutcxpbZrqOedoUPgmg5wSHUdl5cSWsDY-20";
+let cachedPublicKey: string | null = null;
+
+async function getVapidPublicKey(): Promise<string> {
+  if (cachedPublicKey) return cachedPublicKey;
+  const { data, error } = await supabase.functions.invoke("send-watering-reminders", {
+    method: "GET" as any,
+    body: undefined,
+  } as any);
+  // Fallback: call directly via fetch since invoke doesn't pass query params
+  if (!data || !data.publicKey) {
+    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-watering-reminders?action=publicKey`;
+    const res = await fetch(url, {
+      headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+    });
+    const json = await res.json();
+    cachedPublicKey = json.publicKey || "";
+  } else {
+    cachedPublicKey = data.publicKey;
+  }
+  if (!cachedPublicKey) throw new Error("VAPID public key not available");
+  return cachedPublicKey;
+}
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -40,7 +58,8 @@ export async function ensurePushSubscription(): Promise<boolean> {
   let sub = await reg.pushManager.getSubscription();
   if (!sub) {
     try {
-      const key = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+      const publicKey = await getVapidPublicKey();
+      const key = urlBase64ToUint8Array(publicKey);
       sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: key.buffer.slice(key.byteOffset, key.byteOffset + key.byteLength) as ArrayBuffer,

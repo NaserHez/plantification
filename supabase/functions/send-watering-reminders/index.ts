@@ -61,11 +61,18 @@ serve(async (req) => {
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const VAPID_PUBLIC =
-      "BNTOUyNKwCnybWwaXY5taN1HNIUNX8ykl3MuA-Ck5WRLp0T1NE1jutcxpbZrqOedoUPgmg5wSHUdl5cSWsDY-20";
-    const VAPID_PRIVATE = Deno.env.get("VAPID_PRIVATE_KEY");
-    if (!VAPID_PRIVATE) {
-      return new Response(JSON.stringify({ error: "VAPID_PRIVATE_KEY not set" }), {
+    const VAPID_PUBLIC = Deno.env.get("VAPID_PUBLIC_KEY") || "";
+    const VAPID_PRIVATE = Deno.env.get("VAPID_PRIVATE_KEY") || "";
+
+    const url = new URL(req.url);
+    if (url.searchParams.get("action") === "publicKey") {
+      return new Response(JSON.stringify({ publicKey: VAPID_PUBLIC }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!VAPID_PRIVATE || !VAPID_PUBLIC) {
+      return new Response(JSON.stringify({ error: "VAPID keys not set" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -74,7 +81,6 @@ serve(async (req) => {
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
     // Optional debug: ?dryRun=1 returns the plan without sending
-    const url = new URL(req.url);
     const dryRun = url.searchParams.get("dryRun") === "1";
     // Optional: ?userId=... to force-send to one user (for testing from the app)
     const forceUserId = url.searchParams.get("userId");

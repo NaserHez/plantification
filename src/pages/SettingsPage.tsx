@@ -368,6 +368,12 @@ export default function SettingsPage() {
           <Button onClick={clearIdentifyCache} variant="outline" className="w-full rounded-xl h-10">
             Clear identification cache
           </Button>
+          <Button onClick={clearAppCache} variant="outline" className="w-full rounded-xl h-10">
+            Clear app cache & reload
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            Use after publishing a new version to fetch the latest update immediately.
+          </p>
         </div>
 
         {/* Profile */}

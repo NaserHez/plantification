@@ -35,7 +35,14 @@ export default function PlantJournal({ plantId }: { plantId: string }) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<Blob | null>(null);
   const [saving, setSaving] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Timelapse photos = entries with image_url, oldest → newest so growth reads left-to-right
+  const timelapse = useMemo(
+    () => entries.filter(e => e.image_url).slice().reverse(),
+    [entries]
+  );
 
   useEffect(() => {
     const fetchEntries = async () => {

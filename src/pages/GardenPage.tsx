@@ -67,6 +67,7 @@ function SortablePlantCard({ plant, layout }: { plant: Plant; layout: LayoutMode
         sunlight={plant.sunlight}
         wateringFrequency={plant.watering_frequency}
         location={plant.location}
+        lastWatered={plant.last_watered}
         variant={layout === "list" ? "list" : "card"}
       />
     </div>

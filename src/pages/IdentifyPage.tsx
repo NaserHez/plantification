@@ -148,6 +148,34 @@ export default function IdentifyPage() {
                 </span>
               </div>
 
+              {/* Source badge — Plant.id vs Gemini fallback */}
+              {(() => {
+                const fromGemini = result.diagnostics?.fallback === 'gemini';
+                return (
+                  <div className="mt-2 flex items-center gap-2 flex-wrap">
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                        fromGemini
+                          ? 'bg-cta/15 text-cta border border-cta/30'
+                          : 'bg-primary/10 text-primary border border-primary/20'
+                      }`}
+                      title={fromGemini ? 'Plant.id unavailable — identified by Gemini vision' : 'Identified by Plant.id'}
+                    >
+                      {fromGemini ? <Sparkles className="w-3 h-3" /> : <Leaf className="w-3 h-3" />}
+                      {fromGemini ? 'Gemini AI' : 'Plant.id'}
+                    </span>
+                    {result.diagnostics?.aiBoosted && !fromGemini && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-accent text-accent-foreground border border-border">
+                        <Sparkles className="w-3 h-3" /> AI-verified
+                      </span>
+                    )}
+                    {fromGemini && (
+                      <span className="text-[10px] text-muted-foreground">Plant.id quota reached — using AI fallback</span>
+                    )}
+                  </div>
+                );
+              })()}
+
               {result.isMock && (
                 <p className="text-xs text-destructive mt-2">{t("mockWarning")}</p>
               )}

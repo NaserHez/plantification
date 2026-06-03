@@ -29,6 +29,8 @@ interface Diagnostics {
   ambiguous?: boolean;
   cached?: boolean;
   clientCache?: boolean;
+  fallback?: string;
+  plantIdError?: string;
   totalMs?: number;
 }
 

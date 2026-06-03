@@ -329,7 +329,7 @@ export default function GardenPage() {
             </div>
             <h2 className="font-serif text-lg mb-1">{t("noPlants")}</h2>
             <p className="text-sm text-muted-foreground mb-4">{t("noPlantsDesc")}</p>
-            <Button onClick={() => navigate("/identify")} className="rounded-xl">
+            <Button onClick={() => navigate("/identify")} variant="cta" className="rounded-xl">
               {t("identifyPlant")}
             </Button>
           </motion.div>

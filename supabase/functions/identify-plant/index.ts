@@ -26,6 +26,92 @@ function cacheSet(key: string, value: any) {
   CACHE.set(key, { value, ts: Date.now() });
 }
 
+/**
+ * Gemini-only fallback identifier. Used when Plant.id is unavailable
+ * (e.g. HTTP 429 quota exhausted). Returns the same shape as the main
+ * Plant.id-backed result so the client doesn't need branching logic.
+ */
+async function identifyWithGemini(base64Image: string, language: string, aiKey: string) {
+  const langMap: Record<string, string> = { en: 'English', ar: 'Arabic', pt: 'European Portuguese (Portugal)' };
+  const langName = langMap[language] || 'English';
+  const t0 = Date.now();
+
+  const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${aiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-flash',
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'text', text:
+`You are an expert botanist. Identify the plant in this photo and assess its health.
+Return STRICT JSON only (no markdown, no commentary) matching exactly this shape:
+{
+  "name": "common name",
+  "scientificName": "Genus species",
+  "commonNames": ["..."],
+  "confidence": 0-100,
+  "alternatives": [{"name":"...","scientificName":"...","probability":0-100}],
+  "description": "1-2 sentence description",
+  "careTips": "3-4 sentences in ${langName} covering watering, sunlight, soil, common issues. Prioritize organic/biological treatments.",
+  "healthAssessment": {
+    "isHealthy": true|false,
+    "diseases": [{"name":"...","probability":0-100,"description":"...","treatment":"organic/biological treatment"}]
+  }
+}
+Respond entirely in ${langName} for description, careTips, disease descriptions and treatments. Use English for scientificName.`
+          },
+          { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64Image}` } },
+        ],
+      }],
+      max_tokens: 900,
+    }),
+  });
+
+  const aiMs = Date.now() - t0;
+  if (!res.ok) {
+    console.error('Gemini fallback HTTP error:', res.status, await res.text());
+    return null;
+  }
+  const data = await res.json();
+  let content: string = data.choices?.[0]?.message?.content || '';
+  // Strip code fences if present
+  content = content.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
+  const start = content.indexOf('{');
+  const end = content.lastIndexOf('}');
+  if (start < 0 || end < 0) return null;
+  let parsed: any;
+  try { parsed = JSON.parse(content.slice(start, end + 1)); } catch (e) {
+    console.error('Gemini JSON parse failed:', e);
+    return null;
+  }
+
+  return {
+    name: parsed.name || 'Unknown plant',
+    scientificName: parsed.scientificName || parsed.name || 'Unknown',
+    commonNames: Array.isArray(parsed.commonNames) ? parsed.commonNames.slice(0, 5) : [],
+    confidence: typeof parsed.confidence === 'number' ? Math.round(parsed.confidence) : 70,
+    rawConfidence: typeof parsed.confidence === 'number' ? Math.round(parsed.confidence) : 70,
+    alternatives: Array.isArray(parsed.alternatives) ? parsed.alternatives.slice(0, 5).map((a: any) => ({
+      name: a.name, scientificName: a.scientificName || a.name, commonNames: [], probability: Math.round(a.probability || 0),
+    })) : [],
+    taxonomy: null,
+    description: parsed.description || null,
+    similarImages: [],
+    careTips: parsed.careTips || '',
+    healthAssessment: parsed.healthAssessment ? {
+      isHealthy: !!parsed.healthAssessment.isHealthy,
+      diseases: Array.isArray(parsed.healthAssessment.diseases) ? parsed.healthAssessment.diseases.slice(0, 5).map((d: any) => ({
+        name: d.name, probability: Math.round(d.probability || 0), description: d.description || null, treatment: d.treatment || null,
+      })) : [],
+    } : null,
+    verifiedByAI: true,
+    isMock: false,
+    diagnostics: { aiMs },
+  };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -119,9 +205,45 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Plant.id API error:', response.status, errorText);
+
+      // Gemini-only fallback when Plant.id is unavailable (rate limit, quota, etc.)
+      const aiKey = Deno.env.get('LOVABLE_API_KEY');
+      if (aiKey) {
+        try {
+          const fallback = await identifyWithGemini(base64Image, language, aiKey);
+          if (fallback) {
+            const result = {
+              ...fallback,
+              imageHash: hash,
+              diagnostics: {
+                plantIdStatus,
+                plantIdMs,
+                aiMs: fallback.diagnostics?.aiMs || 0,
+                aiUsed: true,
+                aiBoosted: false,
+                aiAgreement: false,
+                ambiguous: false,
+                cached: false,
+                fallback: 'gemini',
+                plantIdError: plantIdStatus === 429 ? 'rate_limit' : `http_${plantIdStatus}`,
+                totalMs: Date.now() - t0,
+              },
+            };
+            cacheSet(cacheKey, result);
+            return new Response(JSON.stringify(result), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+        } catch (e) {
+          console.error('Gemini fallback error:', e);
+        }
+      }
+
       return new Response(
         JSON.stringify({
-          error: 'Plant identification service temporarily unavailable',
+          error: plantIdStatus === 429
+            ? 'Plant identification quota exceeded. Please try again later.'
+            : 'Plant identification service temporarily unavailable',
           isMock: false,
           diagnostics: { plantIdStatus, plantIdMs, totalMs: Date.now() - t0, cached: false, aiUsed: false },
         }),

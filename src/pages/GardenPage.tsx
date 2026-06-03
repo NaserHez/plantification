@@ -67,6 +67,7 @@ function SortablePlantCard({ plant, layout }: { plant: Plant; layout: LayoutMode
         sunlight={plant.sunlight}
         wateringFrequency={plant.watering_frequency}
         location={plant.location}
+        lastWatered={plant.last_watered}
         variant={layout === "list" ? "list" : "card"}
       />
     </div>
@@ -228,7 +229,7 @@ export default function GardenPage() {
         >
           <Share2 className="w-4 h-4" />
         </Button>
-        <Button onClick={() => navigate("/identify")} size="icon" className="rounded-xl h-10 w-10">
+        <Button onClick={() => navigate("/identify")} variant="cta" size="icon" className="rounded-xl h-10 w-10">
           <Plus className="w-5 h-5" />
         </Button>
       </div>
@@ -328,7 +329,7 @@ export default function GardenPage() {
             </div>
             <h2 className="font-serif text-lg mb-1">{t("noPlants")}</h2>
             <p className="text-sm text-muted-foreground mb-4">{t("noPlantsDesc")}</p>
-            <Button onClick={() => navigate("/identify")} className="rounded-xl">
+            <Button onClick={() => navigate("/identify")} variant="cta" className="rounded-xl">
               {t("identifyPlant")}
             </Button>
           </motion.div>
@@ -352,6 +353,7 @@ export default function GardenPage() {
                       sunlight={p.sunlight}
                       wateringFrequency={p.watering_frequency}
                       location={p.location}
+                      lastWatered={p.last_watered}
                     />
                   ))}
                 </div>

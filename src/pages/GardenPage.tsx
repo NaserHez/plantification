@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Leaf, LayoutGrid, List, MapPin, GripVertical, ArrowLeft, Search, Share2 } from "lucide-react";
+import { Plus, Leaf, LayoutGrid, List, MapPin, GripVertical, ArrowLeft, Search, Share2, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -9,6 +9,7 @@ import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/i18n/LanguageContext";
+import emptyGardenIllustration from "@/assets/empty-garden.png";
 import {
   DndContext,
   closestCenter,

@@ -1,5 +1,5 @@
-import { useEffect, useState, useRef, useCallback } from "react";
-import { BookOpen, Plus, Trash2, Camera, Smile, Loader2 } from "lucide-react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { BookOpen, Plus, Trash2, Camera, Smile, Loader2, Film, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,7 +35,14 @@ export default function PlantJournal({ plantId }: { plantId: string }) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<Blob | null>(null);
   const [saving, setSaving] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Timelapse photos = entries with image_url, oldest → newest so growth reads left-to-right
+  const timelapse = useMemo(
+    () => entries.filter(e => e.image_url).slice().reverse(),
+    [entries]
+  );
 
   useEffect(() => {
     const fetchEntries = async () => {
@@ -184,6 +191,98 @@ export default function PlantJournal({ plantId }: { plantId: string }) {
                   {t("save")}
                 </Button>
               </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Timelapse growth gallery */}
+      {timelapse.length > 0 && (
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+              <Film className="w-3.5 h-3.5 text-primary" /> Growth timelapse
+              <span className="text-[10px] text-muted-foreground/70">· {timelapse.length}</span>
+            </h4>
+            <span className="text-[10px] text-muted-foreground/70">
+              {new Date(timelapse[0].entry_date).toLocaleDateString()} → {new Date(timelapse[timelapse.length - 1].entry_date).toLocaleDateString()}
+            </span>
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory scrollbar-thin">
+            {timelapse.map((e, i) => (
+              <button
+                key={e.id}
+                onClick={() => setLightboxIndex(i)}
+                className="relative shrink-0 snap-start rounded-xl overflow-hidden border border-border bg-muted hover:border-primary/50 transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
+                style={{ width: 96, height: 96 }}
+                aria-label={`Open photo from ${new Date(e.entry_date).toLocaleDateString()}`}
+              >
+                <SignedImage
+                  src={e.image_url!}
+                  alt={`Plant photo ${i + 1}`}
+                  className="w-full h-full object-cover"
+                  fallback={<div className="w-full h-full flex items-center justify-center text-xl">🌱</div>}
+                />
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-1.5 py-1">
+                  <p className="text-[9px] font-medium text-white leading-tight">
+                    {new Date(e.entry_date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                  </p>
+                </div>
+                <span className="absolute top-1 left-1 text-[9px] font-bold text-white bg-primary/80 rounded-full px-1.5 py-0.5">
+                  {i + 1}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox */}
+      <AnimatePresence>
+        {lightboxIndex !== null && timelapse[lightboxIndex] && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setLightboxIndex(null)}
+            className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col items-center justify-center p-4"
+          >
+            <button
+              onClick={(ev) => { ev.stopPropagation(); setLightboxIndex(null); }}
+              className="absolute top-4 right-4 p-2 rounded-full bg-card border border-border"
+              aria-label="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <div onClick={(ev) => ev.stopPropagation()} className="max-w-sm w-full">
+              <SignedImage
+                src={timelapse[lightboxIndex].image_url!}
+                alt=""
+                className="w-full max-h-[70vh] rounded-2xl object-contain bg-muted"
+              />
+              <div className="mt-3 flex items-center justify-between">
+                <button
+                  disabled={lightboxIndex === 0}
+                  onClick={(ev) => { ev.stopPropagation(); setLightboxIndex(i => (i ?? 0) - 1); }}
+                  className="text-xs px-3 py-1.5 rounded-lg bg-muted disabled:opacity-30"
+                >← Prev</button>
+                <div className="text-xs text-center">
+                  <p className="font-medium">{moodLabel(timelapse[lightboxIndex].mood || "stable")}</p>
+                  <p className="text-muted-foreground text-[11px]">
+                    {new Date(timelapse[lightboxIndex].entry_date).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}
+                  </p>
+                </div>
+                <button
+                  disabled={lightboxIndex === timelapse.length - 1}
+                  onClick={(ev) => { ev.stopPropagation(); setLightboxIndex(i => (i ?? 0) + 1); }}
+                  className="text-xs px-3 py-1.5 rounded-lg bg-muted disabled:opacity-30"
+                >Next →</button>
+              </div>
+              {timelapse[lightboxIndex].observation && (
+                <p className="text-sm text-muted-foreground mt-2 leading-relaxed text-center">
+                  {timelapse[lightboxIndex].observation}
+                </p>
+              )}
             </div>
           </motion.div>
         )}

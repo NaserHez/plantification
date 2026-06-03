@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Leaf, LayoutGrid, List, MapPin, GripVertical, ArrowLeft, Search, Share2 } from "lucide-react";
+import { Plus, Leaf, LayoutGrid, List, MapPin, GripVertical, ArrowLeft, Search, Share2, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -9,6 +9,7 @@ import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/i18n/LanguageContext";
+import emptyGardenIllustration from "@/assets/empty-garden.png";
 import {
   DndContext,
   closestCenter,
@@ -320,18 +321,39 @@ export default function GardenPage() {
           </div>
         ) : filteredPlants.length === 0 && plants.length === 0 ? (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-16"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-center pt-8 pb-10 px-2"
           >
-            <div className="w-16 h-16 rounded-2xl bg-accent flex items-center justify-center mx-auto mb-4">
-              <Leaf className="w-8 h-8 text-primary" />
+            <motion.div
+              animate={{ y: [0, -6, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              className="relative mx-auto w-48 h-48 mb-5"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-accent/40 to-cta/10 rounded-full blur-2xl" />
+              <img
+                src={emptyGardenIllustration}
+                alt="A friendly potted plant ready to join your collection"
+                width={640}
+                height={640}
+                loading="lazy"
+                className="relative w-full h-full object-contain drop-shadow-sm"
+              />
+            </motion.div>
+            <h2 className="font-serif text-2xl mb-2">Your indoor jungle starts here</h2>
+            <p className="text-sm text-muted-foreground mb-6 max-w-xs mx-auto leading-relaxed">
+              Add your first plant — snap a photo and Plantification will identify it and build a personalized care plan.
+            </p>
+            <div className="flex flex-col items-center gap-2">
+              <Button onClick={() => navigate("/identify")} variant="cta" size="lg" className="rounded-xl gap-2 px-6 shadow-md">
+                <Camera className="w-4 h-4" />
+                Identify your first plant
+              </Button>
+              <p className="text-[11px] text-muted-foreground/80">
+                Got a mystery plant from the grocery store? We've got you.
+              </p>
             </div>
-            <h2 className="font-serif text-lg mb-1">{t("noPlants")}</h2>
-            <p className="text-sm text-muted-foreground mb-4">{t("noPlantsDesc")}</p>
-            <Button onClick={() => navigate("/identify")} variant="cta" className="rounded-xl">
-              {t("identifyPlant")}
-            </Button>
           </motion.div>
         ) : filteredPlants.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground text-sm">{t("noResults")}</div>

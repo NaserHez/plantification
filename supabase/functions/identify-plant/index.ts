@@ -119,9 +119,45 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Plant.id API error:', response.status, errorText);
+
+      // Gemini-only fallback when Plant.id is unavailable (rate limit, quota, etc.)
+      const aiKey = Deno.env.get('LOVABLE_API_KEY');
+      if (aiKey) {
+        try {
+          const fallback = await identifyWithGemini(base64Image, language, aiKey);
+          if (fallback) {
+            const result = {
+              ...fallback,
+              imageHash: hash,
+              diagnostics: {
+                plantIdStatus,
+                plantIdMs,
+                aiMs: fallback.diagnostics?.aiMs || 0,
+                aiUsed: true,
+                aiBoosted: false,
+                aiAgreement: false,
+                ambiguous: false,
+                cached: false,
+                fallback: 'gemini',
+                plantIdError: plantIdStatus === 429 ? 'rate_limit' : `http_${plantIdStatus}`,
+                totalMs: Date.now() - t0,
+              },
+            };
+            cacheSet(cacheKey, result);
+            return new Response(JSON.stringify(result), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+        } catch (e) {
+          console.error('Gemini fallback error:', e);
+        }
+      }
+
       return new Response(
         JSON.stringify({
-          error: 'Plant identification service temporarily unavailable',
+          error: plantIdStatus === 429
+            ? 'Plant identification quota exceeded. Please try again later.'
+            : 'Plant identification service temporarily unavailable',
           isMock: false,
           diagnostics: { plantIdStatus, plantIdMs, totalMs: Date.now() - t0, cached: false, aiUsed: false },
         }),

@@ -1,5 +1,5 @@
-import { useEffect, useState, useRef, useCallback } from "react";
-import { BookOpen, Plus, Trash2, Camera, Smile, Loader2 } from "lucide-react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { BookOpen, Plus, Trash2, Camera, Smile, Loader2, Film, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";

@@ -201,7 +201,7 @@ export default function PlantJournal({ plantId }: { plantId: string }) {
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
             <h4 className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-              <Film className="w-3.5 h-3.5 text-primary" /> {t("growthTimelapse") || "Growth timelapse"}
+              <Film className="w-3.5 h-3.5 text-primary" /> Growth timelapse
               <span className="text-[10px] text-muted-foreground/70">· {timelapse.length}</span>
             </h4>
             <span className="text-[10px] text-muted-foreground/70">

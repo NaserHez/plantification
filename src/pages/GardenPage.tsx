@@ -353,6 +353,7 @@ export default function GardenPage() {
                       sunlight={p.sunlight}
                       wateringFrequency={p.watering_frequency}
                       location={p.location}
+                      lastWatered={p.last_watered}
                     />
                   ))}
                 </div>

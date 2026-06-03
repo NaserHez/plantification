@@ -229,7 +229,7 @@ export default function GardenPage() {
         >
           <Share2 className="w-4 h-4" />
         </Button>
-        <Button onClick={() => navigate("/identify")} size="icon" className="rounded-xl h-10 w-10">
+        <Button onClick={() => navigate("/identify")} variant="cta" size="icon" className="rounded-xl h-10 w-10">
           <Plus className="w-5 h-5" />
         </Button>
       </div>

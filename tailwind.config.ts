@@ -90,6 +90,11 @@ export default {
   			sun: 'hsl(var(--sun))',
   			water: 'hsl(var(--water))',
   			bloom: 'hsl(var(--bloom))',
+  			overdue: 'hsl(var(--overdue))',
+  			cta: {
+  				DEFAULT: 'hsl(var(--cta))',
+  				foreground: 'hsl(var(--cta-foreground))'
+  			},
   			sidebar: {
   				DEFAULT: 'hsl(var(--sidebar-background))',
   				foreground: 'hsl(var(--sidebar-foreground))',

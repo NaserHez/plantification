@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { ThemeProvider } from "next-themes";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
+import { ensurePushSubscription } from "@/lib/push";
 import Index from "./pages/Index";
 import IdentifyPage from "./pages/IdentifyPage";
 import GardenPage from "./pages/GardenPage";
@@ -37,6 +38,12 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (user && "Notification" in window && Notification.permission === "granted") {
+      ensurePushSubscription().catch(() => {});
+    }
+  }, [user]);
 
   if (user === undefined) return null;
   if (!user) return <AuthForm />;

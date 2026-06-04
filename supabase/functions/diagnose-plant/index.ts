@@ -110,14 +110,6 @@ serve(async (req) => {
       });
     }
 
-    const apiKey = Deno.env.get('PLANT_ID_API_KEY');
-    if (!apiKey) {
-      return new Response(
-        JSON.stringify({ error: 'PLANT_ID_API_KEY not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
     const { image, language } = await req.json();
     const langMap: Record<string, string> = { en: "English", ar: "Arabic", pt: "European Portuguese (Portugal)" };
     const langName = langMap[language] || "English";
@@ -129,6 +121,19 @@ serve(async (req) => {
     }
 
     const base64Image = image.includes(',') ? image.split(',')[1] : image;
+    const apiKey = Deno.env.get('PLANT_ID_API_KEY');
+    if (!apiKey) {
+      const fallback = await diagnoseWithGemini(base64Image, language);
+      if (fallback) {
+        return new Response(JSON.stringify(fallback), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      return new Response(
+        JSON.stringify({ error: 'Plant health analysis is not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Use the health_assessment endpoint for more detailed results
     const response = await fetch('https://api.plant.id/v3/health_assessment', {
@@ -155,6 +160,16 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Plant.id API error:', response.status, errorText);
+      const fallback = await diagnoseWithGemini(base64Image, language);
+      if (fallback) {
+        return new Response(
+          JSON.stringify({
+            ...fallback,
+            diagnostics: { source: 'gemini', plantIdStatus: response.status },
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
       return new Response(
         JSON.stringify({ error: 'Plant identification service temporarily unavailable' }),
         { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

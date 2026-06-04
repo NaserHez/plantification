@@ -12,7 +12,7 @@ import { useTheme } from "next-themes";
 import BottomNav from "@/components/BottomNav";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { Language } from "@/i18n/translations";
-import { ensurePushSubscription, syncPushSettings, isPushSupported } from "@/lib/push";
+import { ensurePushSubscription, syncPushSettings, isPushSupported, getReminderTimezone } from "@/lib/push";
 
 const CARE_LANGUAGES = [
   { value: "en", label: "English", flag: "🇬🇧" },
@@ -49,6 +49,7 @@ export default function SettingsPage() {
   const [notifPermission, setNotifPermission] = useState<string>("default");
   const [notifTone, setNotifTone] = useState(() => localStorage.getItem("notif_tone") || "default");
   const [reminderTime, setReminderTime] = useState(() => localStorage.getItem("reminder_time") || "08:00");
+  const [reminderTimezone, setReminderTimezone] = useState(() => getReminderTimezone());
   const [aiValidation, setAiValidation] = useState(() => localStorage.getItem("identify_ai_validation") !== "false");
 
   const toggleAiValidation = (val: boolean) => {
@@ -108,6 +109,9 @@ export default function SettingsPage() {
       if ("Notification" in window) {
         setNotifPermission(Notification.permission);
       }
+      const tz = getReminderTimezone();
+      setReminderTimezone(tz);
+      if (Notification.permission === "granted") syncPushSettings().catch(() => {});
       setLoading(false);
     };
     load();
@@ -329,6 +333,7 @@ export default function SettingsPage() {
                   <Clock className="w-3.5 h-3.5" /> {t("reminderTime")}
                 </Label>
                 <p className="text-[10px] text-muted-foreground mb-2">{t("reminderTimeDesc")}</p>
+                <p className="text-[10px] text-muted-foreground mb-2">Timezone: {reminderTimezone}</p>
                 <Input
                   type="time"
                   value={reminderTime}

@@ -40,6 +40,14 @@ function arrayBufferToBase64(buf: ArrayBuffer | null): string {
   return btoa(s);
 }
 
+export function getReminderTimezone(): string {
+  const detected = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  const saved = localStorage.getItem("reminder_timezone");
+  if (saved && saved !== detected) localStorage.setItem("reminder_timezone", detected);
+  if (!saved) localStorage.setItem("reminder_timezone", detected);
+  return detected;
+}
+
 export function isPushSupported(): boolean {
   return (
     typeof window !== "undefined" &&
@@ -76,7 +84,7 @@ export async function ensurePushSubscription(): Promise<boolean> {
 
   const reminderTime = localStorage.getItem("reminder_time") || "08:00";
   const tone = localStorage.getItem("notif_tone") || "default";
-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  const timezone = getReminderTimezone();
   const p256dh = arrayBufferToBase64(sub.getKey("p256dh"));
   const authKey = arrayBufferToBase64(sub.getKey("auth"));
 
@@ -110,7 +118,7 @@ export async function syncPushSettings(): Promise<void> {
   if (!sub) return;
   const reminderTime = localStorage.getItem("reminder_time") || "08:00";
   const tone = localStorage.getItem("notif_tone") || "default";
-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  const timezone = getReminderTimezone();
   await supabase
     .from("push_subscriptions")
     .update({ reminder_time: reminderTime, tone, timezone })

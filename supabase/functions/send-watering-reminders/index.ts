@@ -16,17 +16,30 @@ const frequencyToDays: Record<string, number> = {
   monthly: 30,
 };
 
-function countOverdue(plants: Array<{ last_watered: string | null; watering_frequency: string | null }>): number {
-  const now = Date.now();
-  let n = 0;
+function localDateParts(date: Date, tz: string): { y: number; m: number; d: number } {
+  const fmt = new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" });
+  const parts = fmt.formatToParts(date);
+  const get = (t: string) => Number(parts.find((p) => p.type === t)?.value || 0);
+  return { y: get("year"), m: get("month"), d: get("day") };
+}
+
+function localDayNumber(date: Date, tz: string): number {
+  const { y, m, d } = localDateParts(date, tz);
+  return Math.floor(Date.UTC(y, m - 1, d) / 86400000);
+}
+
+function getOverduePlants(plants: Array<{ name: string; nickname: string | null; last_watered: string | null; watering_frequency: string | null }>, tz: string) {
+  const today = localDayNumber(new Date(), tz);
+  const overdue: Array<{ name: string; nickname: string | null; daysOverdue: number }> = [];
   for (const p of plants) {
     if (!p.last_watered || !p.watering_frequency) continue;
-    const last = new Date(p.last_watered).getTime();
-    const days = Math.floor((now - last) / 86400000);
+    const lastDay = localDayNumber(new Date(p.last_watered), tz);
+    const days = today - lastDay;
     const interval = frequencyToDays[p.watering_frequency] || 7;
-    if (days - interval >= 0) n++;
+    const daysOverdue = days - interval;
+    if (daysOverdue >= 0) overdue.push({ name: p.name, nickname: p.nickname, daysOverdue });
   }
-  return n;
+  return overdue.sort((a, b) => b.daysOverdue - a.daysOverdue);
 }
 
 /** Returns the user's local HH:mm string for a given IANA timezone. */
@@ -114,15 +127,15 @@ serve(async (req) => {
         .from("plants")
         .select("id, name, nickname, last_watered, watering_frequency")
         .eq("user_id", s.user_id);
-      const overdue = countOverdue((plants || []) as any);
+      const overduePlants = getOverduePlants((plants || []) as any, s.timezone || "UTC");
+      const overdue = overduePlants.length;
       if (overdue === 0) {
         // Still mark as processed today so we don't churn
         await admin.from("push_subscriptions").update({ last_sent_date: (s as any)._ymd }).eq("id", s.id);
         results.push({ user_id: s.user_id, skipped: "no_overdue" });
         continue;
       }
-      const names = (plants || [])
-        .filter((p: any) => p.last_watered && p.watering_frequency)
+      const names = overduePlants
         .slice(0, 3)
         .map((p: any) => p.nickname || p.name)
         .join(", ");
@@ -144,7 +157,8 @@ serve(async (req) => {
             endpoint: s.endpoint,
             keys: { p256dh: s.p256dh || "", auth: s.auth || "" },
           } as any,
-          payload
+          payload,
+          { TTL: 60 * 60 * 12, urgency: "normal" }
         );
         await admin.from("push_subscriptions").update({ last_sent_date: (s as any)._ymd }).eq("id", s.id);
         results.push({ user_id: s.user_id, sent: true, overdue });

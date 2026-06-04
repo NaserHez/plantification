@@ -24,13 +24,17 @@ const frequencyToDays: Record<string, number> = {
   monthly: 30,
 };
 
+function localDayNumber(date: Date): number {
+  return Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / (1000 * 60 * 60 * 24));
+}
+
 export function getOverduePlants(plants: Plant[]): OverduePlant[] {
-  const now = Date.now();
+  const today = localDayNumber(new Date());
   return plants
     .filter((p) => p.last_watered && p.watering_frequency)
     .map((p) => {
-      const lastWatered = new Date(p.last_watered!).getTime();
-      const daysSinceWatered = Math.floor((now - lastWatered) / (1000 * 60 * 60 * 24));
+      const lastWatered = new Date(p.last_watered!);
+      const daysSinceWatered = Math.max(0, today - localDayNumber(lastWatered));
       const intervalDays = frequencyToDays[p.watering_frequency!] || 7;
       const daysOverdue = daysSinceWatered - intervalDays;
       return { ...p, daysSinceWatered, daysOverdue };

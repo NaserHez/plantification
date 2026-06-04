@@ -148,8 +148,8 @@ export const translations = {
     careTipsLanguage: "Care Tips Language",
     careTipsLangDesc: "Care tips for newly identified plants will be generated in this language. You can also change the language per plant.",
     wateringReminders: "Watering Reminders",
-    notifEnabled: "Notifications are enabled. You'll be reminded when plants need watering.",
-    notifDisabled: "Enable notifications to get watering reminders when you open the app.",
+    notifEnabled: "Notifications are enabled. You'll be reminded when plants need watering, even when the app is closed.",
+    notifDisabled: "Enable notifications to get watering reminders, even when the app is closed.",
     enableNotifications: "Enable Notifications",
     notifTone: "Notification Tone",
     profile: "Profile",
@@ -204,7 +204,7 @@ export const translations = {
 
     // Notification scheduling
     reminderTime: "Reminder Time",
-    reminderTimeDesc: "Daily notification time",
+    reminderTimeDesc: "Daily notification time in your device timezone",
 
     // Health History
     healthHistory: "Health History",
@@ -463,8 +463,8 @@ export const translations = {
     careTipsLanguage: "لغة نصائح العناية",
     careTipsLangDesc: "سيتم إنشاء نصائح العناية للنباتات المحددة حديثاً بهذه اللغة. يمكنك أيضاً تغيير اللغة لكل نبتة.",
     wateringReminders: "تذكيرات الري",
-    notifEnabled: "الإشعارات مفعّلة. سيتم تذكيرك عندما تحتاج النباتات للري.",
-    notifDisabled: "فعّل الإشعارات للحصول على تذكيرات الري عند فتح التطبيق.",
+    notifEnabled: "الإشعارات مفعّلة. سيتم تذكيرك عندما تحتاج النباتات للري، حتى عند إغلاق التطبيق.",
+    notifDisabled: "فعّل الإشعارات للحصول على تذكيرات الري، حتى عند إغلاق التطبيق.",
     enableNotifications: "تفعيل الإشعارات",
     notifTone: "نغمة الإشعار",
     profile: "الملف الشخصي",
@@ -519,7 +519,7 @@ export const translations = {
 
     // Notification scheduling
     reminderTime: "وقت التذكير",
-    reminderTimeDesc: "وقت الإشعار اليومي",
+    reminderTimeDesc: "وقت الإشعار اليومي حسب المنطقة الزمنية لجهازك",
 
     // Health History
     healthHistory: "سجل الصحة",
@@ -774,8 +774,8 @@ export const translations = {
     careTipsLanguage: "Idioma das Dicas",
     careTipsLangDesc: "As dicas de cuidado para novas plantas serão geradas neste idioma. Também podes alterar por planta.",
     wateringReminders: "Lembretes de Rega",
-    notifEnabled: "Notificações ativadas. Serás lembrado quando as plantas precisarem de rega.",
-    notifDisabled: "Ativa as notificações para receber lembretes de rega ao abrir a app.",
+    notifEnabled: "Notificações ativadas. Serás lembrado quando as plantas precisarem de rega, mesmo com a app fechada.",
+    notifDisabled: "Ativa as notificações para receber lembretes de rega, mesmo com a app fechada.",
     enableNotifications: "Ativar Notificações",
     notifTone: "Tom de Notificação",
     profile: "Perfil",
@@ -830,7 +830,7 @@ export const translations = {
 
     // Notification scheduling
     reminderTime: "Hora do Lembrete",
-    reminderTimeDesc: "Hora da notificação diária",
+    reminderTimeDesc: "Hora da notificação diária no fuso horário do teu dispositivo",
 
     // Health History
     healthHistory: "Histórico de Saúde",

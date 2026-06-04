@@ -148,8 +148,8 @@ export const translations = {
     careTipsLanguage: "Care Tips Language",
     careTipsLangDesc: "Care tips for newly identified plants will be generated in this language. You can also change the language per plant.",
     wateringReminders: "Watering Reminders",
-    notifEnabled: "Notifications are enabled. You'll be reminded when plants need watering.",
-    notifDisabled: "Enable notifications to get watering reminders when you open the app.",
+    notifEnabled: "Notifications are enabled. You'll be reminded when plants need watering, even when the app is closed.",
+    notifDisabled: "Enable notifications to get watering reminders, even when the app is closed.",
     enableNotifications: "Enable Notifications",
     notifTone: "Notification Tone",
     profile: "Profile",
@@ -204,7 +204,7 @@ export const translations = {
 
     // Notification scheduling
     reminderTime: "Reminder Time",
-    reminderTimeDesc: "Daily notification time",
+    reminderTimeDesc: "Daily notification time in your device timezone",
 
     // Health History
     healthHistory: "Health History",

@@ -7,6 +7,7 @@ import SignedImage from "@/components/SignedImage";
 interface PlantCardProps {
   id: string;
   name: string;
+  commonName?: string | null;
   scientificName?: string | null;
   imageUrl?: string | null;
   sunlight?: string | null;
@@ -31,7 +32,8 @@ function getWateringStatus(lastWatered?: string | null, frequency?: string | nul
   return { overdue: days >= interval, dueSoon: days >= interval - 1 && days < interval };
 }
 
-export default function PlantCard({ id, name, scientificName, imageUrl, sunlight, wateringFrequency, location, lastWatered, variant = "card" }: PlantCardProps) {
+export default function PlantCard({ id, name, commonName, scientificName, imageUrl, sunlight, wateringFrequency, location, lastWatered, variant = "card" }: PlantCardProps) {
+  const showCommon = commonName && commonName !== name;
   const navigate = useNavigate();
   const { overdue, dueSoon } = getWateringStatus(lastWatered, wateringFrequency);
   const dropClass = overdue ? "text-overdue animate-pulse" : dueSoon ? "text-sun" : "text-water";

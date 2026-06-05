@@ -24,6 +24,33 @@ registerRoute(
   })
 );
 
+// Cache Supabase REST reads (plants, journal, care tips) so basic plant info
+// and care instructions remain available in dead zones / offline.
+registerRoute(
+  ({ url, request }) =>
+    request.method === "GET" &&
+    url.hostname.endsWith(".supabase.co") &&
+    url.pathname.startsWith("/rest/v1/"),
+  new NetworkFirst({
+    cacheName: "supabase-rest-cache",
+    networkTimeoutSeconds: 4,
+    plugins: [new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 7 })],
+  })
+);
+
+// Cache signed plant images so previously viewed plants still show artwork offline.
+registerRoute(
+  ({ url, request }) =>
+    request.destination === "image" &&
+    url.hostname.endsWith(".supabase.co") &&
+    url.pathname.includes("/storage/v1/"),
+  new NetworkFirst({
+    cacheName: "supabase-images-cache",
+    networkTimeoutSeconds: 4,
+    plugins: [new ExpirationPlugin({ maxEntries: 150, maxAgeSeconds: 60 * 60 * 24 * 14 })],
+  })
+);
+
 // === Push notifications (watering reminders) ===
 self.addEventListener("push", (event) => {
   let data: { title?: string; body?: string; icon?: string; tag?: string; url?: string } = {};

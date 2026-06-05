@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import PlantCard from "@/components/PlantCard";
 import BottomNav from "@/components/BottomNav";
+import GardenTimelapse from "@/components/GardenTimelapse";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -409,7 +410,10 @@ export default function GardenPage() {
         )}
       </div>
 
+      {plants.length > 0 && <GardenTimelapse />}
+
       <BottomNav />
     </div>
   );
 }
+

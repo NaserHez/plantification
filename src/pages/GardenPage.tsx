@@ -63,6 +63,7 @@ function SortablePlantCard({ plant, layout }: { plant: Plant; layout: LayoutMode
       <PlantCard
         id={plant.id}
         name={plant.nickname || plant.name}
+        commonName={plant.nickname ? plant.name : null}
         scientificName={plant.scientific_name}
         imageUrl={plant.image_url}
         sunlight={plant.sunlight}
@@ -71,6 +72,7 @@ function SortablePlantCard({ plant, layout }: { plant: Plant; layout: LayoutMode
         lastWatered={plant.last_watered}
         variant={layout === "list" ? "list" : "card"}
       />
+
     </div>
   );
 }
@@ -370,6 +372,7 @@ export default function GardenPage() {
                       key={p.id}
                       id={p.id}
                       name={p.nickname || p.name}
+                      commonName={p.nickname ? p.name : null}
                       scientificName={p.scientific_name}
                       imageUrl={p.image_url}
                       sunlight={p.sunlight}
@@ -377,6 +380,7 @@ export default function GardenPage() {
                       location={p.location}
                       lastWatered={p.last_watered}
                     />
+
                   ))}
                 </div>
               </div>

@@ -12,7 +12,7 @@ import { useTheme } from "next-themes";
 import BottomNav from "@/components/BottomNav";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { Language } from "@/i18n/translations";
-import { ensurePushSubscription, syncPushSettings, isPushSupported, getReminderTimezone } from "@/lib/push";
+import { ensurePushSubscription, syncPushSettings, isPushSupported, getReminderTimezone, sendTestPush } from "@/lib/push";
 
 const CARE_LANGUAGES = [
   { value: "en", label: "English", flag: "🇬🇧" },
@@ -346,9 +346,29 @@ export default function SettingsPage() {
                   className="rounded-xl h-10 w-32"
                 />
               </div>
+
+              <div className="pt-2 border-t border-border">
+                <Button
+                  onClick={async () => {
+                    const tid = toast.loading("Sending test notification…");
+                    const r = await sendTestPush();
+                    toast.dismiss(tid);
+                    if (r.ok) toast.success("Test sent — check your notifications");
+                    else toast.error(r.error || "Failed to send test");
+                  }}
+                  variant="outline"
+                  className="w-full rounded-xl h-10 gap-2"
+                >
+                  <Bell className="w-4 h-4" /> Send test notification
+                </Button>
+                <p className="text-[10px] text-muted-foreground mt-1.5">
+                  Delivers an immediate push to confirm reminders work on this device.
+                </p>
+              </div>
             </>
           )}
         </div>
+
 
         {/* Identification */}
         <div className="bg-card rounded-2xl p-5 border border-border space-y-3">

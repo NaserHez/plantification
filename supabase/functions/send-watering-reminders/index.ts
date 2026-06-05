@@ -93,6 +93,61 @@ serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
+    // === Test push: deliver an immediate notification to the calling user ===
+    if (url.searchParams.get("action") === "test") {
+      const authHeader = req.headers.get("Authorization") || "";
+      const jwt = authHeader.replace(/^Bearer\s+/i, "");
+      if (!jwt) {
+        return new Response(JSON.stringify({ error: "Not authenticated" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { data: userData } = await admin.auth.getUser(jwt);
+      const uid = userData?.user?.id;
+      if (!uid) {
+        return new Response(JSON.stringify({ error: "Invalid token" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { data: mySubs } = await admin
+        .from("push_subscriptions")
+        .select("id, endpoint, p256dh, auth, enabled")
+        .eq("user_id", uid);
+      const active = (mySubs || []).filter((s) => s.enabled);
+      if (active.length === 0) {
+        return new Response(JSON.stringify({ error: "No active push subscription. Enable notifications first." }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const payload = JSON.stringify({
+        title: "🌱 Test notification",
+        body: "Push notifications are working — your plants are in good hands!",
+        tag: "watering-reminder-test",
+        url: "/notifications",
+      });
+      const out: any[] = [];
+      for (const s of active) {
+        try {
+          await webpush.sendNotification(
+            { endpoint: s.endpoint, keys: { p256dh: s.p256dh || "", auth: s.auth || "" } } as any,
+            payload,
+            { TTL: 60 * 5, urgency: "high" }
+          );
+          out.push({ id: s.id, sent: true });
+        } catch (err: any) {
+          const status = err?.statusCode;
+          if (status === 404 || status === 410) {
+            await admin.from("push_subscriptions").update({ enabled: false }).eq("id", s.id);
+          }
+          out.push({ id: s.id, error: err?.message || String(err), status });
+        }
+      }
+      return new Response(JSON.stringify({ test: true, results: out }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+
     // Optional debug: ?dryRun=1 returns the plan without sending
     const dryRun = url.searchParams.get("dryRun") === "1";
     // Optional: ?userId=... to force-send to one user (for testing from the app)

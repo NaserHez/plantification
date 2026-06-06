@@ -136,8 +136,17 @@ export async function disablePushSubscription(): Promise<void> {
     .eq("endpoint", sub.endpoint);
 }
 
+export interface TestPushResult {
+  ok: boolean;
+  error?: string;
+  results?: Array<{ id: string; sent?: boolean; error?: string; status?: number }>;
+  total?: number;
+  sentCount?: number;
+  failedCount?: number;
+}
+
 /** Trigger an immediate test push to the current user's subscriptions. */
-export async function sendTestPush(): Promise<{ ok: boolean; error?: string }> {
+export async function sendTestPush(): Promise<TestPushResult> {
   try {
     await ensurePushSubscription();
     const { data: sessionData } = await supabase.auth.getSession();
@@ -152,11 +161,15 @@ export async function sendTestPush(): Promise<{ ok: boolean; error?: string }> {
         "Content-Type": "application/json",
       },
     });
-    const json = await res.json().catch(() => ({}));
+    const json = await res.json().catch(() => ({} as any));
     if (!res.ok) return { ok: false, error: json?.error || `HTTP ${res.status}` };
-    return { ok: true };
+    const results: TestPushResult["results"] = Array.isArray(json?.results) ? json.results : [];
+    const sentCount = results.filter((r) => r.sent).length;
+    const failedCount = results.filter((r) => !r.sent).length;
+    return { ok: true, results, total: results.length, sentCount, failedCount };
   } catch (err: any) {
     return { ok: false, error: err?.message || String(err) };
   }
 }
+
 

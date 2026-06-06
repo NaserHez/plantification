@@ -139,9 +139,10 @@ serve(async (req) => {
 
     const apiKey = Deno.env.get('PLANT_ID_API_KEY');
     if (!apiKey) {
+      console.error('identify-plant: missing PLANT_ID_API_KEY env var');
       return new Response(
-        JSON.stringify({ error: 'PLANT_ID_API_KEY not configured', isMock: true }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Service temporarily unavailable', isMock: true }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 

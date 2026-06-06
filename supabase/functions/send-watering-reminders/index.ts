@@ -148,9 +148,22 @@ serve(async (req) => {
     }
 
 
-    // Optional debug: ?dryRun=1 returns the plan without sending
+    // Main cron path: require service-role bearer (used by pg_cron) or a configured CRON_SECRET.
+    const authHeader = req.headers.get("Authorization") || "";
+    const bearer = authHeader.replace(/^Bearer\s+/i, "");
+    const CRON_SECRET = Deno.env.get("CRON_SECRET") || "";
+    const isAuthorized =
+      (bearer && bearer === SERVICE_KEY) ||
+      (CRON_SECRET && bearer === CRON_SECRET);
+    if (!isAuthorized) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Optional debug: ?dryRun=1 returns the plan without sending (admin only — already gated above)
     const dryRun = url.searchParams.get("dryRun") === "1";
-    // Optional: ?userId=... to force-send to one user (for testing from the app)
+    // Optional: ?userId=... to force-send to one user (admin only — already gated above)
     const forceUserId = url.searchParams.get("userId");
 
     const { data: subs, error } = await admin

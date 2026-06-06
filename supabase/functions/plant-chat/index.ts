@@ -29,7 +29,12 @@ serve(async (req) => {
     }
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY is not configured');
+    if (!LOVABLE_API_KEY) {
+      console.error('plant-chat: missing LOVABLE_API_KEY env var');
+      return new Response(JSON.stringify({ error: 'Service temporarily unavailable' }), {
+        status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     const body = await req.json();
     const rawMessages = Array.isArray(body.messages) ? body.messages : [];
@@ -154,7 +159,7 @@ ${langNote}${gardenContext}${weatherInfo}`
     });
   } catch (e) {
     console.error('plant-chat error:', e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : 'Unknown error' }), {
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

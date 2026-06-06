@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, Loader2, Lightbulb, ShieldAlert, ShieldCheck, Activity, Trophy, Sparkles, Leaf } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Lightbulb, ShieldAlert, ShieldCheck, Activity, Trophy, Sparkles, Leaf, Search, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -66,6 +66,55 @@ export default function IdentifyPage() {
   const [nickname, setNickname] = useState("");
   const [selectedAlt, setSelectedAlt] = useState<number>(0);
   const [showDiag, setShowDiag] = useState(false);
+  const [manualQuery, setManualQuery] = useState("");
+  const [manualAdding, setManualAdding] = useState(false);
+
+  const handleManualAdd = async () => {
+    const name = manualQuery.trim();
+    if (name.length < 2) {
+      toast.error("Enter a plant name (min. 2 characters)");
+      return;
+    }
+    setManualAdding(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      // Ask Gemini for care tips for this plant
+      const lang =
+        localStorage.getItem("app_language") ||
+        localStorage.getItem("plant_language") ||
+        "en";
+      let careTips: string | null = null;
+      try {
+        const { data, error } = await supabase.functions.invoke("regenerate-care-tips", {
+          body: { plantName: name, language: lang },
+        });
+        if (!error && data?.careTips) careTips = data.careTips;
+      } catch {
+        // non-fatal — save without tips
+      }
+
+      const { error: insErr } = await supabase.from("plants").insert({
+        user_id: user.id,
+        name,
+        nickname: name,
+        scientific_name: null,
+        confidence: null,
+        image_url: null,
+        care_tips: careTips,
+      });
+      if (insErr) throw insErr;
+
+      toast.success(`${name} ${t("addedToGarden")}`);
+      setManualQuery("");
+      navigate("/garden");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to add plant");
+    } finally {
+      setManualAdding(false);
+    }
+  };
 
   const handleResult = (res: IdentificationResult, img: string) => {
     setResult(res);
@@ -129,6 +178,38 @@ export default function IdentifyPage() {
 
       <div className="px-4 max-w-md mx-auto">
         <CameraCapture onResult={handleResult} language={localStorage.getItem("app_language") || localStorage.getItem("plant_language") || "en"} />
+
+        {/* Manual add — for users who already know the plant */}
+        <div className="mt-4 bg-card rounded-2xl p-4 border border-border">
+          <div className="flex items-center gap-1.5 mb-2">
+            <Search className="w-4 h-4 text-primary" />
+            <h3 className="text-sm font-medium">Know your plant?</h3>
+          </div>
+          <p className="text-xs text-muted-foreground mb-3">
+            Skip identification and add it by name. We'll fetch care tips automatically.
+          </p>
+          <div className="flex gap-2">
+            <Input
+              value={manualQuery}
+              onChange={(e) => setManualQuery(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !manualAdding) handleManualAdd(); }}
+              placeholder="e.g. Snake Plant, Monstera deliciosa"
+              className="rounded-xl h-10"
+              disabled={manualAdding}
+            />
+            <Button
+              onClick={handleManualAdd}
+              disabled={manualAdding || manualQuery.trim().length < 2}
+              variant="cta"
+              className="rounded-xl h-10 gap-1.5 shrink-0"
+            >
+              {manualAdding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+              Add
+            </Button>
+          </div>
+        </div>
+
+
 
         <AnimatePresence>
           {result && (

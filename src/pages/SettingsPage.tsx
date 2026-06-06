@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, LogOut, Moon, Sun, Monitor, User, Lock, Leaf, Loader2, Globe, Bell, BellOff, Languages, Volume2, Clock, Sprout } from "lucide-react";
+import { ArrowLeft, LogOut, Moon, Sun, Monitor, User, Lock, Leaf, Loader2, Globe, Bell, BellOff, Languages, Volume2, Clock, Sprout, Wifi, WifiOff, Trash2, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,7 +12,7 @@ import { useTheme } from "next-themes";
 import BottomNav from "@/components/BottomNav";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { Language } from "@/i18n/translations";
-import { ensurePushSubscription, syncPushSettings, isPushSupported, getReminderTimezone, sendTestPush } from "@/lib/push";
+import { ensurePushSubscription, syncPushSettings, isPushSupported, getReminderTimezone, sendTestPush, type TestPushResult } from "@/lib/push";
 
 const CARE_LANGUAGES = [
   { value: "en", label: "English", flag: "🇬🇧" },
@@ -51,6 +51,54 @@ export default function SettingsPage() {
   const [reminderTime, setReminderTime] = useState(() => localStorage.getItem("reminder_time") || "08:00");
   const [reminderTimezone, setReminderTimezone] = useState(() => getReminderTimezone());
   const [aiValidation, setAiValidation] = useState(() => localStorage.getItem("identify_ai_validation") !== "false");
+  const [testStatus, setTestStatus] = useState<{ state: "idle" | "sending" | "done"; result?: TestPushResult; at?: Date }>({ state: "idle" });
+  const [isOnline, setIsOnline] = useState(() => (typeof navigator !== "undefined" ? navigator.onLine : true));
+  const [careCacheBusy, setCareCacheBusy] = useState(false);
+
+  useEffect(() => {
+    const on = () => setIsOnline(true);
+    const off = () => setIsOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => {
+      window.removeEventListener("online", on);
+      window.removeEventListener("offline", off);
+    };
+  }, []);
+
+  const handleSendTestPush = async () => {
+    setTestStatus({ state: "sending" });
+    const tid = toast.loading("Sending test notification…");
+    const r = await sendTestPush();
+    toast.dismiss(tid);
+    setTestStatus({ state: "done", result: r, at: new Date() });
+    if (r.ok && (r.sentCount ?? 0) > 0) toast.success(`Test sent to ${r.sentCount} subscription${r.sentCount === 1 ? "" : "s"}`);
+    else if (r.ok) toast.error("No subscriptions received the test push");
+    else toast.error(r.error || "Failed to send test");
+  };
+
+  const clearCareDataCache = async () => {
+    if (!("caches" in window)) {
+      toast.error("Cache API not available in this browser");
+      return;
+    }
+    setCareCacheBusy(true);
+    try {
+      const targets = ["supabase-rest-cache", "supabase-images-cache", "weather-cache"];
+      const existing = await caches.keys();
+      const toDelete = existing.filter((k) => targets.includes(k));
+      await Promise.all(toDelete.map((k) => caches.delete(k)));
+      toast.success(
+        toDelete.length > 0
+          ? `Cleared ${toDelete.length} cached store${toDelete.length === 1 ? "" : "s"}`
+          : "No cached care data found"
+      );
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to clear care cache");
+    } finally {
+      setCareCacheBusy(false);
+    }
+  };
 
   const toggleAiValidation = (val: boolean) => {
     setAiValidation(val);
@@ -347,27 +395,129 @@ export default function SettingsPage() {
                 />
               </div>
 
-              <div className="pt-2 border-t border-border">
+              <div className="pt-2 border-t border-border space-y-2">
                 <Button
-                  onClick={async () => {
-                    const tid = toast.loading("Sending test notification…");
-                    const r = await sendTestPush();
-                    toast.dismiss(tid);
-                    if (r.ok) toast.success("Test sent — check your notifications");
-                    else toast.error(r.error || "Failed to send test");
-                  }}
+                  onClick={handleSendTestPush}
+                  disabled={testStatus.state === "sending"}
                   variant="outline"
                   className="w-full rounded-xl h-10 gap-2"
                 >
-                  <Bell className="w-4 h-4" /> Send test notification
+                  {testStatus.state === "sending" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bell className="w-4 h-4" />}
+                  Send test notification
                 </Button>
-                <p className="text-[10px] text-muted-foreground mt-1.5">
+                <p className="text-[10px] text-muted-foreground">
                   Delivers an immediate push to confirm reminders work on this device.
                 </p>
+
+                {testStatus.state === "done" && testStatus.result && (
+                  <div
+                    className={`rounded-xl border p-3 text-xs space-y-1.5 ${
+                      testStatus.result.ok && (testStatus.result.sentCount ?? 0) > 0
+                        ? "bg-primary/5 border-primary/30"
+                        : "bg-destructive/5 border-destructive/30"
+                    }`}
+                    role="status"
+                    aria-live="polite"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium flex items-center gap-1.5">
+                        {testStatus.result.ok && (testStatus.result.sentCount ?? 0) > 0 ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
+                        ) : (
+                          <XCircle className="w-3.5 h-3.5 text-destructive" />
+                        )}
+                        {testStatus.result.ok
+                          ? (testStatus.result.sentCount ?? 0) > 0
+                            ? "Test push delivered"
+                            : "Test sent but no devices received it"
+                          : "Test push failed"}
+                      </span>
+                      {testStatus.at && (
+                        <span className="text-[10px] text-muted-foreground tabular-nums">
+                          {testStatus.at.toLocaleTimeString()}
+                        </span>
+                      )}
+                    </div>
+
+                    {testStatus.result.ok && (
+                      <div className="flex flex-wrap gap-2 text-[10px]">
+                        <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                          {testStatus.result.sentCount ?? 0} / {testStatus.result.total ?? 0} delivered
+                        </span>
+                        {(testStatus.result.failedCount ?? 0) > 0 && (
+                          <span className="px-1.5 py-0.5 rounded bg-destructive/10 text-destructive">
+                            {testStatus.result.failedCount} failed
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {!testStatus.result.ok && testStatus.result.error && (
+                      <p className="text-[11px] text-destructive break-words">{testStatus.result.error}</p>
+                    )}
+
+                    {testStatus.result.results && testStatus.result.results.some((r) => r.error) && (
+                      <details className="text-[10px]">
+                        <summary className="cursor-pointer text-muted-foreground">web-push errors</summary>
+                        <ul className="mt-1 space-y-1">
+                          {testStatus.result.results
+                            .filter((r) => r.error)
+                            .map((r) => (
+                              <li key={r.id} className="font-mono text-destructive break-words">
+                                {r.status ? `[${r.status}] ` : ""}{r.error}
+                              </li>
+                            ))}
+                        </ul>
+                      </details>
+                    )}
+                  </div>
+                )}
               </div>
             </>
           )}
         </div>
+
+        {/* Offline & cached care data */}
+        <div className="bg-card rounded-2xl p-5 border border-border space-y-3">
+          <h2 className="font-serif text-lg flex items-center gap-2">
+            {isOnline ? <Wifi className="w-4 h-4 text-primary" /> : <WifiOff className="w-4 h-4 text-cta" />}
+            Offline mode
+          </h2>
+          <div
+            className={`flex items-center gap-2 rounded-xl border p-2.5 text-xs ${
+              isOnline
+                ? "bg-primary/5 border-primary/20 text-foreground"
+                : "bg-cta/10 border-cta/30 text-cta"
+            }`}
+            role="status"
+            aria-live="polite"
+          >
+            <span
+              className={`inline-block w-2 h-2 rounded-full ${isOnline ? "bg-primary" : "bg-cta animate-pulse"}`}
+            />
+            <span className="flex-1 font-medium">
+              {isOnline ? "Online — fresh data" : "Offline — viewing cached care data"}
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Care instructions, plant info, and time-lapse images are cached so they remain available without a connection.
+          </p>
+          <Button
+            onClick={clearCareDataCache}
+            disabled={careCacheBusy}
+            variant="outline"
+            className="w-full rounded-xl h-10 gap-2"
+          >
+            {careCacheBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+            Clear cached care data
+          </Button>
+          <p className="text-[10px] text-muted-foreground flex items-start gap-1">
+            <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0 text-cta" />
+            Removes saved care instructions, plant data, and time-lapse images from this device. Next visit re-downloads them.
+          </p>
+        </div>
+
+
 
 
         {/* Identification */}

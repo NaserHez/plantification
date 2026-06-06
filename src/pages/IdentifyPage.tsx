@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, Loader2, Lightbulb, ShieldAlert, ShieldCheck, Activity, Trophy, Sparkles, Leaf } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Lightbulb, ShieldAlert, ShieldCheck, Activity, Trophy, Sparkles, Leaf, Search, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +8,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import CameraCapture from "@/components/CameraCapture";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
-import { uploadPlantImage } from "@/lib/supabase-helpers";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 

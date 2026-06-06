@@ -148,13 +148,21 @@ serve(async (req) => {
     }
 
 
-    // Main cron path: require service-role bearer (used by pg_cron) or a configured CRON_SECRET.
+    // Main cron path: require service-role bearer, configured CRON_SECRET, or the vault-stored cron secret used by pg_cron.
     const authHeader = req.headers.get("Authorization") || "";
     const bearer = authHeader.replace(/^Bearer\s+/i, "");
     const CRON_SECRET = Deno.env.get("CRON_SECRET") || "";
-    const isAuthorized =
-      (bearer && bearer === SERVICE_KEY) ||
-      (CRON_SECRET && bearer === CRON_SECRET);
+    let isAuthorized = false;
+    if (bearer) {
+      if (bearer === SERVICE_KEY) isAuthorized = true;
+      else if (CRON_SECRET && bearer === CRON_SECRET) isAuthorized = true;
+      else {
+        try {
+          const { data: vaultSecret } = await admin.rpc("get_cron_watering_secret");
+          if (vaultSecret && bearer === vaultSecret) isAuthorized = true;
+        } catch (_) { /* ignore */ }
+      }
+    }
     if (!isAuthorized) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, LogOut, Moon, Sun, Monitor, User, Lock, Leaf, Loader2, Globe, Bell, BellOff, Languages, Volume2, Clock, Sprout } from "lucide-react";
+import { ArrowLeft, LogOut, Moon, Sun, Monitor, User, Lock, Leaf, Loader2, Globe, Bell, BellOff, Languages, Volume2, Clock, Sprout, Wifi, WifiOff, Trash2, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,7 +12,7 @@ import { useTheme } from "next-themes";
 import BottomNav from "@/components/BottomNav";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { Language } from "@/i18n/translations";
-import { ensurePushSubscription, syncPushSettings, isPushSupported, getReminderTimezone, sendTestPush } from "@/lib/push";
+import { ensurePushSubscription, syncPushSettings, isPushSupported, getReminderTimezone, sendTestPush, type TestPushResult } from "@/lib/push";
 
 const CARE_LANGUAGES = [
   { value: "en", label: "English", flag: "🇬🇧" },
@@ -51,6 +51,54 @@ export default function SettingsPage() {
   const [reminderTime, setReminderTime] = useState(() => localStorage.getItem("reminder_time") || "08:00");
   const [reminderTimezone, setReminderTimezone] = useState(() => getReminderTimezone());
   const [aiValidation, setAiValidation] = useState(() => localStorage.getItem("identify_ai_validation") !== "false");
+  const [testStatus, setTestStatus] = useState<{ state: "idle" | "sending" | "done"; result?: TestPushResult; at?: Date }>({ state: "idle" });
+  const [isOnline, setIsOnline] = useState(() => (typeof navigator !== "undefined" ? navigator.onLine : true));
+  const [careCacheBusy, setCareCacheBusy] = useState(false);
+
+  useEffect(() => {
+    const on = () => setIsOnline(true);
+    const off = () => setIsOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => {
+      window.removeEventListener("online", on);
+      window.removeEventListener("offline", off);
+    };
+  }, []);
+
+  const handleSendTestPush = async () => {
+    setTestStatus({ state: "sending" });
+    const tid = toast.loading("Sending test notification…");
+    const r = await sendTestPush();
+    toast.dismiss(tid);
+    setTestStatus({ state: "done", result: r, at: new Date() });
+    if (r.ok && (r.sentCount ?? 0) > 0) toast.success(`Test sent to ${r.sentCount} subscription${r.sentCount === 1 ? "" : "s"}`);
+    else if (r.ok) toast.error("No subscriptions received the test push");
+    else toast.error(r.error || "Failed to send test");
+  };
+
+  const clearCareDataCache = async () => {
+    if (!("caches" in window)) {
+      toast.error("Cache API not available in this browser");
+      return;
+    }
+    setCareCacheBusy(true);
+    try {
+      const targets = ["supabase-rest-cache", "supabase-images-cache", "weather-cache"];
+      const existing = await caches.keys();
+      const toDelete = existing.filter((k) => targets.includes(k));
+      await Promise.all(toDelete.map((k) => caches.delete(k)));
+      toast.success(
+        toDelete.length > 0
+          ? `Cleared ${toDelete.length} cached store${toDelete.length === 1 ? "" : "s"}`
+          : "No cached care data found"
+      );
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to clear care cache");
+    } finally {
+      setCareCacheBusy(false);
+    }
+  };
 
   const toggleAiValidation = (val: boolean) => {
     setAiValidation(val);

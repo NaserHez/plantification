@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import CameraCapture from "@/components/CameraCapture";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadPlantImage } from "@/lib/supabase-helpers";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 

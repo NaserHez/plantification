@@ -15,6 +15,7 @@ export default {
   	extend: {
   		fontFamily: {
   			sans: [
+  				'Plus Jakarta Sans',
   				'Work Sans',
   				'ui-sans-serif',
   				'system-ui',
@@ -24,8 +25,8 @@ export default {
   				'Roboto',
   				'Helvetica Neue',
   				'Arial',
-  				'Noto Sans',
   				'sans-serif'
+
   			],
   			serif: [
   				'Lora',

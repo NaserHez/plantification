@@ -92,9 +92,11 @@ export default {
   			water: 'hsl(var(--water))',
   			bloom: 'hsl(var(--bloom))',
   			overdue: 'hsl(var(--overdue))',
+  			healthy: 'hsl(var(--healthy))',
   			cta: {
   				DEFAULT: 'hsl(var(--cta))',
   				foreground: 'hsl(var(--cta-foreground))'
+
   			},
   			sidebar: {
   				DEFAULT: 'hsl(var(--sidebar-background))',

@@ -15,6 +15,7 @@ export default {
   	extend: {
   		fontFamily: {
   			sans: [
+  				'Plus Jakarta Sans',
   				'Work Sans',
   				'ui-sans-serif',
   				'system-ui',
@@ -24,8 +25,8 @@ export default {
   				'Roboto',
   				'Helvetica Neue',
   				'Arial',
-  				'Noto Sans',
   				'sans-serif'
+
   			],
   			serif: [
   				'Lora',
@@ -91,9 +92,11 @@ export default {
   			water: 'hsl(var(--water))',
   			bloom: 'hsl(var(--bloom))',
   			overdue: 'hsl(var(--overdue))',
+  			healthy: 'hsl(var(--healthy))',
   			cta: {
   				DEFAULT: 'hsl(var(--cta))',
   				foreground: 'hsl(var(--cta-foreground))'
+
   			},
   			sidebar: {
   				DEFAULT: 'hsl(var(--sidebar-background))',

@@ -1,4 +1,4 @@
-import { Droplets, Sun, MapPin } from "lucide-react";
+import { Droplets, Sun, MapPin, AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -26,16 +26,21 @@ const FREQ_DAYS: Record<string, number> = {
 };
 
 function getWateringStatus(lastWatered?: string | null, frequency?: string | null) {
-  if (!lastWatered || !frequency) return { overdue: false, dueSoon: false };
+  if (!lastWatered || !frequency) return { overdue: false, dueSoon: false, wilting: false };
   const interval = FREQ_DAYS[frequency] || 7;
   const days = (Date.now() - new Date(lastWatered).getTime()) / 86400000;
-  return { overdue: days >= interval, dueSoon: days >= interval - 1 && days < interval };
+  return {
+    overdue: days >= interval,
+    dueSoon: days >= interval - 1 && days < interval,
+    // Severely overdue → visual "wilting" cue (double the interval).
+    wilting: days >= interval * 2,
+  };
 }
 
 export default function PlantCard({ id, name, commonName, scientificName, imageUrl, sunlight, wateringFrequency, location, lastWatered, variant = "card" }: PlantCardProps) {
   const showCommon = commonName && commonName !== name;
   const navigate = useNavigate();
-  const { overdue, dueSoon } = getWateringStatus(lastWatered, wateringFrequency);
+  const { overdue, dueSoon, wilting } = getWateringStatus(lastWatered, wateringFrequency);
   const dropClass = overdue ? "text-overdue animate-pulse" : dueSoon ? "text-sun" : "text-water";
 
   if (variant === "list") {
@@ -43,9 +48,15 @@ export default function PlantCard({ id, name, commonName, scientificName, imageU
       <motion.div
         whileTap={{ scale: 0.98 }}
         onClick={() => navigate(`/plant/${id}`)}
-        className="bg-card rounded-xl overflow-hidden cursor-pointer border border-border shadow-sm hover:shadow-md transition-shadow flex items-center gap-3 p-2"
+        className={cn(
+          "bg-card rounded-xl overflow-hidden cursor-pointer border border-border shadow-sm hover:shadow-md transition-shadow flex items-center gap-3 p-2",
+          wilting && "border-cta/50"
+        )}
+        role="button"
+        tabIndex={0}
+        aria-label={`Open ${name}${wilting ? " — needs urgent care" : ""}`}
       >
-        <div className="w-14 h-14 rounded-lg bg-muted overflow-hidden flex-shrink-0">
+        <div className={cn("w-14 h-14 rounded-lg bg-muted overflow-hidden flex-shrink-0", wilting && "grayscale")}>
           {imageUrl ? (
             <SignedImage src={imageUrl} alt={name} className="w-full h-full object-cover" fallback={<div className="w-full h-full flex items-center justify-center"><span className="text-2xl">🌱</span></div>} />
           ) : (
@@ -59,9 +70,10 @@ export default function PlantCard({ id, name, commonName, scientificName, imageU
         </div>
 
         <div className="flex gap-1.5 flex-shrink-0 items-center">
-          {sunlight && <Sun className="w-3.5 h-3.5 text-sun" />}
-          {wateringFrequency && <Droplets className={cn("w-3.5 h-3.5", dropClass)} />}
-          {location && <MapPin className="w-3.5 h-3.5 text-bloom" />}
+          {wilting && <AlertTriangle className="w-3.5 h-3.5 text-cta" aria-label="Wilting" />}
+          {sunlight && <Sun className="w-3.5 h-3.5 text-sun" aria-hidden />}
+          {wateringFrequency && <Droplets className={cn("w-3.5 h-3.5", dropClass)} aria-hidden />}
+          {location && <MapPin className="w-3.5 h-3.5 text-bloom" aria-hidden />}
         </div>
       </motion.div>
     );
@@ -72,9 +84,15 @@ export default function PlantCard({ id, name, commonName, scientificName, imageU
       whileHover={{ y: -4 }}
       whileTap={{ scale: 0.97 }}
       onClick={() => navigate(`/plant/${id}`)}
-      className="relative bg-card rounded-2xl overflow-hidden cursor-pointer border border-border shadow-sm hover:shadow-md transition-shadow"
+      className={cn(
+        "relative bg-card rounded-2xl overflow-hidden cursor-pointer border border-border shadow-sm hover:shadow-md transition-shadow",
+        wilting && "border-cta/50"
+      )}
+      role="button"
+      tabIndex={0}
+      aria-label={`Open ${name}${wilting ? " — needs urgent care" : ""}`}
     >
-      <div className="aspect-[4/3] bg-muted overflow-hidden relative">
+      <div className={cn("aspect-[4/3] bg-muted overflow-hidden relative", wilting && "grayscale-[0.6]")}>
         {imageUrl ? (
           <SignedImage src={imageUrl} alt={name} className="w-full h-full object-cover" fallback={<div className="w-full h-full flex items-center justify-center"><span className="text-4xl">🌱</span></div>} />
         ) : (
@@ -82,12 +100,17 @@ export default function PlantCard({ id, name, commonName, scientificName, imageU
             <span className="text-4xl">🌱</span>
           </div>
         )}
-        {overdue && (
+        {wilting ? (
+          <div className="absolute top-2 right-2 flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-cta text-[10px] font-medium text-white shadow-sm">
+            <AlertTriangle className="w-3 h-3" />
+            <span>Wilting</span>
+          </div>
+        ) : overdue ? (
           <div className="absolute top-2 right-2 flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-overdue text-[10px] font-medium text-white shadow-sm">
             <Droplets className="w-3 h-3" />
             <span>Water</span>
           </div>
-        )}
+        ) : null}
       </div>
       <div className="p-3">
         <h3 className="font-serif text-base font-medium truncate">{name}</h3>
@@ -99,9 +122,9 @@ export default function PlantCard({ id, name, commonName, scientificName, imageU
         )}
 
         <div className="flex gap-2 mt-2 items-center">
-          {sunlight && <Sun className="w-3.5 h-3.5 text-sun" />}
-          {wateringFrequency && <Droplets className={cn("w-3.5 h-3.5", dropClass)} />}
-          {location && <MapPin className="w-3.5 h-3.5 text-bloom" />}
+          {sunlight && <Sun className="w-3.5 h-3.5 text-sun" aria-hidden />}
+          {wateringFrequency && <Droplets className={cn("w-3.5 h-3.5", dropClass)} aria-hidden />}
+          {location && <MapPin className="w-3.5 h-3.5 text-bloom" aria-hidden />}
         </div>
       </div>
     </motion.div>

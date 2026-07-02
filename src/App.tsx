@@ -24,6 +24,10 @@ import InstallBanner from "./components/InstallBanner";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import CommunityPage from "./pages/CommunityPage";
 import PublicGardenPage from "./pages/PublicGardenPage";
+import LightMeterPage from "./pages/LightMeterPage";
+import JoinGardenPage from "./pages/JoinGardenPage";
+import SharedGardensPage from "./pages/SharedGardensPage";
+import OnboardingTour from "./components/OnboardingTour";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -62,8 +66,10 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/community" element={<CommunityPage />} />
               <Route path="/garden/:userId" element={<PublicGardenPage />} />
+              <Route path="/join/:code" element={<JoinGardenPage />} />
               <Route path="/*" element={
                 <AuthGate>
+                  <OnboardingTour />
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/identify" element={<IdentifyPage />} />
@@ -76,6 +82,8 @@ const App = () => (
                     <Route path="/notifications" element={<NotificationsPage />} />
                     <Route path="/planting-calendar" element={<PlantingCalendarPage />} />
                     <Route path="/weather" element={<WeatherCenterPage />} />
+                    <Route path="/light-meter" element={<LightMeterPage />} />
+                    <Route path="/shared-gardens" element={<SharedGardensPage />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                   <InstallBanner />

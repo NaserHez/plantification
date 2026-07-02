@@ -14,6 +14,77 @@ export type Database = {
   }
   public: {
     Tables: {
+      badges: {
+        Row: {
+          code: string
+          description: string
+          icon: string | null
+          name: string
+        }
+        Insert: {
+          code: string
+          description: string
+          icon?: string | null
+          name: string
+        }
+        Update: {
+          code?: string
+          description?: string
+          icon?: string | null
+          name?: string
+        }
+        Relationships: []
+      }
+      care_schedules: {
+        Row: {
+          created_at: string
+          id: string
+          interval_days: number
+          is_paused: boolean
+          last_done_at: string | null
+          next_due_at: string
+          notes: string | null
+          plant_id: string
+          task_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          interval_days: number
+          is_paused?: boolean
+          last_done_at?: string | null
+          next_due_at?: string
+          notes?: string | null
+          plant_id: string
+          task_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          interval_days?: number
+          is_paused?: boolean
+          last_done_at?: string | null
+          next_due_at?: string
+          notes?: string | null
+          plant_id?: string
+          task_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "care_schedules_plant_id_fkey"
+            columns: ["plant_id"]
+            isOneToOne: false
+            referencedRelation: "plants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_notifications: {
         Row: {
           actor_id: string
@@ -208,13 +279,18 @@ export type Database = {
           id: string
           image_url: string | null
           is_public: boolean
+          last_light_at: string | null
+          last_light_lux: number | null
+          last_light_reading: string | null
           last_watered: string | null
+          light_requirement: string | null
           location: string | null
           name: string
           nickname: string | null
           notes: string | null
           pot_size: string | null
           scientific_name: string | null
+          shared_garden_id: string | null
           sunlight: string | null
           updated_at: string
           user_id: string
@@ -227,13 +303,18 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_public?: boolean
+          last_light_at?: string | null
+          last_light_lux?: number | null
+          last_light_reading?: string | null
           last_watered?: string | null
+          light_requirement?: string | null
           location?: string | null
           name: string
           nickname?: string | null
           notes?: string | null
           pot_size?: string | null
           scientific_name?: string | null
+          shared_garden_id?: string | null
           sunlight?: string | null
           updated_at?: string
           user_id: string
@@ -246,19 +327,32 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_public?: boolean
+          last_light_at?: string | null
+          last_light_lux?: number | null
+          last_light_reading?: string | null
           last_watered?: string | null
+          light_requirement?: string | null
           location?: string | null
           name?: string
           nickname?: string | null
           notes?: string | null
           pot_size?: string | null
           scientific_name?: string | null
+          shared_garden_id?: string | null
           sunlight?: string | null
           updated_at?: string
           user_id?: string
           watering_frequency?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "plants_shared_garden_id_fkey"
+            columns: ["shared_garden_id"]
+            isOneToOne: false
+            referencedRelation: "shared_gardens"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       post_comments: {
         Row: {
@@ -364,25 +458,37 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          current_streak: number
           display_name: string | null
           garden_bio: string | null
           id: string
+          last_care_date: string | null
+          longest_streak: number
+          onboarded_at: string | null
           user_id: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          current_streak?: number
           display_name?: string | null
           garden_bio?: string | null
           id?: string
+          last_care_date?: string | null
+          longest_streak?: number
+          onboarded_at?: string | null
           user_id: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          current_streak?: number
           display_name?: string | null
           garden_bio?: string | null
           id?: string
+          last_care_date?: string | null
+          longest_streak?: number
+          onboarded_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -432,12 +538,102 @@ export type Database = {
         }
         Relationships: []
       }
+      shared_garden_members: {
+        Row: {
+          garden_id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          garden_id: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          garden_id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_garden_members_garden_id_fkey"
+            columns: ["garden_id"]
+            isOneToOne: false
+            referencedRelation: "shared_gardens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shared_gardens: {
+        Row: {
+          created_at: string
+          id: string
+          invite_code: string
+          name: string
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invite_code?: string
+          name: string
+          owner_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invite_code?: string
+          name?: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_badges: {
+        Row: {
+          badge_code: string
+          earned_at: string
+          user_id: string
+        }
+        Insert: {
+          badge_code: string
+          earned_at?: string
+          user_id: string
+        }
+        Update: {
+          badge_code?: string
+          earned_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_badge_code_fkey"
+            columns: ["badge_code"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      garden_owner: { Args: { _garden: string }; Returns: string }
       get_cron_watering_secret: { Args: never; Returns: string }
+      grant_badge: {
+        Args: { _code: string; _user: string }
+        Returns: undefined
+      }
+      is_garden_member: {
+        Args: { _garden: string; _user: string }
+        Returns: boolean
+      }
+      join_shared_garden: { Args: { _code: string }; Returns: string }
+      record_care_action: { Args: { _plant: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

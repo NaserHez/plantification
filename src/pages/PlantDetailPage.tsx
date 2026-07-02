@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Droplets, Sun, MapPin, Trash2, Loader2, Stethoscope, Globe, RefreshCw, Bot, Home, Eye, Camera } from "lucide-react";
+import { ArrowLeft, Droplets, Sun, MapPin, Trash2, Loader2, Stethoscope, Globe, RefreshCw, Bot, Home, Eye, Camera, SunMedium } from "lucide-react";
+import CareSchedulePanel from "@/components/CareSchedulePanel";
 import PlantGallery from "@/components/PlantGallery";
 import { uploadPlantImage, compressImage } from "@/lib/supabase-helpers";
 import HealthTimeline from "@/components/HealthTimeline";
@@ -90,6 +91,8 @@ export default function PlantDetailPage() {
     const now = new Date().toISOString();
     await supabase.from("plants").update({ last_watered: now }).eq("id", id);
     setPlant((p: any) => ({ ...p, last_watered: now }));
+    // Best-effort streak update — ignore errors.
+    (supabase as any).rpc("record_care_action", { _plant: id }).then(() => {});
     toast.success(t("watered"));
     setSaving(false);
   };
@@ -328,6 +331,20 @@ export default function PlantDetailPage() {
               />
             </div>
           </div>
+
+          {id && (
+            <div className="mt-6 space-y-4">
+              <CareSchedulePanel plantId={id} wateringFrequency={plant.watering_frequency} />
+              <Button
+                onClick={() => navigate(`/light-meter?plant=${id}`)}
+                variant="outline"
+                className="w-full rounded-xl h-10 gap-2"
+              >
+                <SunMedium className="w-4 h-4 text-sun" />
+                {plant.last_light_reading ? `Light: ${plant.last_light_reading} — measure again` : "Measure light with camera"}
+              </Button>
+            </div>
+          )}
 
           {id && <PlantGallery plantId={id} />}
           

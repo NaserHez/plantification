@@ -258,6 +258,16 @@ export default function SettingsPage() {
   };
 
   const handleSignOut = async () => {
+    // Clear cached private data before signing out so the next user on a shared
+    // device can't see the previous user's plants/journal/images via NetworkFirst fallback.
+    try {
+      if ("caches" in window) {
+        const targets = ["supabase-rest-cache", "supabase-images-cache"];
+        await Promise.all(targets.map((n) => caches.delete(n)));
+      }
+    } catch {
+      // best-effort
+    }
     await supabase.auth.signOut();
     navigate("/");
   };

@@ -1,18 +1,16 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Leaf, Loader2, Eye, EyeOff, CheckCircle2, AlertCircle } from "lucide-react";
+import { Leaf, Loader2, Eye, EyeOff, CheckCircle2, AlertCircle, Mail, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/i18n/LanguageContext";
 
-// RFC-5322-lite email pattern — good enough for instant client feedback.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-// Small list of the most breached passwords to block outright (OWASP guidance).
 const COMMON_PASSWORDS = new Set([
   "password", "password1", "password123", "12345678", "123456789", "qwerty",
   "qwerty123", "111111", "iloveyou", "abc123", "letmein", "welcome",
@@ -53,15 +51,43 @@ function friendlyAuthError(msg: string, mode: "login" | "signup"): string {
   return mode === "signup" ? `Could not create account: ${msg}` : `Could not sign in: ${msg}`;
 }
 
+// Parse the OAuth/verification error passed back via URL hash — e.g. `#error=access_denied&error_description=...`
+function parseHashError(): string | null {
+  if (typeof window === "undefined") return null;
+  const h = window.location.hash.replace(/^#/, "");
+  if (!h) return null;
+  const p = new URLSearchParams(h);
+  const desc = p.get("error_description") || p.get("error");
+  return desc ? decodeURIComponent(desc.replace(/\+/g, " ")) : null;
+}
+
 export default function AuthForm() {
-  const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
+  const [mode, setMode] = useState<"login" | "signup" | "forgot" | "check-inbox">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [touched, setTouched] = useState<{ email?: boolean; password?: boolean }>({});
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resending, setResending] = useState(false);
   const { t } = useLanguage();
+
+  // Surface auth callback errors from the URL hash on first mount.
+  useEffect(() => {
+    const err = parseHashError();
+    if (err) {
+      toast.error(err);
+      history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
+  }, []);
+
+  // Countdown for the resend button.
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setTimeout(() => setResendCooldown((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendCooldown]);
 
   const emailValid = EMAIL_RE.test(email.trim());
   const strength = useMemo(() => scorePassword(password), [password]);
@@ -95,7 +121,7 @@ export default function AuthForm() {
         const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (error) throw error;
         toast.success("Welcome back!");
-      } else {
+      } else if (mode === "signup") {
         const { error, data } = await supabase.auth.signUp({
           email: email.trim(),
           password,
@@ -103,15 +129,36 @@ export default function AuthForm() {
         });
         if (error) throw error;
         if (data.user && !data.session) {
-          toast.success(t("checkEmail"));
+          // Verification required — show the dedicated screen instead of a toast.
+          setMode("check-inbox");
+          setResendCooldown(60);
         } else {
           toast.success("Account created! Welcome to your garden.");
         }
       }
     } catch (err: any) {
-      toast.error(friendlyAuthError(err?.message ?? "Something went wrong.", mode === "forgot" ? "login" : mode));
+      toast.error(friendlyAuthError(err?.message ?? "Something went wrong.", mode === "forgot" ? "login" : (mode as any)));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (resendCooldown > 0 || resending) return;
+    setResending(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: email.trim(),
+        options: { emailRedirectTo: window.location.origin },
+      });
+      if (error) throw error;
+      toast.success("Verification email sent again.");
+      setResendCooldown(60);
+    } catch (err: any) {
+      toast.error(friendlyAuthError(err?.message ?? "Could not resend.", "signup"));
+    } finally {
+      setResending(false);
     }
   };
 
@@ -133,9 +180,62 @@ export default function AuthForm() {
     }
   };
 
+  // ============ Check-inbox screen ============
+  if (mode === "check-inbox") {
+    return (
+      <div className="min-h-dvh flex items-center justify-center bg-background px-4">
+        <motion.main
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-sm text-center"
+          role="status"
+          aria-live="polite"
+        >
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-4">
+            <Mail className="w-8 h-8 text-primary" />
+          </div>
+          <h1 className="text-2xl font-serif mb-2">Check your inbox</h1>
+          <p className="text-sm text-muted-foreground">
+            We just sent a verification link to
+          </p>
+          <p className="text-sm font-medium text-foreground break-all mt-1">{email}</p>
+          <p className="text-xs text-muted-foreground mt-4 leading-relaxed">
+            Click the link in that email to activate your account. If you don't see it, check your spam folder.
+          </p>
+
+          <div className="mt-6 space-y-2">
+            <Button
+              type="button"
+              onClick={handleResend}
+              disabled={resendCooldown > 0 || resending}
+              className="w-full h-11 rounded-xl"
+            >
+              {resending ? <Loader2 className="w-4 h-4 animate-spin" /> :
+                resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend verification link"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => { setMode("signup"); setEmail(""); setPassword(""); }}
+              className="w-full h-11 rounded-xl gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" /> Wrong email? Start over
+            </Button>
+            <p className="text-[11px] text-muted-foreground pt-2">
+              Trouble? Email{" "}
+              <a href="mailto:support@plantification.app" className="text-primary underline">
+                support@plantification.app
+              </a>.
+            </p>
+          </div>
+        </motion.main>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <motion.div
+    <div className="min-h-dvh flex items-center justify-center bg-background px-4">
+      <motion.main
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-sm"
@@ -328,7 +428,7 @@ export default function AuthForm() {
               {googleLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden>
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
                   <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
                   <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
@@ -346,7 +446,7 @@ export default function AuthForm() {
             </p>
           </>
         )}
-      </motion.div>
+      </motion.main>
     </div>
   );
 }

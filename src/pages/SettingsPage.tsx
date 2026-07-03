@@ -149,12 +149,17 @@ export default function SettingsPage() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("display_name, garden_bio")
+        .select("display_name, garden_bio, unit_system")
         .eq("user_id", user.id)
         .maybeSingle();
 
       if (profile?.display_name) setDisplayName(profile.display_name);
       if (profile?.garden_bio) setGardenBio(profile.garden_bio);
+      if ((profile as any)?.unit_system) {
+        const u = ((profile as any).unit_system === "imperial" ? "imperial" : "metric") as UnitSystem;
+        setUnits(u);
+        setUnitSystem(u);
+      }
 
       const saved = localStorage.getItem("garden_name");
       if (saved) setGardenName(saved);

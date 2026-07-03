@@ -396,12 +396,6 @@ export default function AuthForm() {
                     <p className="text-[10px] text-muted-foreground">
                       We check against public breach databases and reject compromised passwords.
                     </p>
-                      {password && strength.score >= 3 && (
-                        <span className="text-primary flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5" /> Good
-                        </span>
-                      )}
-                    </div>
                     {passwordError && (
                       <p role="alert" className="text-xs text-destructive flex items-center gap-1">
                         <AlertCircle className="w-3.5 h-3.5" /> {passwordError}

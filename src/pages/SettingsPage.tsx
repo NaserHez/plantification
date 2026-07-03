@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, LogOut, Moon, Sun, Monitor, User, Lock, Leaf, Loader2, Globe, Bell, BellOff, Languages, Volume2, Clock, Sprout, Wifi, WifiOff, Trash2, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, LogOut, Moon, Sun, Monitor, User, Lock, Leaf, Loader2, Globe, Bell, BellOff, Languages, Volume2, Clock, Sprout, Wifi, WifiOff, Trash2, CheckCircle2, XCircle, AlertTriangle, Ruler, Shield, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +13,9 @@ import BottomNav from "@/components/BottomNav";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { Language } from "@/i18n/translations";
 import { ensurePushSubscription, syncPushSettings, isPushSupported, getReminderTimezone, sendTestPush, type TestPushResult } from "@/lib/push";
+import { getUnitSystem, setUnitSystem, type UnitSystem } from "@/lib/units";
+import MfaSection from "@/components/MfaSection";
+import ReauthDialog from "@/components/ReauthDialog";
 
 const CARE_LANGUAGES = [
   { value: "en", label: "English", flag: "🇬🇧" },
@@ -54,6 +57,10 @@ export default function SettingsPage() {
   const [testStatus, setTestStatus] = useState<{ state: "idle" | "sending" | "done"; result?: TestPushResult; at?: Date }>({ state: "idle" });
   const [isOnline, setIsOnline] = useState(() => (typeof navigator !== "undefined" ? navigator.onLine : true));
   const [careCacheBusy, setCareCacheBusy] = useState(false);
+  const [units, setUnits] = useState<UnitSystem>(() => getUnitSystem());
+  const [reauthOpen, setReauthOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const on = () => setIsOnline(true);

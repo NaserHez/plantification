@@ -284,6 +284,49 @@ export default function SettingsPage() {
     navigate("/");
   };
 
+  const handleUnitChange = async (next: UnitSystem) => {
+    setUnits(next);
+    setUnitSystem(next);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from("profiles").upsert(
+          { user_id: user.id, unit_system: next } as any,
+          { onConflict: "user_id" }
+        );
+      }
+    } catch { /* offline / non-critical */ }
+    toast.success(t("settingsSaved"));
+  };
+
+  const performDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("delete-account", {
+        body: { confirm: "DELETE" },
+      });
+      if (error) throw error;
+      if ((data as any)?.deleted) {
+        // Clear caches then sign out.
+        try {
+          if ("caches" in window) {
+            const keys = await caches.keys();
+            await Promise.all(keys.map((k) => caches.delete(k)));
+          }
+        } catch { /* noop */ }
+        await supabase.auth.signOut();
+        toast.success("Your account has been deleted");
+        navigate("/");
+      } else {
+        throw new Error("Deletion did not complete");
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to delete account");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">

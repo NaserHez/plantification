@@ -26,8 +26,9 @@ function scorePassword(pw: string): Strength {
   let s = 0;
   if (pw.length >= 8) s++;
   if (pw.length >= 12) s++;
+  if (pw.length >= 15) s++; // NIST-aligned passphrase length
   if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) s++;
-  if (/\d/.test(pw) && /[^A-Za-z0-9]/.test(pw)) s++;
+  if (/\d/.test(pw) || /[^A-Za-z0-9]/.test(pw)) s++;
   const score = Math.min(4, s) as Strength["score"];
   const labels = ["", "Weak", "Fair", "Strong", "Excellent"];
   const tones = ["bg-muted", "bg-destructive", "bg-sun", "bg-primary", "bg-primary"];
@@ -42,8 +43,10 @@ function friendlyAuthError(msg: string, mode: "login" | "signup"): string {
     return "Incorrect email or password. Please try again.";
   if (m.includes("email not confirmed"))
     return "Please confirm your email address, then sign in.";
+  if (m.includes("pwned") || m.includes("compromised") || m.includes("breach") || m.includes("data leak"))
+    return "This password has appeared in a public data breach. Please choose a different one — a passphrase of 4+ random words works well.";
   if (m.includes("weak") || m.includes("password should"))
-    return "Password is too weak. Use at least 8 characters with a mix of letters, numbers, and symbols.";
+    return "Password is too weak. Use at least 8 characters — a passphrase of 4+ words is easier to remember and harder to guess.";
   if (m.includes("rate") || m.includes("too many"))
     return "Too many attempts. Please wait a moment and try again.";
   if (m.includes("network") || m.includes("fetch"))
@@ -382,7 +385,7 @@ export default function AuthForm() {
                         role="status"
                         aria-live="polite"
                       >
-                        {password ? `Strength: ${strength.label}` : "Use 8+ characters — a passphrase works best"}
+                        {password ? `Strength: ${strength.label}` : "Use 8+ characters — a passphrase of 4 random words is strongest"}
                       </span>
                       {password && strength.score >= 3 && (
                         <span className="text-primary flex items-center gap-1">
@@ -390,6 +393,9 @@ export default function AuthForm() {
                         </span>
                       )}
                     </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      We check against public breach databases and reject compromised passwords.
+                    </p>
                     {passwordError && (
                       <p role="alert" className="text-xs text-destructive flex items-center gap-1">
                         <AlertCircle className="w-3.5 h-3.5" /> {passwordError}

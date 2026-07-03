@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
+import { useUnits } from "@/hooks/use-units";
 
 // Convert relative brightness to a bucket + rough lux estimate.
 // This is a coarse heuristic — mobile browsers don't expose true ISO/exposure,
@@ -22,6 +23,7 @@ export default function LightMeterPage() {
   const nav = useNavigate();
   const [params] = useSearchParams();
   const plantId = params.get("plant");
+  const units = useUnits();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -134,7 +136,12 @@ export default function LightMeterPage() {
           <div className={`rounded-2xl p-4 border border-border ${bucket.tone}`} role="status" aria-live="polite">
             <div className="text-xs uppercase tracking-wide opacity-70">Reading</div>
             <div className="text-2xl font-serif">{bucket.label}</div>
-            <div className="text-xs opacity-80">~{bucket.lux.toLocaleString()} lux · mean {Math.round(mean)}/255</div>
+            <div className="text-xs opacity-80">
+              {units === "imperial"
+                ? `~${Math.round(bucket.lux / 10.764).toLocaleString()} fc`
+                : `~${bucket.lux.toLocaleString()} lux`}
+              {" · mean "}{Math.round(mean)}/255
+            </div>
           </div>
         )}
 

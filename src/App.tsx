@@ -28,6 +28,7 @@ import LightMeterPage from "./pages/LightMeterPage";
 import JoinGardenPage from "./pages/JoinGardenPage";
 import SharedGardensPage from "./pages/SharedGardensPage";
 import OnboardingTour from "./components/OnboardingTour";
+import PrivacyPage from "./pages/PrivacyPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -64,6 +65,7 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/community" element={<CommunityPage />} />
               <Route path="/garden/:userId" element={<PublicGardenPage />} />
               <Route path="/join/:code" element={<JoinGardenPage />} />

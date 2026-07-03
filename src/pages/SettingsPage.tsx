@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, LogOut, Moon, Sun, Monitor, User, Lock, Leaf, Loader2, Globe, Bell, BellOff, Languages, Volume2, Clock, Sprout, Wifi, WifiOff, Trash2, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, LogOut, Moon, Sun, Monitor, User, Lock, Leaf, Loader2, Globe, Bell, BellOff, Languages, Volume2, Clock, Sprout, Wifi, WifiOff, Trash2, CheckCircle2, XCircle, AlertTriangle, Ruler, Shield, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +13,9 @@ import BottomNav from "@/components/BottomNav";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { Language } from "@/i18n/translations";
 import { ensurePushSubscription, syncPushSettings, isPushSupported, getReminderTimezone, sendTestPush, type TestPushResult } from "@/lib/push";
+import { getUnitSystem, setUnitSystem, type UnitSystem } from "@/lib/units";
+import MfaSection from "@/components/MfaSection";
+import ReauthDialog from "@/components/ReauthDialog";
 
 const CARE_LANGUAGES = [
   { value: "en", label: "English", flag: "🇬🇧" },
@@ -54,6 +57,10 @@ export default function SettingsPage() {
   const [testStatus, setTestStatus] = useState<{ state: "idle" | "sending" | "done"; result?: TestPushResult; at?: Date }>({ state: "idle" });
   const [isOnline, setIsOnline] = useState(() => (typeof navigator !== "undefined" ? navigator.onLine : true));
   const [careCacheBusy, setCareCacheBusy] = useState(false);
+  const [units, setUnits] = useState<UnitSystem>(() => getUnitSystem());
+  const [reauthOpen, setReauthOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const on = () => setIsOnline(true);
@@ -142,12 +149,17 @@ export default function SettingsPage() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("display_name, garden_bio")
+        .select("display_name, garden_bio, unit_system")
         .eq("user_id", user.id)
         .maybeSingle();
 
       if (profile?.display_name) setDisplayName(profile.display_name);
       if (profile?.garden_bio) setGardenBio(profile.garden_bio);
+      if ((profile as any)?.unit_system) {
+        const u = ((profile as any).unit_system === "imperial" ? "imperial" : "metric") as UnitSystem;
+        setUnits(u);
+        setUnitSystem(u);
+      }
 
       const saved = localStorage.getItem("garden_name");
       if (saved) setGardenName(saved);
@@ -270,6 +282,49 @@ export default function SettingsPage() {
     }
     await supabase.auth.signOut();
     navigate("/");
+  };
+
+  const handleUnitChange = async (next: UnitSystem) => {
+    setUnits(next);
+    setUnitSystem(next);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from("profiles").upsert(
+          { user_id: user.id, unit_system: next } as any,
+          { onConflict: "user_id" }
+        );
+      }
+    } catch { /* offline / non-critical */ }
+    toast.success(t("settingsSaved"));
+  };
+
+  const performDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("delete-account", {
+        body: { confirm: "DELETE" },
+      });
+      if (error) throw error;
+      if ((data as any)?.deleted) {
+        // Clear caches then sign out.
+        try {
+          if ("caches" in window) {
+            const keys = await caches.keys();
+            await Promise.all(keys.map((k) => caches.delete(k)));
+          }
+        } catch { /* noop */ }
+        await supabase.auth.signOut();
+        toast.success("Your account has been deleted");
+        navigate("/");
+      } else {
+        throw new Error("Deletion did not complete");
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to delete account");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   if (loading) {
@@ -610,11 +665,107 @@ export default function SettingsPage() {
           </Button>
         </div>
 
+        {/* Units */}
+        <div className="bg-card rounded-2xl p-5 border border-border space-y-3">
+          <h2 className="font-serif text-lg flex items-center gap-2">
+            <Ruler className="w-4 h-4 text-primary" /> Units
+          </h2>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => handleUnitChange("metric")}
+              className={`rounded-xl px-3 py-3 text-sm border transition-colors ${
+                units === "metric"
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-muted text-muted-foreground border-border hover:border-primary/30"
+              }`}
+              aria-pressed={units === "metric"}
+            >
+              <div className="font-medium">Metric</div>
+              <div className="text-[10px] opacity-80">°C · km/h · mm · lux</div>
+            </button>
+            <button
+              onClick={() => handleUnitChange("imperial")}
+              className={`rounded-xl px-3 py-3 text-sm border transition-colors ${
+                units === "imperial"
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-muted text-muted-foreground border-border hover:border-primary/30"
+              }`}
+              aria-pressed={units === "imperial"}
+            >
+              <div className="font-medium">Imperial</div>
+              <div className="text-[10px] opacity-80">°F · mph · in · fc</div>
+            </button>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            Affects weather, wind, plant height, and light meter readings.
+          </p>
+        </div>
+
+        {/* MFA */}
+        <MfaSection />
+
+        {/* Privacy */}
+        <div className="bg-card rounded-2xl p-5 border border-border space-y-2">
+          <h2 className="font-serif text-lg flex items-center gap-2">
+            <Shield className="w-4 h-4 text-primary" /> Privacy
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            See what we collect, how it's stored, and the controls you have over your data.
+          </p>
+          <Link
+            to="/privacy"
+            className="inline-flex items-center justify-center w-full rounded-xl h-10 border border-border hover:bg-muted text-sm font-medium"
+          >
+            View privacy details
+          </Link>
+        </div>
+
         {/* Sign Out */}
         <Button onClick={handleSignOut} variant="outline" className="w-full rounded-xl h-10 gap-2 text-destructive border-destructive/30 hover:bg-destructive/10">
           <LogOut className="w-4 h-4" /> {t("signOut")}
         </Button>
+
+        {/* Danger zone: delete account */}
+        <div className="bg-card rounded-2xl p-5 border border-destructive/30 space-y-3">
+          <h2 className="font-serif text-lg flex items-center gap-2 text-destructive">
+            <ShieldAlert className="w-4 h-4" /> Danger zone
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            Deleting your account permanently removes your profile, plants, photos,
+            journal entries, care schedules, community posts, and sign-in
+            credentials. This cannot be undone.
+          </p>
+          <Label htmlFor="delete-confirm" className="text-xs text-muted-foreground">
+            Type <span className="font-mono font-semibold text-destructive">DELETE</span> to confirm
+          </Label>
+          <Input
+            id="delete-confirm"
+            value={deleteConfirm}
+            onChange={(e) => setDeleteConfirm(e.target.value)}
+            placeholder="DELETE"
+            className="rounded-xl h-10 font-mono"
+          />
+          <Button
+            onClick={() => setReauthOpen(true)}
+            disabled={deleteConfirm !== "DELETE" || deleting}
+            variant="outline"
+            className="w-full rounded-xl h-10 gap-2 text-destructive border-destructive/40 hover:bg-destructive/10"
+          >
+            {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+            Permanently delete my account
+          </Button>
+        </div>
       </div>
+
+      <ReauthDialog
+        open={reauthOpen}
+        onOpenChange={setReauthOpen}
+        email={email}
+        title="Confirm account deletion"
+        description="Re-enter your password to permanently delete your account. This cannot be undone."
+        confirmLabel="Delete account"
+        onConfirmed={performDeleteAccount}
+      />
 
       <BottomNav />
     </div>

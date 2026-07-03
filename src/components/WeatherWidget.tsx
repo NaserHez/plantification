@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Cloud, Sun, CloudRain, Snowflake, Wind, Droplets, Thermometer, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { formatTemp, formatWind } from "@/lib/units";
+import { useUnits } from "@/hooks/use-units";
 
 interface WeatherData {
   temperature: number;
@@ -76,10 +78,12 @@ function getWeatherLabel(code: number, lang: string): string {
 
 export default function WeatherWidget() {
   const { t, language } = useLanguage();
+  const units = useUnits();
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [city, setCity] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+
 
   useEffect(() => {
     const fetchWeather = async () => {
@@ -171,7 +175,7 @@ export default function WeatherWidget() {
           </div>
         </div>
         <div className="text-right">
-          <span className="text-2xl font-semibold">{weather.temperature}°C</span>
+          <span className="text-2xl font-semibold">{formatTemp(weather.temperature, units)}</span>
           <p className="text-[10px] text-muted-foreground">{weatherLabel}</p>
         </div>
       </div>
@@ -183,7 +187,7 @@ export default function WeatherWidget() {
         </div>
         <div className="flex items-center gap-1">
           <Wind className="w-3.5 h-3.5" />
-          {weather.windSpeed} km/h
+          {formatWind(weather.windSpeed, units)}
         </div>
       </div>
 

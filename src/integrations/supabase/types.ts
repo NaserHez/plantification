@@ -465,6 +465,7 @@ export type Database = {
           last_care_date: string | null
           longest_streak: number
           onboarded_at: string | null
+          unit_system: string
           user_id: string
         }
         Insert: {
@@ -477,6 +478,7 @@ export type Database = {
           last_care_date?: string | null
           longest_streak?: number
           onboarded_at?: string | null
+          unit_system?: string
           user_id: string
         }
         Update: {
@@ -489,6 +491,7 @@ export type Database = {
           last_care_date?: string | null
           longest_streak?: number
           onboarded_at?: string | null
+          unit_system?: string
           user_id?: string
         }
         Relationships: []

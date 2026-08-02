@@ -204,6 +204,7 @@ export type Database = {
           display_name: string | null
           garden_bio: string | null
           id: string
+          unit_system: string
           user_id: string
         }
         Insert: {
@@ -212,6 +213,7 @@ export type Database = {
           display_name?: string | null
           garden_bio?: string | null
           id?: string
+          unit_system?: string
           user_id: string
         }
         Update: {
@@ -220,6 +222,7 @@ export type Database = {
           display_name?: string | null
           garden_bio?: string | null
           id?: string
+          unit_system?: string
           user_id?: string
         }
         Relationships: []

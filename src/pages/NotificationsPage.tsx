@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Droplets, BellOff, Bell, BellRing, CalendarClock, MapPin, List as ListIcon } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
@@ -244,7 +244,7 @@ export default function NotificationsPage() {
         </motion.div>
 
         {/* Overdue plants list */}
-        {overdue.length === 0 && upcoming.length === 0 && activity.length === 0 ? (
+        {overdue.length === 0 && upcoming.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

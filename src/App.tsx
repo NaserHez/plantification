@@ -22,7 +22,6 @@ import PlantingCalendarPage from "./pages/PlantingCalendarPage";
 import WeatherCenterPage from "./pages/WeatherCenterPage";
 import InstallBanner from "./components/InstallBanner";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
-import CommunityPage from "./pages/CommunityPage";
 import PublicGardenPage from "./pages/PublicGardenPage";
 import LightMeterPage from "./pages/LightMeterPage";
 import JoinGardenPage from "./pages/JoinGardenPage";
@@ -66,7 +65,7 @@ const App = () => (
             <Routes>
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/privacy" element={<PrivacyPage />} />
-              <Route path="/community" element={<CommunityPage />} />
+              
               <Route path="/garden/:userId" element={<PublicGardenPage />} />
               <Route path="/join/:code" element={<JoinGardenPage />} />
               <Route path="/*" element={

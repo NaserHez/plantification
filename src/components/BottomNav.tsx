@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Camera, Leaf, Home, Menu, Stethoscope, Bot, CloudSun, Users, Calendar, Bell, Settings, X } from "lucide-react";
+import { Camera, Leaf, Home, Menu, Stethoscope, Bot, CloudSun, Calendar, Bell, Settings } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -16,12 +16,11 @@ export default function BottomNav() {
     { path: "/", icon: Home, label: t("home") },
     { path: "/identify", icon: Camera, label: t("identify") },
     { path: "/garden", icon: Leaf, label: t("garden") },
-    { path: "/community", icon: Users, label: t("community") },
+    { path: "/diagnose", icon: Stethoscope, label: t("health") },
   ];
 
   // Items moved into the menu
   const menuItems = [
-    { path: "/diagnose", icon: Stethoscope, label: t("health") },
     { path: "/chat", icon: Bot, label: t("aiChat") },
     { path: "/weather", icon: CloudSun, label: t("weather") },
     { path: "/planting-calendar", icon: Calendar, label: t("plantingCalendar") || "Planting Calendar" },

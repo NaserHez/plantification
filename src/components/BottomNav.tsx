@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Camera, Leaf, Home, Menu, Stethoscope, Bot, CloudSun, Calendar, Bell, Settings } from "lucide-react";
+import { Camera, Leaf, Home, Menu, Stethoscope, Bot, CloudSun, Calendar } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/i18n/LanguageContext";

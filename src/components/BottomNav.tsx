@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Camera, Leaf, Home, Menu, Stethoscope, Bot, CloudSun, Calendar, Bell, Settings } from "lucide-react";
+import { Camera, Leaf, Home, Menu, Stethoscope, Bot, CloudSun, Calendar } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -24,8 +24,6 @@ export default function BottomNav() {
     { path: "/chat", icon: Bot, label: t("aiChat") },
     { path: "/weather", icon: CloudSun, label: t("weather") },
     { path: "/planting-calendar", icon: Calendar, label: t("plantingCalendar") || "Planting Calendar" },
-    { path: "/notifications", icon: Bell, label: t("notifications") },
-    { path: "/settings", icon: Settings, label: t("settings") },
   ];
 
   const go = (path: string) => {

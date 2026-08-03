@@ -24,8 +24,6 @@ export default function BottomNav() {
     { path: "/chat", icon: Bot, label: t("aiChat") },
     { path: "/weather", icon: CloudSun, label: t("weather") },
     { path: "/planting-calendar", icon: Calendar, label: t("plantingCalendar") || "Planting Calendar" },
-    { path: "/notifications", icon: Bell, label: t("notifications") },
-    { path: "/settings", icon: Settings, label: t("settings") },
   ];
 
   const go = (path: string) => {

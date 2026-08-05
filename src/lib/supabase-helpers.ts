@@ -101,7 +101,7 @@ export async function getDisplayUrl(ref: string | null | undefined): Promise<str
   if (legacyMatch) {
     return signPlantImagePath(decodeURIComponent(legacyMatch[1]));
   }
-  return ref; // public URL (e.g. community-images) or data URL
+  return ref; // already-public URL or data URL
 }
 
 export function compressImage(file: File, maxSize = 1800, quality = 0.92): Promise<string> {

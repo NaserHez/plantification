@@ -93,6 +93,39 @@ export default function Index() {
     <div className="min-h-screen bg-background pb-20">
       {/* Hero */}
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-accent/30 to-leaf-light/40 px-6 pt-12 pb-10">
+        <div className={`absolute top-4 ${language === "ar" ? "right-4" : "left-4"} z-10`}>
+          <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+            <SheetTrigger asChild>
+              <button
+                className="p-2 rounded-full bg-background/70 backdrop-blur-sm hover:bg-background/90 transition-colors"
+                aria-label={t("more") || "More"}
+              >
+                <Menu className="w-5 h-5 text-muted-foreground" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="rounded-t-3xl pb-8">
+              <SheetHeader className="text-left mb-2">
+                <SheetTitle className="font-serif text-lg">{t("more") || "More"}</SheetTitle>
+              </SheetHeader>
+              <div className="grid grid-cols-3 gap-3 pt-2">
+                {[
+                  { path: "/chat", icon: Bot, label: t("aiChat") },
+                  { path: "/weather", icon: CloudSun, label: t("weather") },
+                  { path: "/planting-calendar", icon: CalendarDays, label: t("plantingCalendar") || "Planting Calendar" },
+                ].map(({ path, icon: Icon, label }) => (
+                  <button
+                    key={path}
+                    onClick={() => { setMenuOpen(false); navigate(path); }}
+                    className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border border-border bg-card text-foreground hover:border-primary/30 transition-colors"
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="text-xs font-medium text-center leading-tight">{label}</span>
+                  </button>
+                ))}
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
         <div className={`absolute top-4 ${language === "ar" ? "left-4" : "right-4"} flex items-center gap-2 z-10`}>
           <button
             onClick={() => navigate("/notifications")}
@@ -112,6 +145,7 @@ export default function Index() {
             <Settings className="w-5 h-5 text-muted-foreground" />
           </button>
         </div>
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

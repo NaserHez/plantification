@@ -73,6 +73,7 @@ function SortablePlantCard({ plant, layout }: { plant: Plant; layout: LayoutMode
         wateringFrequency={plant.watering_frequency}
         location={plant.location}
         lastWatered={plant.last_watered}
+        createdAt={plant.created_at}
         variant={layout === "list" ? "list" : "card"}
       />
 
@@ -426,6 +427,7 @@ export default function GardenPage() {
                       wateringFrequency={p.watering_frequency}
                       location={p.location}
                       lastWatered={p.last_watered}
+                      createdAt={p.created_at}
                     />
 
                   ))}

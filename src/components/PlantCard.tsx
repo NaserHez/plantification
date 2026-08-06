@@ -14,6 +14,7 @@ interface PlantCardProps {
   wateringFrequency?: string | null;
   location?: string | null;
   lastWatered?: string | null;
+  createdAt?: string | null;
   variant?: "card" | "list";
 }
 
@@ -37,10 +38,13 @@ function getWateringStatus(lastWatered?: string | null, frequency?: string | nul
   };
 }
 
-export default function PlantCard({ id, name, commonName, scientificName, imageUrl, sunlight, wateringFrequency, location, lastWatered, variant = "card" }: PlantCardProps) {
+export default function PlantCard({ id, name, commonName, scientificName, imageUrl, sunlight, wateringFrequency, location, lastWatered, createdAt, variant = "card" }: PlantCardProps) {
   const showCommon = commonName && commonName !== name;
   const navigate = useNavigate();
   const { overdue, dueSoon, wilting } = getWateringStatus(lastWatered, wateringFrequency);
+  const addedLabel = createdAt
+    ? new Date(createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
+    : null;
   const dropClass = overdue ? "text-overdue animate-pulse" : dueSoon ? "text-sun" : "text-water";
 
   if (variant === "list") {
@@ -67,6 +71,7 @@ export default function PlantCard({ id, name, commonName, scientificName, imageU
           <h3 className="font-serif text-sm font-medium truncate">{name}</h3>
           {showCommon && <p className="text-[11px] text-muted-foreground truncate">{commonName}</p>}
           {scientificName && <p className="text-xs text-muted-foreground italic truncate">{scientificName}</p>}
+          {addedLabel && <p className="text-[10px] text-muted-foreground/70">Added {addedLabel}</p>}
         </div>
 
         <div className="flex gap-1.5 flex-shrink-0 items-center">
@@ -120,6 +125,8 @@ export default function PlantCard({ id, name, commonName, scientificName, imageU
         {scientificName && (
           <p className="text-xs text-muted-foreground italic truncate">{scientificName}</p>
         )}
+
+        {addedLabel && <p className="text-[10px] text-muted-foreground/70 mt-1">Added {addedLabel}</p>}
 
         <div className="flex gap-2 mt-2 items-center">
           {sunlight && <Sun className="w-3.5 h-3.5 text-sun" aria-hidden />}

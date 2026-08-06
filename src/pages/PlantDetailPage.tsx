@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Droplets, Sun, MapPin, Trash2, Loader2, Stethoscope, Globe, RefreshCw, Bot, Home, Eye, Camera, SunMedium } from "lucide-react";
+import { ArrowLeft, Droplets, Sun, MapPin, Trash2, Loader2, Stethoscope, Globe, RefreshCw, Bot, Home, Eye, Camera, SunMedium, CalendarDays } from "lucide-react";
 import CareSchedulePanel from "@/components/CareSchedulePanel";
 import PlantGallery from "@/components/PlantGallery";
 import { uploadPlantImage, compressImage } from "@/lib/supabase-helpers";

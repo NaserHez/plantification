@@ -201,6 +201,14 @@ export default function PlantDetailPage() {
           {plant.nickname && plant.nickname !== plant.name && (
             <p className="text-xs text-muted-foreground">Species: {plant.name}</p>
           )}
+          {plant.created_at && (
+            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
+              <CalendarDays className="w-3.5 h-3.5" />
+              Added {new Date(plant.created_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}
+            </p>
+          )}
+
+
 
           <div className="flex gap-2 mt-4">
             <Button onClick={handleWater} disabled={saving} variant="outline" className="flex-1 h-10 rounded-xl gap-2 text-water border-water/30">

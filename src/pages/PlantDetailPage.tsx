@@ -261,16 +261,53 @@ export default function PlantDetailPage() {
               <Label className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
                 <MapPin className="w-3.5 h-3.5 text-bloom" /> {t("locationLabel")}
               </Label>
-              <Select value={plant.location || "indoor"} onValueChange={(v) => handleUpdate("location", v)}>
+              <Select
+                value={plant.location || "indoor"}
+                onValueChange={(v) => {
+                  if (v === "__add__") { setAddingLocation(true); return; }
+                  handleUpdate("location", v);
+                }}
+              >
                 <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="indoor">{t("indoor").replace(/^[^\s]+\s/, "")}</SelectItem>
                   <SelectItem value="outdoor">{t("outdoor").replace(/^[^\s]+\s/, "")}</SelectItem>
                   <SelectItem value="balcony">{t("balcony").replace(/^[^\s]+\s/, "")}</SelectItem>
                   <SelectItem value="windowsill">{t("windowsill").replace(/^[^\s]+\s/, "")}</SelectItem>
+                  {customLocations.map((loc) => (
+                    <SelectItem key={loc} value={loc}>{formatLocation(loc)}</SelectItem>
+                  ))}
+                  {plant.location &&
+                    !BUILT_IN_LOCATIONS.includes(plant.location) &&
+                    !customLocations.includes(plant.location) && (
+                      <SelectItem value={plant.location}>{formatLocation(plant.location)}</SelectItem>
+                    )}
+                  <SelectItem value="__add__">+ Add new location…</SelectItem>
                 </SelectContent>
               </Select>
+              {addingLocation && (
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    value={newLocation}
+                    onChange={(e) => setNewLocation(e.target.value)}
+                    placeholder="e.g. Kitchen, Greenhouse"
+                    autoFocus
+                    className="rounded-xl h-9"
+                    onKeyDown={(e) => { if (e.key === "Enter") handleAddLocation(); }}
+                  />
+                  <Button onClick={handleAddLocation} size="sm" className="rounded-xl h-9">Add</Button>
+                  <Button
+                    onClick={() => { setAddingLocation(false); setNewLocation(""); }}
+                    size="sm"
+                    variant="ghost"
+                    className="rounded-xl h-9"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              )}
             </div>
+
 
             <div className="p-3 rounded-xl bg-accent/50 border border-border">
               <div className="flex items-center justify-between mb-2">

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Droplets, Sun, MapPin, Trash2, Loader2, Stethoscope, Globe, RefreshCw, Bot, Home, Eye, Camera, SunMedium } from "lucide-react";
+import { ArrowLeft, Droplets, Sun, MapPin, Trash2, Loader2, Stethoscope, Globe, RefreshCw, Bot, Home, Eye, Camera, SunMedium, CalendarDays } from "lucide-react";
 import CareSchedulePanel from "@/components/CareSchedulePanel";
 import PlantGallery from "@/components/PlantGallery";
 import { uploadPlantImage, compressImage } from "@/lib/supabase-helpers";
@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { regenerateCareTips } from "@/lib/supabase-helpers";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { BUILT_IN_LOCATIONS, addCustomLocation, formatLocation, getCustomLocations } from "@/lib/locations";
 
 const LANGUAGES = [
   { value: "en", label: "English", flag: "🇬🇧" },
@@ -36,6 +37,18 @@ export default function PlantDetailPage() {
   const [tipsLanguage, setTipsLanguage] = useState(localStorage.getItem("plant_language") || "en");
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const [customLocations, setCustomLocations] = useState<string[]>(() => getCustomLocations());
+  const [addingLocation, setAddingLocation] = useState(false);
+  const [newLocation, setNewLocation] = useState("");
+
+  const handleAddLocation = () => {
+    const clean = newLocation.trim();
+    if (!clean) return;
+    setCustomLocations(addCustomLocation(clean));
+    setAddingLocation(false);
+    setNewLocation("");
+    handleUpdate("location", clean);
+  };
 
   const handleChangePhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -188,6 +201,14 @@ export default function PlantDetailPage() {
           {plant.nickname && plant.nickname !== plant.name && (
             <p className="text-xs text-muted-foreground">Species: {plant.name}</p>
           )}
+          {plant.created_at && (
+            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
+              <CalendarDays className="w-3.5 h-3.5" />
+              Added {new Date(plant.created_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}
+            </p>
+          )}
+
+
 
           <div className="flex gap-2 mt-4">
             <Button onClick={handleWater} disabled={saving} variant="outline" className="flex-1 h-10 rounded-xl gap-2 text-water border-water/30">
@@ -261,16 +282,53 @@ export default function PlantDetailPage() {
               <Label className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
                 <MapPin className="w-3.5 h-3.5 text-bloom" /> {t("locationLabel")}
               </Label>
-              <Select value={plant.location || "indoor"} onValueChange={(v) => handleUpdate("location", v)}>
+              <Select
+                value={plant.location || "indoor"}
+                onValueChange={(v) => {
+                  if (v === "__add__") { setAddingLocation(true); return; }
+                  handleUpdate("location", v);
+                }}
+              >
                 <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="indoor">{t("indoor").replace(/^[^\s]+\s/, "")}</SelectItem>
                   <SelectItem value="outdoor">{t("outdoor").replace(/^[^\s]+\s/, "")}</SelectItem>
                   <SelectItem value="balcony">{t("balcony").replace(/^[^\s]+\s/, "")}</SelectItem>
                   <SelectItem value="windowsill">{t("windowsill").replace(/^[^\s]+\s/, "")}</SelectItem>
+                  {customLocations.map((loc) => (
+                    <SelectItem key={loc} value={loc}>{formatLocation(loc)}</SelectItem>
+                  ))}
+                  {plant.location &&
+                    !BUILT_IN_LOCATIONS.includes(plant.location) &&
+                    !customLocations.includes(plant.location) && (
+                      <SelectItem value={plant.location}>{formatLocation(plant.location)}</SelectItem>
+                    )}
+                  <SelectItem value="__add__">+ Add new location…</SelectItem>
                 </SelectContent>
               </Select>
+              {addingLocation && (
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    value={newLocation}
+                    onChange={(e) => setNewLocation(e.target.value)}
+                    placeholder="e.g. Kitchen, Greenhouse"
+                    autoFocus
+                    className="rounded-xl h-9"
+                    onKeyDown={(e) => { if (e.key === "Enter") handleAddLocation(); }}
+                  />
+                  <Button onClick={handleAddLocation} size="sm" className="rounded-xl h-9">Add</Button>
+                  <Button
+                    onClick={() => { setAddingLocation(false); setNewLocation(""); }}
+                    size="sm"
+                    variant="ghost"
+                    className="rounded-xl h-9"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              )}
             </div>
+
 
             <div className="p-3 rounded-xl bg-accent/50 border border-border">
               <div className="flex items-center justify-between mb-2">

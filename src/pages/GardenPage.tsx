@@ -10,6 +10,7 @@ import GardenTimelapse from "@/components/GardenTimelapse";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { addCustomLocation, formatLocation, getCustomLocations, removeCustomLocation } from "@/lib/locations";
 import emptyGardenIllustration from "@/assets/empty-garden.png";
 import {
   DndContext,
@@ -38,6 +39,7 @@ interface Plant {
   location: string | null;
   nickname: string | null;
   last_watered: string | null;
+  created_at: string | null;
 }
 
 type LayoutMode = "cards" | "list" | "location";
@@ -71,6 +73,7 @@ function SortablePlantCard({ plant, layout }: { plant: Plant; layout: LayoutMode
         wateringFrequency={plant.watering_frequency}
         location={plant.location}
         lastWatered={plant.last_watered}
+        createdAt={plant.created_at}
         variant={layout === "list" ? "list" : "card"}
       />
 
@@ -88,6 +91,8 @@ export default function GardenPage() {
   });
   const [searchQuery, setSearchQuery] = useState("");
   const [searchVisible, setSearchVisible] = useState(false);
+  const [customLocations, setCustomLocations] = useState<string[]>(() => getCustomLocations());
+  const [newLocation, setNewLocation] = useState("");
 
   // Pull-to-reveal search with smooth progress
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -127,7 +132,7 @@ export default function GardenPage() {
     const fetchPlants = async () => {
       const { data } = await supabase
         .from("plants")
-        .select("id, name, scientific_name, image_url, sunlight, watering_frequency, location, nickname, last_watered")
+        .select("id, name, scientific_name, image_url, sunlight, watering_frequency, location, nickname, last_watered, created_at")
         .order("created_at", { ascending: false });
 
       const fetched = data || [];
@@ -183,8 +188,11 @@ export default function GardenPage() {
       if (!groups[loc]) groups[loc] = [];
       groups[loc].push(p);
     });
+    customLocations.forEach((loc) => {
+      if (!groups[loc]) groups[loc] = [];
+    });
     return groups;
-  }, [filteredPlants]);
+  }, [filteredPlants, customLocations]);
 
   const locationLabels: Record<string, string> = {
     indoor: t("indoor"),
@@ -193,6 +201,8 @@ export default function GardenPage() {
     windowsill: t("windowsill"),
     other: t("other"),
   };
+
+  const labelFor = (loc: string) => locationLabels[loc] || formatLocation(loc);
 
   return (
     <div
@@ -362,11 +372,48 @@ export default function GardenPage() {
           <div className="text-center py-8 text-muted-foreground text-sm">{t("noResults")}</div>
         ) : layout === "location" ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 mt-2">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newLocation}
+                onChange={(e) => setNewLocation(e.target.value)}
+                placeholder="Add a location (e.g. Kitchen)"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && newLocation.trim()) {
+                    setCustomLocations(addCustomLocation(newLocation));
+                    setNewLocation("");
+                  }
+                }}
+                className="flex-1 h-9 px-3 rounded-xl bg-muted border-0 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+              <Button
+                onClick={() => {
+                  if (!newLocation.trim()) return;
+                  setCustomLocations(addCustomLocation(newLocation));
+                  setNewLocation("");
+                }}
+                size="sm"
+                variant="outline"
+                className="rounded-xl h-9"
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
             {Object.entries(locationGroups).map(([loc, group]) => (
               <div key={loc}>
-                <h2 className="font-serif text-sm text-muted-foreground mb-2">
-                  {locationLabels[loc] || loc}
-                </h2>
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="font-serif text-sm text-muted-foreground">
+                    {labelFor(loc)} <span className="text-xs">({group.length})</span>
+                  </h2>
+                  {customLocations.includes(loc) && group.length === 0 && (
+                    <button
+                      onClick={() => setCustomLocations(removeCustomLocation(loc))}
+                      className="text-xs text-muted-foreground hover:text-destructive"
+                    >
+                      {t("delete") || "Remove"}
+                    </button>
+                  )}
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   {group.map((p) => (
                     <PlantCard
@@ -380,6 +427,7 @@ export default function GardenPage() {
                       wateringFrequency={p.watering_frequency}
                       location={p.location}
                       lastWatered={p.last_watered}
+                      createdAt={p.created_at}
                     />
 
                   ))}

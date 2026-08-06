@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Camera, Leaf, Sparkles, Stethoscope, Bot, Settings, Bell, CalendarDays, ArrowRight, Sprout, Thermometer } from "lucide-react";
+import { Camera, Leaf, Sparkles, Stethoscope, Bot, Settings, Bell, CalendarDays, ArrowRight, Sprout, Thermometer, Menu, CloudSun } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
@@ -64,6 +65,7 @@ export default function Index() {
   const navigate = useNavigate();
   const { t, language } = useLanguage();
   const [overdueCount, setOverdueCount] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const fetchPlants = async () => {

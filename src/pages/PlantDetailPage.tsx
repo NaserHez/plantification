@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { regenerateCareTips } from "@/lib/supabase-helpers";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { BUILT_IN_LOCATIONS, addCustomLocation, formatLocation, getCustomLocations } from "@/lib/locations";
 
 const LANGUAGES = [
   { value: "en", label: "English", flag: "🇬🇧" },
@@ -36,6 +37,18 @@ export default function PlantDetailPage() {
   const [tipsLanguage, setTipsLanguage] = useState(localStorage.getItem("plant_language") || "en");
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const [customLocations, setCustomLocations] = useState<string[]>(() => getCustomLocations());
+  const [addingLocation, setAddingLocation] = useState(false);
+  const [newLocation, setNewLocation] = useState("");
+
+  const handleAddLocation = () => {
+    const clean = newLocation.trim();
+    if (!clean) return;
+    setCustomLocations(addCustomLocation(clean));
+    setAddingLocation(false);
+    setNewLocation("");
+    handleUpdate("location", clean);
+  };
 
   const handleChangePhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
